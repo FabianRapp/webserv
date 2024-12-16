@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  server:
+    build:
+      context: ./server/
+      dockerfile: Dockerfile.server
+    #ports:
+      #currently no open ports
+      #- "8080:8080"
+    networks:
+      - internal_network
+
+  client:
+    build:
+      context: ./client/
+      dockerfile: Dockerfile.client
+    networks:
+      - internal_network
+    stdin_open: true
+    tty: true
+
+networks:
+  internal_network:
+    internal: true
+    driver: bridge
