@@ -2,15 +2,23 @@ CPP := c++
 
 NAME := webserv
 
-INCLUDES := -I./includes
+INCLUDES := -I./includes \
+			-I./includes/parser \
+
 FSAN := address
-CXXFLAGS := -Wall -Wextra -Werror -std=c++17 -g -fsanitize=$(FSAN) -O0 -MMD -MP \
+
+WWW := -Wall -Wextra
+CXXFLAGS :=  $(WWW) -std=c++17 -g -fsanitize=$(FSAN) -O0 -MMD -MP \
 			-Wconversion -Wsign-conversion $(INCLUDES) \
 
 #-Wno-shadow -Wshadow
 
 SRCS_DIR := srcs/
 SRCS := main.cpp \
+		Webserv.cpp \
+		Parser.cpp \
+		Lexer.cpp \
+		Token.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 

@@ -1,6 +1,9 @@
 compile_commands.json
 webserv
 .cache
+objs
+
+
 # Prerequisites
 *.d
 
