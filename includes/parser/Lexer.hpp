@@ -6,13 +6,15 @@
 
 class Lexer {
 public:
-						Lexer(std::string raw_http_request);
+						Lexer(const std::string & raw_http_request);
+	/* todo: add function pairs from 'todo' below to 'next()' */
 	Token				next(void);
 private:
-	std::string			_input;
+	const std::string	_input;
 	size_t				_pos;
 						Lexer(void);
-	/* Each token type should have 2 lexing function:
+	/* todo:
+	Each token type should have 2 lexing function:
 		1 to decide if the current position (_input[_pos]) is of that type,
 		it should not change _pos.
 		And 1 for extracting that string and setting _pos to right after the

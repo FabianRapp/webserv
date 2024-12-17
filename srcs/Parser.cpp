@@ -8,9 +8,10 @@ t_http_request	Parser::parse(void) {
 	while (token.type != EOF_TOKEN) {
 		switch (token.type) {
 			default:
-				std::cerr << "Unknown tyoken type: " << token.type << '\n';
+				std::cerr << "Parser Error: Unknown token type: " << token.type << '\n';
 				FT_ASSERT(0);
 		}
+		token = _lexer.next();
 	}
 
 	return (msg);

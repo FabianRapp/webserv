@@ -8,7 +8,7 @@
 #include <string>
 #include <iostream>
 
-
+/* todo: parse(): main logic */
 class Parser {
 public:
 					Parser(std::string http_input): _lexer(http_input) {}
