@@ -12,7 +12,7 @@ Webserv::~Webserv(void) {
 }
 
 /* main loop */
-noreturn
+[[noreturn]]
 void	Webserv::run(void) {
 	while (1) {
 	}

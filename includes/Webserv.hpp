@@ -13,8 +13,8 @@ public:
 					Webserv(void);
 					Webserv(const char * config_file_path);
 					~Webserv(void);
-	noreturn
-	void	run(void);
+	[[noreturn]]
+	void			run(void);
 private:
 	t_http_request	_parse(std::string raw_input);
 	void			_send(t_http_response msg);
