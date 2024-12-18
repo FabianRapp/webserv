@@ -22,7 +22,3 @@ typedef struct http_request {
 	std::string	body;
 }	t_http_request;
 
-
-/*todo: */
-typedef struct http_response {
-}	t_http_response;

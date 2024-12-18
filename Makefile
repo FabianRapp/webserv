@@ -19,6 +19,7 @@ SRCS := main.cpp \
 		Parser.cpp \
 		Lexer.cpp \
 		Token.cpp \
+		utils.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 

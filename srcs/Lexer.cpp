@@ -3,7 +3,7 @@
 Lexer::Lexer(const std::string  & raw_http_request)
 : _input(raw_http_request), _pos(0)
 {
-	std::cout << "Called lexer with input: " << raw_http_request << '\n';
+	std::cout << "Called lexer\n";
 }
 
 /*todo: */

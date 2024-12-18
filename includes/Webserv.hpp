@@ -3,18 +3,25 @@
 #include <Token.hpp>
 #include <msg.hpp>
 #include <Parser.hpp>
+#include <utils.hpp>
+#include <types.hpp>
+//#include <ClientConnection.hpp>
 
 #include <unistd.h>
 #include <cstring>
 #include <errno.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <stdnoreturn.h>
 #include <iostream>
 #include <string>
+#include <poll.h>
 
 #ifndef REQUEST_QUE_SIZE
 # define REQUEST_QUE_SIZE 10
+#endif
+
+#ifndef MAX_CLIENTS
+# define MAX_CLIENTS 3
 #endif
 
 class Webserv {
@@ -26,12 +33,27 @@ public:
 	void			run(void);
 private:
 	t_http_request	_parse(std::string raw_input);
-	void			_send(t_http_response msg);
-	/* todo: structure to go form 't_http_request' to 't_http_response' */
+	void			_execute_request(t_http_request request,
+						 struct pollfd & client);
 
 private:
-	int					_server_fd;
-	struct sockaddr_in	_server_addr;
-	struct sockaddr_in	_client_addr;
-	socklen_t			_addr_len;
+	int						_server_fd;
+
+	struct sockaddr_in		_server_addr;
+	const socklen_t			_server_addr_len;
+	struct sockaddr_in		_client_addr;
+	socklen_t				_client_addr_len;
+	/* to avoid pointer casts every where */
+	struct sockaddr	*const _server_addr_ptr;
+	struct sockaddr	*const _client_addr_ptr;
+
+
+	/* client connection managment */
+	struct pollfd			_client_fds[MAX_CLIENTS];
+	nfds_t					_active_client_count;
+	void					_accept_clients(void);
+	void					_add_client(t_fd fd);
+	void					_set_client_poll_events(short int event);
+
+	void					_close_client_connection(struct pollfd & client);
 };
