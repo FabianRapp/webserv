@@ -36,6 +36,7 @@ all: $(NAME)
 
 $(NAME): $(OBJS)
 	$(CPP) $(CXXFLAGS) $(OBJS) -o $(NAME)
+	cp -f $(NAME) ./docker_testing/server
 
 normal: $(NAME)
 	@echo "$(GREEN) Compiled $(NAME) $(CLEAR)"
