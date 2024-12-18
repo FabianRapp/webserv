@@ -2,10 +2,11 @@ To run:
 docker-compose up -d --build
 docker-compose up -d
 
-open client/server:
-docker exec -t docker_testing_client_1 bash
-docker exec -t docker_testing_server_1 bash
+open server/client:
+docker exec -it docker_testing_server_1 bash
+docker exec -it docker_testing_client_1 bash
 
+Then on the server run 'make && ./webserv'.
 
 to send http requests to the server(example):
 curl http://server:8080

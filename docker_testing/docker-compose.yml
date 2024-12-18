@@ -1,13 +1,17 @@
 version: "3.8"
 
 services:
+  #server:
+  #  build:
+  #    context: ./server/
+  #    dockerfile: Dockerfile.server
+  #  networks:
+  #    - internal_network
+
   server:
     build:
-      context: ./server/
-      dockerfile: Dockerfile.server
-    #ports:
-      #currently no open ports
-      #- "8080:8080"
+      context: ../
+      dockerfile: ./docker_testing/server/Dockerfile.our_server
     networks:
       - internal_network
 
