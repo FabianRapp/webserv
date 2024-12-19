@@ -24,6 +24,24 @@
 # define MAX_CLIENTS 3
 #endif
 
+/* to handle small client requests statically and large ones dynamically
+ * (ensures operation for most reqeusts on low memory without droping all
+ * requests) */
+/* todo: implementation */
+class RawClientMsg {
+public:
+					RawClientMsg(void);
+					~RawClientMsg(void);
+					RawClientMsg(const RawClientMsg & old);
+	RawClientMsg &	operator=(const RawClientMsg & right);
+	char			*buf; /* points to the correct buffer */
+	size_t			full_size;
+	bool			finished;
+private:
+	char	static_buf[1024];/* To operate in OOM situations */
+	char	*dynamic_buf; /* For long messages, tho might fail if OOM */
+};
+
 class Webserv {
 public:
 					Webserv(void);

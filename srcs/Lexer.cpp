@@ -8,5 +8,7 @@ Lexer::Lexer(const std::string  & raw_http_request)
 
 /*todo: */
 Token	Lexer::next(void) {
-	return (Token(EOF_TOKEN, ""));
+	/* placeholder */
+	TokenType	type = TokenType::EOF_TOKEN;
+	return (Token(type));
 }

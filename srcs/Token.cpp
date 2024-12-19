@@ -1,6 +1,6 @@
 #include <Token.hpp>
-
-Token::Token(token_type type, const std::string & value)
+/*
+Token::Token(t_token_type type, const std::string value)
 	: type(type), val(value) {}
 
 Token::~Token(void) {}
@@ -15,3 +15,4 @@ Token &	Token::operator=(const Token & right) {
 	this->val = right.val;
 	return (*this);
 }
+*/

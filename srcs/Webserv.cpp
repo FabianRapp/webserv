@@ -116,13 +116,13 @@ void	Webserv::run(void) {
 			continue ;
 		}
 
-		_set_client_poll_events(POLLIN);
+		_set_client_poll_events(POLLPRI | POLLIN);
 
 		for (auto & client : _client_fds) {
 			if (client.fd == -1) {
 				continue ;
 			}
-			if (!(client.revents & POLLIN)) {
+			if (!(client.revents & (POLLIN | POLLPRI))) {
 				/* fd is not ready */
 				continue ;
 			}
@@ -139,13 +139,20 @@ void	Webserv::run(void) {
 			 * response.
 			 * For now not important, just keep in mind.
 			 */
+			} else {
+				buffer[bytes_read] = 0;
 			}
-
-
-			buffer[bytes_read] = 0;
 			printf("Received Request:\n%s\n", buffer);
+			//for (size_t i = 0; i < strlen(buffer); i++) {
+			//	printf("%x\n", buffer[i]);
+			//}
 			char	*full_msg;
 
+			if (buffer[bytes_read - 1] == 0) {
+				std::cout << "0\n";
+			} else {
+				std::cout << "not 0\n";
+			}
 			/* todo: check for earlyer chunks of the msg etc.. */
 			full_msg = buffer;
 			t_http_request	request = _parse(full_msg);
@@ -194,6 +201,7 @@ void	Webserv::_execute_request(t_http_request request, struct pollfd & client) {
 }
 
 void	Webserv::_close_client_connection(struct pollfd & client) {
+	FT_ASSERT(client.fd > 0);
 	close(client.fd);
 	client.events = 0;
 	client.revents = 0;
