@@ -20,6 +20,7 @@ SRCS := main.cpp \
 		Lexer.cpp \
 		Token.cpp \
 		utils.cpp \
+		to_string.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 
