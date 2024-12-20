@@ -16,10 +16,13 @@ enum class TokenType {
 	HEADER_TERMINATION,
 	BODY,
 	BODY_TERMINATION,
-	EOF_TOKEN,
+	EOF_TOKEN, /* not actually part of the request, inserted by lexer/parser. */
+	UNFINISHED, /* Input is finished but token is not complete */
 };
 
+/* we most likely don't need all of these */
 enum class HeaderType {
+	// Request Headers
 	ACCEPT,
 	ACCEPT_CHARSET,
 	ACCEPT_ENCODING,
@@ -39,6 +42,41 @@ enum class HeaderType {
 	REFERER,
 	TE,
 	USER_AGENT,
+
+	/* todo: from here onwards header types by chatgpt, needs verification */
+	// General Headers
+	CACHE_CONTROL,
+	CONNECTION,
+	DATE,
+	PRAGMA,
+	TRAILER,
+	TRANSFER_ENCODING,
+	UPGRADE,
+	VIA,
+	WARNING,
+
+	// Entity Headers
+	ALLOW,
+	CONTENT_ENCODING,
+	CONTENT_LANGUAGE,
+	CONTENT_LENGTH,
+	CONTENT_LOCATION,
+	CONTENT_MD5, // Deprecated
+	CONTENT_RANGE,
+	CONTENT_TYPE,
+	EXPIRES,
+	LAST_MODIFIED,
+
+	// Extension Headers
+	COOKIE,			   // Common custom header
+	SET_COOKIE,		   // Often used in requests for session handling
+	DNT,				  // "Do Not Track" header
+	ORIGIN,			   // Cross-Origin Resource Sharing (CORS)
+	UPGRADE_INSECURE_REQUESTS, // Browser security preference
+
+	// Additional Optional Headers
+	ACCEPT_DATETIME,	  // Rare, for datetime-specific requests
+	EARLY_DATA			// Introduced in HTTP/2 extensions
 };
 
 enum class MethodType {

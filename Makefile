@@ -21,6 +21,7 @@ SRCS := main.cpp \
 		Token.cpp \
 		utils.cpp \
 		to_string.cpp \
+		ClientConnection.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 

@@ -17,6 +17,7 @@ Webserv::Webserv(void):
 	_client_addr_ptr(reinterpret_cast<struct sockaddr *>(&_client_addr)),
 	_active_client_count(0)
 {
+	memset(_client_connections, 0, sizeof _client_connections);
 	for (auto & poll_fd : _client_fds) {
 		poll_fd.fd = -1;
 		poll_fd.events = 0;
@@ -97,7 +98,8 @@ void	Webserv::_accept_clients(void) {
 		if (new_client_fd < 0) {
 			break ;
 		}
-		_add_client(new_client_fd);
+		ClientConnection * new_connection = _add_client(new_client_fd);
+		(void)new_connection; /* is this ptr needed here? */
 
 		std::cout << "Connection accepted from address("
 			<< inet_ntoa(_client_addr.sin_addr) << "): PORT("
@@ -117,8 +119,8 @@ void	Webserv::run(void) {
 		}
 
 		_set_client_poll_events(POLLPRI | POLLIN);
-
-		for (auto & client : _client_fds) {
+		for (size_t client_idx = 0; client_idx < MAX_CLIENTS; client_idx++) {
+			auto & client = _client_fds[client_idx];
 			if (client.fd == -1) {
 				continue ;
 			}
@@ -126,38 +128,25 @@ void	Webserv::run(void) {
 				/* fd is not ready */
 				continue ;
 			}
+			ClientConnection	*connection = _client_connections[client_idx];
 			char	buffer[4096];
 			long int bytes_read = read(client.fd, buffer, sizeof buffer - 1);
 			if (bytes_read < 0) {
 				std::cerr << "Error: read failed\n";
 				FT_ASSERT(0);
-			} else if (bytes_read == sizeof buffer -1) {
-			/* todo: Handle longer than buffer messages.
-			 * This should pause this fd execution and continue with non
-			 * blocking one. On malloc error (size the massage will need to be
-			 * allocaed) the connection should be droped with the right error
-			 * response.
-			 * For now not important, just keep in mind.
-			 */
-			} else {
-				buffer[bytes_read] = 0;
 			}
-			printf("Received Request:\n%s\n", buffer);
+			buffer[bytes_read] = 0;
+			connection->input += buffer;
 			//for (size_t i = 0; i < strlen(buffer); i++) {
 			//	printf("%x\n", buffer[i]);
 			//}
-			char	*full_msg;
 
-			if (buffer[bytes_read - 1] == 0) {
-				std::cout << "0\n";
-			} else {
-				std::cout << "not 0\n";
-			}
 			/* todo: check for earlyer chunks of the msg etc.. */
-			full_msg = buffer;
-			t_http_request	request = _parse(full_msg);
-			_execute_request(request, client);
-
+			connection->parse();
+			if (connection->completed_request()) {
+				t_http_request	request = connection->get_request();
+				_execute_request(request, client_idx);
+			}
 
 			//write(client_fd, http_response, strlen(http_response));
 		}
@@ -165,14 +154,16 @@ void	Webserv::run(void) {
 }
 
 /* assumes space for the given client */
-void	Webserv::_add_client(t_fd fd) {
+ClientConnection *	Webserv::_add_client(t_fd fd) {
 	FT_ASSERT(_active_client_count < MAX_CLIENTS);
 	FT_ASSERT(fd > 0);
 	_active_client_count++;
-	for (auto & poll_fd : _client_fds) {
-		if (poll_fd.fd == -1) {
-			poll_fd.fd = fd;
-			return ;
+
+	for (size_t i = 0; i < MAX_CLIENTS; i++) {
+		if (_client_connections[i] == nullptr) {
+			_client_fds[i].fd = fd;
+			_client_connections[i] = new ClientConnection(_client_fds[i].fd);
+			return (_client_connections[i]);
 		}
 	}
 	FT_ASSERT(0);
@@ -188,23 +179,23 @@ void	Webserv::_set_client_poll_events(short int events) {
 	}
 }
 
-/* wraper for Parser, I think leaving it like this should be the simplest */
-t_http_request	Webserv::_parse(std::string raw_input) {
-	Parser	parser(raw_input);
-	return (parser.parse());
-}
-
 /* todo: */
-void	Webserv::_execute_request(t_http_request request, struct pollfd & client) {
-	_close_client_connection(client); // placeholder
+void	Webserv::_execute_request(t_http_request request, size_t client_idx) {
+	_close_client_connection(client_idx); // placeholder
 	(void)request;
 }
 
-void	Webserv::_close_client_connection(struct pollfd & client) {
-	FT_ASSERT(client.fd > 0);
-	close(client.fd);
-	client.events = 0;
-	client.revents = 0;
-	client.fd = -1;
+/* TODO: Update for new ClientConnection */
+void	Webserv::_close_client_connection(size_t client_idx) {
+	auto &	poll_fd = _client_fds[client_idx];
+	FT_ASSERT(poll_fd.fd > 0);
+
+	delete _client_connections[client_idx];
+	_client_connections[client_idx] = nullptr;
+
+	/* fd allready closed in destructor of ClientConnection */
+	poll_fd.events = 0;
+	poll_fd.revents = 0;
+	poll_fd.fd = -1;
 	_active_client_count--;
 }

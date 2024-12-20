@@ -27,6 +27,7 @@ public:
 			std::pair<HeaderType, std::string>
 		> value = {}
 	);
+	/* todo copy constructor/ =overload */
 	MethodType &							get_method(void);
 	std::pair<HeaderType, std::string> &	get_header(void);
 	void									get_no_value(void);
