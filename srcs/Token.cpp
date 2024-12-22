@@ -9,6 +9,16 @@ Token::Token(TokenType type,
 	> value)
 	: type(type), value(std::move(value)) {}
 
+Token::Token(const Token &old) :type(old.type), value(old.value) {}
+
+Token &	Token::operator=(const Token & right) {
+	if (this == &right) {
+		return (*this);
+	}
+	this->type = right.type;
+	this->value = right.value;
+	return (*this);
+}
 MethodType &	Token::get_method(void) {
 	FT_ASSERT(type == TokenType::METHOD);
 	return (std::get<MethodType>(value));

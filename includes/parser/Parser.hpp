@@ -12,7 +12,7 @@
 /* assumes one parser object per client connection */
 class Parser {
 public:
-					Parser(const std::string & http_input);
+					Parser(std::string & http_input);
 					~Parser(void);
 	void			parse(void);
 	bool			is_finished(void) const; /* to check wether the read request is
@@ -22,6 +22,7 @@ public:
 	connection. */
 private:
 	void			_reset(void);
+	void			_handle_header(Token & token);
 	t_http_request	_request;
 	Lexer			_lexer;
 };

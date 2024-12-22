@@ -9,16 +9,19 @@
 class Lexer {
 public:
 						Lexer(void) = delete;
-						Lexer(const std::string & raw_http_request);
+						Lexer(std::string & raw_http_request);
+						Lexer(const Lexer & old);
+						Lexer &	operator=(const Lexer & right);
 						~Lexer(void);
-	Token				next(bool expected_body, bool chunked_body, size_t expected_body_size);
 	Token				next(void);
 	void				reset(void); /* Resets the lexer for the next
 										request. */
 private:
-	const std::string	&_input;
+	std::string			&_input;
 	size_t				_pos;
 	char				_cur;
+	bool				_last_header_term;
+	size_t				_body_size;
 
 	void				_advance(void);
 	void				_advance(size_t count);
@@ -35,11 +38,9 @@ private:
 	Token				_extract_header(void);
 	bool				_is_header_termination(void);
 	Token				_extract_header_termination(void);
-	bool				_is_body(bool expected_body, size_t expected_body_size);
-	Token				_extract_body(bool chunked, size_t expected_body_size);
+	bool				_is_body(void);
+	Token				_extract_body(void);
 	bool				_is_body_termination(void);
 	Token				_extract_body_termination(void);
-	bool				_is_unfinished(void);
-	Token				_extract_unfinished(void);
 };
 
