@@ -1,5 +1,6 @@
 #pragma once
 
+#include <colors.h>
 #include <Token.hpp>
 #include <msg.hpp>
 #include <Parser.hpp>

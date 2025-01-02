@@ -46,7 +46,7 @@ enum class HeaderType {
 	/* todo: from here onwards header types by chatgpt, needs verification */
 	// General Headers
 	CACHE_CONTROL,
-	CONNECTION,
+	CONNECTION, /* example "close" */
 	DATE,
 	PRAGMA,
 	TRAILER,
@@ -88,6 +88,7 @@ enum class MethodType {
 	DELETE,
 	TRACE,
 	CONNECT,
+	INVALID,
 };
 
 /**************************** to_string prototypes ****************************/

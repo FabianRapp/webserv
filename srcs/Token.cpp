@@ -68,6 +68,8 @@ std::string	Token::full_string() const {
 			return (to_string(type));
 		} case TokenType::EOF_TOKEN: {
 			return (to_string(type));
+		} case TokenType::UNFINISHED: {
+			return ("UNFINISHED");
 		} default: {
 			FT_ASSERT(0 && "unknown token type");
 		}

@@ -4,6 +4,7 @@
 #include <cstdbool>
 #include <iostream>
 #include <cstdint>
+#include <regex>
 
 /* Todo: implement throws for erros. */
 class Lexer {
@@ -28,8 +29,12 @@ private:
 
 	bool				_is_eof(void); /* Has no extract (when there is no
 											more input. */
+	std::pair<std::string, MethodType>
+						_match_method(void);
 	bool				_is_method(void);
 	Token				_extract_method(void);
+	std::pair<std::string, std::string>
+						_match_uri(void);
 	bool				_is_uri(void);
 	Token				_extract_uri(void);
 	bool				_is_version(void);

@@ -38,6 +38,7 @@ std::string	to_string(TokenType val) {
 		case TokenType::BODY: return ("BODY");
 		case TokenType::BODY_TERMINATION: return ("BODY_TERMINATION");
 		case TokenType::EOF_TOKEN: return ("EOF_TOKEN");
+		case TokenType::UNFINISHED: return ("UNFINISHED");
 		default:
 			std::cerr << "Error: to_string: unsupported TokenType value" << std::endl;
 			FT_ASSERT(0);
@@ -55,6 +56,7 @@ std::string	to_string(MethodType val) {
 		case MethodType::DELETE: return ("DELETE");
 		case MethodType::TRACE: return ("TRACE");
 		case MethodType::CONNECT: return ("CONNECT");
+		case MethodType::INVALID: return ("INVALID");
 		default:
 			std::cerr << "Error: to_string: unsupported MethodType" << std::endl;
 			FT_ASSERT(0);

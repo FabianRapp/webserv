@@ -7,7 +7,7 @@ Lexer::Lexer(std::string  & raw_http_request)
 	_last_header_term(false),
 	_body_size(0)
 {
-	std::cout << "Called lexer\n";
+	std::cout << "Lexer constructor\n";
 	if (_input.size()) {
 		_cur = _input[0];
 	} else {
@@ -63,17 +63,18 @@ void	Lexer::reset(void) {
 /* call this directtly when the body is to be expected
  * (last token was HEADER_TERMINATION) */
 Token	Lexer::next(void) {
-	std::cout << "called Lexer::next with input:\n"
-		<< _input.substr(_pos, _input.size()) << '\n';
-
+	std::cout << "Lexer: tryng to match \"" << _input.substr(_pos, 10) << "\":\n";
 	/* todo: is this too stupid? xd */
 	/* order might change if it makes sense idk */
 	Token	token(TokenType::UNFINISHED);
-	if (_is_eof()) {
+	if (_is_eof()) { /* first check */
 		/* does not need to advance or have any value so simply returns. */
 		token = Token(TokenType::EOF_TOKEN);
-	} else if (_is_body()) {
+	} else if (_is_body()) { /* second check */
 		token = _extract_body();
+	} else if (_last_header_term) {
+		/* body is not complete, waiting for more data,
+		 * reutrn UNFINISHED token */
 	} else if (_is_method()) {
 		token = _extract_method();
 	} else if (_is_uri()) {
@@ -100,27 +101,68 @@ bool	Lexer::_is_eof(void) {
 	if (_pos == _input.size()) {
 		return (true);
 	}
+	/* placeholder until lexer does more stuff */
+	//return (true);
 	return (false);
+}
+
+std::pair<std::string, MethodType>	Lexer::_match_method(void) {
+	/* strcmp to all methods */
+	/* Termination: a sinlge SP (0x20) */
+	const std::pair<std::string, MethodType>	patterns[] = {
+		{"OPTIONS\x20", MethodType::OPTIONS},
+		{"GET\x20", MethodType::GET},
+		{"HEAD\x20", MethodType::HEAD},
+		{"POST\x20", MethodType::POST},
+		{"PUT\x20", MethodType::PUT},
+		{"DELETE\x20", MethodType::DELETE},
+		{"TRACE\x20", MethodType::TRACE},
+		{"CONNECT\x20", MethodType::CONNECT},
+	};
+
+	for (auto & pattern : patterns) {
+		if (0 == _input.compare(_pos, pattern.first.size(), pattern.first)) {
+			return (pattern);
+		}
+	}
+	return (std::pair<std::string, MethodType>({"", MethodType::INVALID}));
 }
 
 /* todo: Placeholder */
 bool	Lexer::_is_method(void) {
-	
-	/* strcmp to all methods */
-	/* Termination: a sinlge SP (0x20) */
-	return (false);
+	if (_match_method().second == MethodType::INVALID) {
+		return (false);
+	}
+	return (true);
 }
 
 /* todo: Placeholder */
 Token	Lexer::_extract_method(void) {
-	MethodType	placeholder_method_type = MethodType::GET;
-	return (Token(TokenType::METHOD, placeholder_method_type));
+	std::pair<std::string, MethodType>	method = _match_method();
+	FT_ASSERT(method.second != MethodType::INVALID);
+	_advance(method.first.size());
+	return (Token(TokenType::METHOD, method.second));
+}
+
+
+std::pair<std::string, std::string>	Lexer::_match_uri(void) {
+	/* Termination: a sinlge SP (0x20) */
+	const static std::regex	patterns[] = {
+		std::regex("*\x20"),
+	};
+	for (auto & pattern : patterns) {
+		std::smatch	match;
+		if (std::regex_search(_input.begin() + static_cast<long>(_pos),
+			_input.end(), pattern)) {
+		}
+	}
 }
 
 /* todo: Placeholder */
+/*  Request-URI    = "*" | absoluteURI | abs_path | authority */
 bool	Lexer::_is_uri(void) {
 
-	/* Termination: a sinlge SP (0x20) */
+
 	return (false);
 }
 
@@ -156,8 +198,11 @@ Token	Lexer::_extract_header(void) {
 	placeholder_header.first = HeaderType::ACCEPT;
 	placeholder_header.second = "placeholder header content";
 	
-	/* todo:
-	 * for the CONTENT_LENGTH header the length has to be stored in _body_len */
+	/* todo: keep in mind:
+	 * for the CONTENT_LENGTH header the length has to be stored in _body_len
+	 * for what ever header determines chunked encoding the _body_len has to
+	 *		be set to smth, tho idk what yet.
+	 */
 	/* advance past the line termination "\r\n" */
 	return (Token(TokenType::HEADER, placeholder_header));
 }

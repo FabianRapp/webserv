@@ -202,11 +202,12 @@ void	Parser::_handle_header(Token & token) {
 }
 
 void	Parser::parse(void) {
-	Token	token = _lexer.next();
 	while (1) {
-		token = _lexer.next();
+		Token token = _lexer.next();
+		std::cout << "got token: " << token.full_string() << "\n";
 		if (_request.finished && token.type != TokenType::EOF_TOKEN) {
-			// ERROR
+			FT_ASSERT(0
+				&& "Likly piplined request miss handling");
 		}
 		switch (token.type) {
 			case (TokenType::METHOD): {
@@ -222,8 +223,7 @@ void	Parser::parse(void) {
 				break ;
 			}
 			case (TokenType::HEADER): {
-
-				/* todo: handle all kinds or headers */
+				_handle_header(token);
 				break ;
 			}
 			case (TokenType::HEADER_TERMINATION): {
@@ -238,8 +238,10 @@ void	Parser::parse(void) {
 				break ;
 			}
 			case (TokenType::EOF_TOKEN): {
+				/* place holder, should not set finished when other stuff
+				 * works */
 				_request.finished = true;
-				break ;
+				return ;
 			}
 			case (TokenType::UNFINISHED): {
 				return ;
@@ -253,14 +255,22 @@ bool	Parser::is_finished(void) const {
 	return (_request.finished);
 }
 
-/* once is_finished is true this can be called.
- * Resets the parser/lexer for the next client request with the same
- 	connection. */
 t_http_request	Parser::get_request(void) const {
 	return (_request);
 }
+
+/* once is_finished is true this can be called.
+ * Resets the parser/lexer for the next client request with the same
+ 	connection.
+ * todo: think of way to handle persistant connection (andvance input and reuse
+	it
+*/
 void	Parser::_reset(void) {
 	_lexer.reset();
-	_request.finished = false;
+	
+/* once is_finished is true this can be called.
+ * Resets the parser/lexer for the next client request with the same
+ 	connection.
+*/_request.finished = false;
 	/* todo: reset every field in _request */
 }

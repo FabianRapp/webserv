@@ -108,7 +108,6 @@ void	Webserv::_accept_clients(void) {
 	errno = old_err;
 }
 
-/* main loop */
 [[noreturn]]
 void	Webserv::run(void) {
 	while (1) {
@@ -128,14 +127,17 @@ void	Webserv::run(void) {
 				/* fd is not ready */
 				continue ;
 			}
+
 			ClientConnection	*connection = _client_connections[client_idx];
-			char	buffer[4096];
-			long int bytes_read = read(client.fd, buffer, sizeof buffer - 1);
+			char		buffer[4096];
+			int			recv_flags = 0;//MSG_ERRQUEUE <- has smth to do with error checks
+			long int	bytes_read = recv(client.fd, buffer, sizeof buffer - 1, recv_flags);
 			if (bytes_read < 0) {
 				std::cerr << "Error: read failed\n";
 				FT_ASSERT(0);
 			}
 			buffer[bytes_read] = 0;
+			std::cout << "Read:\n" << buffer << '\n';
 			connection->input += buffer;
 			//for (size_t i = 0; i < strlen(buffer); i++) {
 			//	printf("%x\n", buffer[i]);
@@ -146,6 +148,15 @@ void	Webserv::run(void) {
 			if (connection->completed_request()) {
 				t_http_request	request = connection->get_request();
 				_execute_request(request, client_idx);
+			} /* else if (something that has to be done without the full
+					request, example: the client expectes:CONTINUE)
+			{
+					...
+			} */
+			else {
+				std::cout << FT_ANSI_YELLOW
+					"Warning: not completed requst(bug or long request?)\n"
+					FT_ANSI_RESET;
 			}
 
 			//write(client_fd, http_response, strlen(http_response));
@@ -181,8 +192,25 @@ void	Webserv::_set_client_poll_events(short int events) {
 
 /* todo: */
 void	Webserv::_execute_request(t_http_request request, size_t client_idx) {
-	_close_client_connection(client_idx); // placeholder
-	(void)request;
+	switch (request.type) {
+		case (MethodType::GET): {
+			break ;
+		}
+		case (MethodType::POST): {
+			break ;
+		}
+		case (MethodType::DELETE): {
+			break ;
+		}
+		default: {
+			std::cerr << "Error: Unsupported request type: "
+				<< to_string(request.type) << "\n";
+			/* todo: send error response */
+			_close_client_connection(client_idx); // placeholder
+			return ;
+		}
+	}
+	/* todo: first handle error not checked in parser/lexer then execute */
 }
 
 /* TODO: Update for new ClientConnection */

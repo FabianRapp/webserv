@@ -32,6 +32,7 @@
 };
 
 /* todo: this is just a place holder */
+/* todo: uri refactore to a simple pair made by lexer */
 struct s_uri {
 	std::string	str;
 
@@ -60,12 +61,12 @@ struct s_uri {
 
 /*todo: this is only a rough basic idea */
 typedef struct http_request {
-	bool				finished;
-	MethodType			type;
+	bool				finished = false;
+	MethodType			type = MethodType::INVALID;
 	struct s_uri		uri;
 	struct s_version	version;
-	size_t				body_len;
+	size_t				body_len = 0;
 	/* todo: all header kinds */
-	std::string			body;
+	std::string			body = "";
 }	t_http_request;
 
