@@ -14,6 +14,8 @@ services:
       dockerfile: ./docker_testing/server/Dockerfile.our_server
     networks:
       - internal_network
+    volumes:
+      - data:/repo
 
   client:
     build:
@@ -23,6 +25,15 @@ services:
       - internal_network
     stdin_open: true
     tty: true
+
+volumes:
+  data:
+    name: "datada"
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: ../
 
 networks:
   internal_network:

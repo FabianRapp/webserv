@@ -50,7 +50,7 @@ leaks: clean
 
 $(OBJS_DIR)%.o: $(SRCS_DIR)%.cpp
 	@mkdir -p $(@D)
-	@$(CC) -c $< -o $@ $(CXXFLAGS) 
+	@$(CC) -c $< -o $@ $(CXXFLAGS)
 
 clean:
 	@rm -f $(OBJS)
