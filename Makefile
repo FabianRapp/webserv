@@ -35,7 +35,7 @@ CLEAR	=	\033[0m
 
 .PHONY: all normal leaks clean fclean re compile_commands.json client
 
-all: $(NAME) client
+all: $(NAME)
 
 $(NAME): $(OBJS)
 	$(CPP) $(CXXFLAGS) $(OBJS) -o $(NAME)

@@ -145,7 +145,8 @@ void	Webserv::run(void) {
 
 			/* todo: check for earlyer chunks of the msg etc.. */
 			connection->parse();
-			if (connection->completed_request()) {
+			bool testing_response = true;
+			if (testing_response || connection->completed_request()) {
 				t_http_request	request = connection->get_request();
 				_execute_request(request, client_idx);
 			} /* else if (something that has to be done without the full
@@ -192,6 +193,23 @@ void	Webserv::_set_client_poll_events(short int events) {
 
 /* todo: */
 void	Webserv::_execute_request(t_http_request request, size_t client_idx) {
+	std::cout << "Executiing request..\n";
+
+	ClientConnection	*connection = _client_connections[client_idx];
+
+	{ /* placeholder */
+		std::string	place_holder_response = "placeholder response";
+		if (send(connection->fd, place_holder_response.c_str(), place_holder_response.length(), 0) < 0) {
+			std::cerr << "Error: send error: " << strerror(errno) << '\n';
+			exit(1);
+		}
+		/* currently the client needs the conenction to be closed to know the msg is finished */
+		_close_client_connection(client_idx); // placeholder
+		return ;
+	}
+
+
+
 	switch (request.type) {
 		case (MethodType::GET): {
 			break ;

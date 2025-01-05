@@ -7,10 +7,11 @@
 #include <string>
 #include <poll.h>
 #include <netdb.h>
+#include <fcntl.h>
 
 int	main(void) {
-	const char				*hostname = "google.com";
-	const int16_t			port = 80;
+	const char				*hostname = "localhost";
+	const int16_t			port = 8080;
 	const struct hostent	*server = gethostbyname(hostname);
 	if (server == NULL) {
 		std::cerr << "Error: Server does not exist\n";
@@ -45,9 +46,10 @@ int	main(void) {
 		std::cerr << "Error: send error: " << strerror(errno) << '\n';
 		return (1);
 	}
-
+	std::cout << "requst send..\n";
 	int received;
 
+	/* why does this block if the server does not close the connection? */
 	while ((received = recv(fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
 		buffer[received] = '\0';
 		std::cout << buffer;

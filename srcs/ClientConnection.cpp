@@ -16,7 +16,7 @@ void	ClientConnection::parse(void) {
 
 /* only call this if completed_request returned true */
 t_http_request	ClientConnection::get_request(void) const {
-	FT_ASSERT(_parser.is_finished());
+	//FT_ASSERT(_parser.is_finished());
 	return (_parser.get_request());
 }
 
