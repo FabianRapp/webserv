@@ -33,9 +33,9 @@ YELLOW	=	\033[33m
 CYAN	=	\033[0;36m
 CLEAR	=	\033[0m
 
-.PHONY: all normal leaks clean fclean re compile_commands.json
+.PHONY: all normal leaks clean fclean re compile_commands.json client
 
-all: $(NAME)
+all: $(NAME) client
 
 $(NAME): $(OBJS)
 	$(CPP) $(CXXFLAGS) $(OBJS) -o $(NAME)
@@ -43,6 +43,9 @@ $(NAME): $(OBJS)
 
 normal: $(NAME)
 	@echo "$(GREEN) Compiled $(NAME) $(CLEAR)"
+
+client: client/client.cpp
+	$(CPP) $(CXXFLAGS) client/client.cpp -o client.out
 
 leaks: clean
 	make CXXFLAGS="$(CXXFLAGS) -g -DLEAKS"
@@ -59,6 +62,7 @@ clean:
 fclean:
 	@rm -rf $(OBJS_DIR)
 	@rm -f $(NAME)
+	@rm -f client.out
 	@echo "$(YELLOW) Cleaned object files, build directories and executables \
 		$(CLEAR)"
 
