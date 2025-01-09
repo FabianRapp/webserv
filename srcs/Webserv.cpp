@@ -191,25 +191,10 @@ void	Webserv::_set_client_poll_events(short int events) {
 	}
 }
 
-/* todo: */
-void	Webserv::_execute_request(t_http_request request, size_t client_idx) {
-	std::cout << "Executiing request..\n";
+std::string	Webserv::_build_response(t_http_request request, bool & close_connection) {
+	std::string	response = "HTTP/1.1 ";
 
-	ClientConnection	*connection = _client_connections[client_idx];
-
-	{ /* placeholder */
-		std::string	place_holder_response = "placeholder response";
-		if (send(connection->fd, place_holder_response.c_str(), place_holder_response.length(), 0) < 0) {
-			std::cerr << "Error: send error: " << strerror(errno) << '\n';
-			exit(1);
-		}
-		/* currently the client needs the conenction to be closed to know the msg is finished */
-		_close_client_connection(client_idx); // placeholder
-		return ;
-	}
-
-
-
+	close_connection = true; /* default for now == true */
 	switch (request.type) {
 		case (MethodType::GET): {
 			break ;
@@ -223,12 +208,30 @@ void	Webserv::_execute_request(t_http_request request, size_t client_idx) {
 		default: {
 			std::cerr << "Error: Unsupported request type: "
 				<< to_string(request.type) << "\n";
-			/* todo: send error response */
-			_close_client_connection(client_idx); // placeholder
-			return ;
+			response += "405 Method Not Allowed\r\n";
+			//response += "\r\n\r\n";
+			close_connection = true;
 		}
 	}
-	/* todo: first handle error not checked in parser/lexer then execute */
+	return (response);
+}
+
+/* todo: */
+void	Webserv::_execute_request(t_http_request request, size_t client_idx) {
+	std::cout << "Executiing request..\n";
+	/* todo: idk when the client does not expect a response yet */
+
+	ClientConnection	*connection = _client_connections[client_idx];
+	bool				close_connection;
+	std::string			response = _build_response(request, close_connection);
+
+	if (send(connection->fd, response.c_str(), response.length(), 0) < 0) {
+		std::cerr << "Error: send error: " << strerror(errno) << '\n';
+		exit(1);
+	}
+	if (close_connection) {
+		_close_client_connection(client_idx); // placeholder
+	}
 }
 
 /* TODO: Update for new ClientConnection */

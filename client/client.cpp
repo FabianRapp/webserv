@@ -12,6 +12,8 @@
 int	main(void) {
 	const char				*hostname = "localhost";
 	const int16_t			port = 8080;
+	//const char				*hostname = "google.com";
+	//const int16_t			port = 80;
 	const struct hostent	*server = gethostbyname(hostname);
 	if (server == NULL) {
 		std::cerr << "Error: Server does not exist\n";
@@ -38,7 +40,7 @@ int	main(void) {
 	
 
 	std::string	request =
-		std::string("GET / HTTP/1.1\r\n")
+		std::string("GETR / HTTP/1.1\r\n")
 		+ "Host: " + hostname + "\r\n"
 		+ "Connection: close\r\n\r\n"
 	;
@@ -52,6 +54,7 @@ int	main(void) {
 	/* why does this block if the server does not close the connection? */
 	while ((received = recv(fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
 		buffer[received] = '\0';
+		std::cout << "received " << received << "bytes\n";
 		std::cout << buffer;
 	}
 	if (received < 0) {

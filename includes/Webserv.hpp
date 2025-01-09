@@ -46,7 +46,7 @@ private:
 	struct sockaddr	*const _server_addr_ptr;
 	struct sockaddr	*const _client_addr_ptr;
 
-
+	std::string				_build_response(t_http_request request, bool & close_connection);
 	/* client connection managment */
 	struct pollfd			_client_fds[MAX_CLIENTS];
 	ClientConnection *		_client_connections[MAX_CLIENTS];
