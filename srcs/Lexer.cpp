@@ -58,14 +58,12 @@ void	Lexer::_advance(void) {
 /* For when a request is finsihed and the connection is held for more
 	requests. */
 void	Lexer::reset(void) {
+	_body_size = 0;
 }
 
-/* call this directtly when the body is to be expected
- * (last token was HEADER_TERMINATION) */
 Token	Lexer::next(void) {
-	std::cout << "Lexer: tryng to match \"" << _input.substr(_pos, 10) << "\":\n";
-	/* todo: is this too stupid? xd */
-	/* order might change if it makes sense idk */
+	std::cout << "Lexer: trying to match \"" << _input.substr(_pos, 10) << "...\":\n";
+
 	Token	token(TokenType::UNFINISHED);
 	if (_is_eof()) { /* first check */
 		/* does not need to advance or have any value so simply returns. */
@@ -88,7 +86,9 @@ Token	Lexer::next(void) {
 	} else if (_is_body_termination()) {
 		token = _extract_body_termination();
 	}
-
+	/* todo: check if the input can not possible be any valid field even when
+	 * more input is read (to prevent reading forever and waiting for the input
+	 * to for example match a header field when it should be an error */
 	return (token);
 }
 
@@ -144,19 +144,18 @@ Token	Lexer::_extract_method(void) {
 	return (Token(TokenType::METHOD, method.second));
 }
 
-
-std::pair<std::string, std::string>	Lexer::_match_uri(void) {
-	/* Termination: a sinlge SP (0x20) */
-	const static std::regex	patterns[] = {
-		std::regex("*\x20"),
-	};
-	for (auto & pattern : patterns) {
-		std::smatch	match;
-		if (std::regex_search(_input.begin() + static_cast<long>(_pos),
-			_input.end(), pattern)) {
-		}
-	}
-}
+//std::pair<std::string, std::string>	Lexer::_match_uri(void) {
+//	/* Termination: a sinlge SP (0x20) */
+//	const static std::regex	patterns[] = {
+//		std::regex("*\x20"),
+//	};
+//	for (auto & pattern : patterns) {
+//		std::smatch	match;
+//		if (std::regex_search(_input.begin() + static_cast<long>(_pos),
+//			_input.end(), pattern)) {
+//		}
+//	}
+//}
 
 /* todo: Placeholder */
 /*  Request-URI    = "*" | absoluteURI | abs_path | authority */
@@ -264,4 +263,8 @@ Token	Lexer::_extract_body_termination(void) {
 	FT_ASSERT(_input.size() >= _pos + body_termination_size);
 	_advance(body_termination_size);
 	return (Token(TokenType::BODY_TERMINATION));
+}
+
+void	Lexer::set_body_size(size_t size) {
+	_body_size = size;
 }

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <enums.hpp>
+#include <unordered_map>
 
 
 /* todo: this is just a place holder */
@@ -61,12 +62,11 @@ struct s_uri {
 
 /*todo: this is only a rough basic idea */
 typedef struct http_request {
-	bool				finished = false;
-	MethodType			type = MethodType::INVALID;
-	struct s_uri		uri;
-	struct s_version	version;
-	size_t				body_len = 0;
-	/* todo: all header kinds */
-	std::string			body = "";
+	bool										finished = false;
+	MethodType									type = MethodType::INVALID;
+	struct s_uri								uri;
+	struct s_version							version;
+	std::unordered_map<HeaderType, std::string>	headers;
+	std::string									body = "";
 }	t_http_request;
 

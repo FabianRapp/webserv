@@ -17,6 +17,8 @@ public:
 	Token				next(void);
 	void				reset(void); /* Resets the lexer for the next
 										request. */
+
+	void	set_body_size(size_t size);
 private:
 	std::string			&_input;
 	size_t				_pos;
