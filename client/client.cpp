@@ -40,7 +40,7 @@ int	main(void) {
 	
 
 	std::string	request =
-		std::string("GETR / HTTP/1.1\r\n")
+		std::string("GET / HTTP/1.1\r\n")
 		+ "Host: " + hostname + "\r\n"
 		+ "Connection: close\r\n\r\n"
 	;

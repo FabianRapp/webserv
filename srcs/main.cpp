@@ -1,6 +1,11 @@
 #include <Webserv.hpp>
 #include <StatusCodes.hpp>
 
+
+#include <ClientConnections.hpp>
+
+ 
+
 std::unordered_map<unsigned long, std::string>	StatusCodes::codes;
 void	init_status_codes(void) {
 	/* append section for info:

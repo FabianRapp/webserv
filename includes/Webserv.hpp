@@ -7,7 +7,9 @@
 #include <utils.hpp>
 #include <types.hpp>
 #include <ClientConnection.hpp>
+#include <ClientConnections.hpp>
 
+#include <thread>
 #include <unistd.h>
 #include <cstring>
 #include <errno.h>
@@ -21,10 +23,6 @@
 # define REQUEST_QUE_SIZE 10
 #endif
 
-#ifndef MAX_CLIENTS
-# define MAX_CLIENTS 3
-#endif
-
 class Webserv {
 public:
 					Webserv(void);
@@ -33,7 +31,7 @@ public:
 	[[noreturn]]
 	void			run(void);
 private:
-	void			_execute_request(t_http_request request, size_t client_idx);
+	void			_execute_request(t_http_request request, ClientConnection & connection);
 
 private:
 	int						_server_fd;
@@ -48,12 +46,13 @@ private:
 
 	std::string				_build_response(t_http_request request, bool & close_connection);
 	/* client connection managment */
-	struct pollfd			_client_fds[MAX_CLIENTS];
-	ClientConnection *		_client_connections[MAX_CLIENTS];
-	nfds_t					_active_client_count;
+	ClientConnections		_connections;
+	//struct pollfd			_client_fds[MAX_CLIENTS];
+	//ClientConnection *		_client_connections[MAX_CLIENTS];
+	//nfds_t					_active_client_count;
 	void					_accept_clients(void);
-	ClientConnection *		_add_client(t_fd fd);
-	void					_set_client_poll_events(short int event);
+	//void					_add_client(t_fd fd);
+	//void					_set_client_poll_events(short int event);
 
-	void					_close_client_connection(size_t client_idx);
+	//void					_close_client_connection(ClientConnection *connection);
 };

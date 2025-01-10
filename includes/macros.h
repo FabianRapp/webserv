@@ -8,6 +8,9 @@
     static_assert(0, "unsupported platform or linux/macos not detected");
 #endif
 
+#ifndef MAX_CLIENTS
+# define MAX_CLIENTS 3
+#endif
 
 #ifdef NDEBUG
 

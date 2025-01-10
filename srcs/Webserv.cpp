@@ -14,15 +14,15 @@ Webserv::Webserv(void):
 	_server_addr_len(static_cast<socklen_t>(sizeof _server_addr)),
 	_client_addr_len(static_cast<socklen_t>(sizeof _client_addr)),
 	_server_addr_ptr(reinterpret_cast<struct sockaddr *>(&_server_addr)),
-	_client_addr_ptr(reinterpret_cast<struct sockaddr *>(&_client_addr)),
-	_active_client_count(0)
+	_client_addr_ptr(reinterpret_cast<struct sockaddr *>(&_client_addr))
+	//_active_client_count(0)
 {
-	memset(_client_connections, 0, sizeof _client_connections);
-	for (auto & poll_fd : _client_fds) {
-		poll_fd.fd = -1;
-		poll_fd.events = 0;
-		poll_fd.revents = 0;
-	}
+	//memset(_client_connections, 0, sizeof _client_connections);
+	//for (auto & poll_fd : _client_fds) {
+	//	poll_fd.fd = -1;
+	//	poll_fd.events = 0;
+	//	poll_fd.revents = 0;
+	//}
 	/* AF_INET : ipv4
 	 * AF_INET6: ipv6 */
 	_server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -53,31 +53,31 @@ Webserv::Webserv(const char * config_file_path):
 	_server_addr_len(static_cast<socklen_t>(sizeof _server_addr)),
 	_client_addr_len(static_cast<socklen_t>(sizeof _client_addr)),
 	_server_addr_ptr(reinterpret_cast<struct sockaddr *>(&_server_addr)),
-	_client_addr_ptr(reinterpret_cast<struct sockaddr *>(&_client_addr)),
-	_active_client_count(0)
+	_client_addr_ptr(reinterpret_cast<struct sockaddr *>(&_client_addr))
 {
 	FT_ASSERT(0 && "not implemented");
 	(void)config_file_path;
 }
 
 Webserv::~Webserv(void) {
-	for (auto & poll_fd : _client_fds) {
-		if (poll_fd.fd > 0) {
-			close(poll_fd.fd);
-		}
-	}
+	//for (auto & poll_fd : _client_fds) {
+	//	if (poll_fd.fd > 0) {
+	//		close(poll_fd.fd);
+	//	}
+	//}
 }
 
 void	Webserv::_accept_clients(void) {
-	FT_ASSERT(_active_client_count <= MAX_CLIENTS);
-	if (_active_client_count == MAX_CLIENTS) {
+	FT_ASSERT(_connections.get_count() <= MAX_CLIENTS);
+	if (_connections.get_count() == MAX_CLIENTS) {
+		/*todo: send basic error response */
 		return ;
 	}
 	int	old_err = errno;
 	errno = 0;
 
 	int	new_client_fd;
-	while (_active_client_count < MAX_CLIENTS)
+	while (_connections.get_count() < MAX_CLIENTS)
 	{
 		struct pollfd	poll_fd = {
 			.fd = _server_fd,
@@ -98,8 +98,8 @@ void	Webserv::_accept_clients(void) {
 		if (new_client_fd < 0) {
 			break ;
 		}
-		ClientConnection * new_connection = _add_client(new_client_fd);
-		(void)new_connection; /* is this ptr needed here? */
+		_connections.add_client(new_client_fd);
+		//_add_client(new_client_fd);
 
 		std::cout << "Connection accepted from address("
 			<< inet_ntoa(_client_addr.sin_addr) << "): PORT("
@@ -113,42 +113,35 @@ void	Webserv::run(void) {
 	while (1) {
 		_accept_clients();
 
-		if (_active_client_count == 0) {
+		if (_connections.get_count() == 0) {
 			continue ;
 		}
-
-		_set_client_poll_events(POLLPRI | POLLIN);
-		for (size_t client_idx = 0; client_idx < MAX_CLIENTS; client_idx++) {
-			auto & client = _client_fds[client_idx];
-			if (client.fd == -1) {
-				continue ;
-			}
-			if (!(client.revents & (POLLIN | POLLPRI))) {
-				/* fd is not ready */
-				continue ;
-			}
-
-			ClientConnection	*connection = _client_connections[client_idx];
+		_connections.set_and_poll(POLLPRI | POLLIN);
+		//_set_client_poll_events(POLLPRI | POLLIN);
+		ClientConnections::PollIterator	it = _connections.begin(POLLPRI | POLLIN);
+		ClientConnections::PollIterator	end = _connections.end(POLLPRI | POLLIN);
+		while (it < end) {
+			ClientConnection&	connection = *it;
 			char		buffer[4096];
 			int			recv_flags = 0;//MSG_ERRQUEUE <- has smth to do with error checks
-			long int	bytes_read = recv(client.fd, buffer, sizeof buffer - 1, recv_flags);
+			long int	bytes_read = recv(connection.fd, buffer, sizeof buffer - 1, recv_flags);
 			if (bytes_read < 0) {
 				std::cerr << "Error: read failed\n";
 				FT_ASSERT(0);
 			}
 			buffer[bytes_read] = 0;
 			std::cout << "Read:\n" << buffer << '\n';
-			connection->input += buffer;
+			connection.input += buffer;
 			//for (size_t i = 0; i < strlen(buffer); i++) {
 			//	printf("%x\n", buffer[i]);
 			//}
 
 			/* todo: check for earlyer chunks of the msg etc.. */
-			connection->parse();
+			connection.parse();
 			bool testing_response = true;
-			if (testing_response || connection->completed_request()) {
-				t_http_request	request = connection->get_request();
-				_execute_request(request, client_idx);
+			if (testing_response || connection.completed_request()) {
+				t_http_request	request = connection.get_request();
+				_execute_request(request, connection);
 			} /* else if (something that has to be done without the full
 					request, example: the client expectes:CONTINUE)
 			{
@@ -159,35 +152,8 @@ void	Webserv::run(void) {
 					"Warning: not completed requst(bug or long request?)\n"
 					FT_ANSI_RESET;
 			}
-
-			//write(client_fd, http_response, strlen(http_response));
+			++it;
 		}
-	}
-}
-
-/* assumes space for the given client */
-ClientConnection *	Webserv::_add_client(t_fd fd) {
-	FT_ASSERT(_active_client_count < MAX_CLIENTS);
-	FT_ASSERT(fd > 0);
-	_active_client_count++;
-
-	for (size_t i = 0; i < MAX_CLIENTS; i++) {
-		if (_client_connections[i] == nullptr) {
-			_client_fds[i].fd = fd;
-			_client_connections[i] = new ClientConnection(_client_fds[i].fd);
-			return (_client_connections[i]);
-		}
-	}
-	FT_ASSERT(0);
-}
-
-void	Webserv::_set_client_poll_events(short int events) {
-	for (auto & client : _client_fds) {
-		client.events = events;
-	}
-	if (poll(_client_fds, _active_client_count, 0) < 0) {
-		std::cerr << "Error: poll: " << strerror(errno) << '(' << errno << ")\n";
-		FT_ASSERT(0);
 	}
 }
 
@@ -217,34 +183,18 @@ std::string	Webserv::_build_response(t_http_request request, bool & close_connec
 }
 
 /* todo: */
-void	Webserv::_execute_request(t_http_request request, size_t client_idx) {
+void	Webserv::_execute_request(t_http_request request, ClientConnection & connection) {
 	std::cout << "Executiing request..\n";
 	/* todo: idk when the client does not expect a response yet */
 
-	ClientConnection	*connection = _client_connections[client_idx];
 	bool				close_connection;
 	std::string			response = _build_response(request, close_connection);
 
-	if (send(connection->fd, response.c_str(), response.length(), 0) < 0) {
+	if (send(connection.fd, response.c_str(), response.length(), 0) < 0) {
 		std::cerr << "Error: send error: " << strerror(errno) << '\n';
 		exit(1);
 	}
 	if (close_connection) {
-		_close_client_connection(client_idx); // placeholder
+		_connections.close_client_connection(&connection); // placeholder
 	}
-}
-
-/* TODO: Update for new ClientConnection */
-void	Webserv::_close_client_connection(size_t client_idx) {
-	auto &	poll_fd = _client_fds[client_idx];
-	FT_ASSERT(poll_fd.fd > 0);
-
-	delete _client_connections[client_idx];
-	_client_connections[client_idx] = nullptr;
-
-	/* fd allready closed in destructor of ClientConnection */
-	poll_fd.events = 0;
-	poll_fd.revents = 0;
-	poll_fd.fd = -1;
-	_active_client_count--;
 }

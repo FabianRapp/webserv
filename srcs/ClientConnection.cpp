@@ -1,6 +1,10 @@
 #include <ClientConnection.hpp>
 
-ClientConnection::ClientConnection(const t_fd & fd): fd(fd), _parser(input) {}
+ClientConnection::ClientConnection(const t_fd & fd, int idx)
+:	fd(fd),
+	client_idx(idx),
+	_parser(input)
+{}
 
 ClientConnection::~ClientConnection(void) {
 	close(fd);

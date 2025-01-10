@@ -22,6 +22,7 @@ SRCS := main.cpp \
 		utils.cpp \
 		to_string.cpp \
 		ClientConnection.cpp \
+		ClientConnections.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 
