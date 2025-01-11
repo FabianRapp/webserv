@@ -23,6 +23,7 @@ SRCS := main.cpp \
 		to_string.cpp \
 		ClientConnection.cpp \
 		ClientConnections.cpp \
+		NewClientListener.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 
@@ -63,7 +64,6 @@ clean:
 fclean:
 	@rm -rf $(OBJS_DIR)
 	@rm -f $(NAME)
-	@rm -f client.out
 	@echo "$(YELLOW) Cleaned object files, build directories and executables \
 		$(CLEAR)"
 

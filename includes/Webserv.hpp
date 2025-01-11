@@ -8,6 +8,7 @@
 #include <types.hpp>
 #include <ClientConnection.hpp>
 #include <ClientConnections.hpp>
+#include <NewClientListener.hpp>
 
 #include <thread>
 #include <unistd.h>
@@ -34,7 +35,8 @@ private:
 	void			_execute_request(t_http_request request, ClientConnection & connection);
 
 private:
-	int						_server_fd;
+	NewClientListener		_listener;
+	std::atomic<bool>		_exit;
 
 	struct sockaddr_in		_server_addr;
 	const socklen_t			_server_addr_len;
@@ -43,16 +45,7 @@ private:
 	/* to avoid pointer casts every where */
 	struct sockaddr	*const _server_addr_ptr;
 	struct sockaddr	*const _client_addr_ptr;
+	ClientConnections		_connections;
 
 	std::string				_build_response(t_http_request request, bool & close_connection);
-	/* client connection managment */
-	ClientConnections		_connections;
-	//struct pollfd			_client_fds[MAX_CLIENTS];
-	//ClientConnection *		_client_connections[MAX_CLIENTS];
-	//nfds_t					_active_client_count;
-	void					_accept_clients(void);
-	//void					_add_client(t_fd fd);
-	//void					_set_client_poll_events(short int event);
-
-	//void					_close_client_connection(ClientConnection *connection);
 };

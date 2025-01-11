@@ -11,45 +11,43 @@ static struct sockaddr_in	make_addr(unsigned short port) {
 }
 
 Webserv::Webserv(void):
+	_listener(_exit, _connections),
+	_exit(false),
 	_server_addr_len(static_cast<socklen_t>(sizeof _server_addr)),
 	_client_addr_len(static_cast<socklen_t>(sizeof _client_addr)),
 	_server_addr_ptr(reinterpret_cast<struct sockaddr *>(&_server_addr)),
 	_client_addr_ptr(reinterpret_cast<struct sockaddr *>(&_client_addr))
-	//_active_client_count(0)
 {
-	//memset(_client_connections, 0, sizeof _client_connections);
-	//for (auto & poll_fd : _client_fds) {
-	//	poll_fd.fd = -1;
-	//	poll_fd.events = 0;
-	//	poll_fd.revents = 0;
-	//}
 	/* AF_INET : ipv4
 	 * AF_INET6: ipv6 */
-	_server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (_server_fd < 0) {
+	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (server_fd < 0) {
 		std::cerr << "Error: server: socket: " << strerror(errno) << '\n';
 		exit(errno);
 	}
-	_server_fd = set_fd_non_block(_server_fd);
-	if (_server_fd < 0) {
+	server_fd = set_fd_non_block(server_fd);
+	if (server_fd < 0) {
 		exit(errno);
 	}
 	_server_addr = make_addr(8080);
-	if (bind(_server_fd, _server_addr_ptr, _server_addr_len) < 0) {
-		close(_server_fd);
+	if (bind(server_fd, _server_addr_ptr, _server_addr_len) < 0) {
+		close(server_fd);
 		std::cerr << "Error: " << strerror(errno) << '\n';
 		exit(errno);
 	}
-	if (listen(_server_fd, REQUEST_QUE_SIZE) < 0) {
-		close(_server_fd);
+	if (listen(server_fd, REQUEST_QUE_SIZE) < 0) {
+		close(server_fd);
 		std::cerr << "Error: " << strerror(errno) << '\n';
 		exit(errno);
 	}
+	_listener.set_server_fd(server_fd);
 	std::cout << "Started server on port 8080...\n";
 }
 
 /* todo: parse config file */
 Webserv::Webserv(const char * config_file_path):
+	_listener(_exit, _connections),
+	_exit(false),
 	_server_addr_len(static_cast<socklen_t>(sizeof _server_addr)),
 	_client_addr_len(static_cast<socklen_t>(sizeof _client_addr)),
 	_server_addr_ptr(reinterpret_cast<struct sockaddr *>(&_server_addr)),
@@ -60,64 +58,59 @@ Webserv::Webserv(const char * config_file_path):
 }
 
 Webserv::~Webserv(void) {
-	//for (auto & poll_fd : _client_fds) {
-	//	if (poll_fd.fd > 0) {
-	//		close(poll_fd.fd);
-	//	}
-	//}
+	_listener.join_thread();
 }
 
-void	Webserv::_accept_clients(void) {
-	FT_ASSERT(_connections.get_count() <= MAX_CLIENTS);
-	if (_connections.get_count() == MAX_CLIENTS) {
-		/*todo: send basic error response */
-		return ;
-	}
-	int	old_err = errno;
-	errno = 0;
-
-	int	new_client_fd;
-	while (_connections.get_count() < MAX_CLIENTS)
-	{
-		struct pollfd	poll_fd = {
-			.fd = _server_fd,
-			.events = POLLIN,
-			.revents = 0,
-		};
-		if (poll(&poll_fd, 1, 0) < 0) {
-			FT_ASSERT(0 && "poll failed");
-		}
-		if (!(poll_fd.revents & POLLIN)) {
-			return ;
-		}
-		new_client_fd = accept(_server_fd, _client_addr_ptr, &_client_addr_len);
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-			FT_ASSERT(0 && "Should have been handled by poll");
-		}
-		new_client_fd = set_fd_non_block(new_client_fd);
-		if (new_client_fd < 0) {
-			break ;
-		}
-		_connections.add_client(new_client_fd);
-		//_add_client(new_client_fd);
-
-		std::cout << "Connection accepted from address("
-			<< inet_ntoa(_client_addr.sin_addr) << "): PORT("
-			<< ntohs(_client_addr.sin_port) << ")\n";
-	}
-	errno = old_err;
-}
+//void	Webserv::_listener(void) {
+//	FT_ASSERT(_connections.get_count() <= MAX_CLIENTS);
+//	if (_connections.get_count() == MAX_CLIENTS) {
+//		/*todo: send basic error response */
+//		return ;
+//	}
+//	int	old_err = errno;
+//	errno = 0;
+//
+//	int	new_client_fd;
+//	while (_connections.get_count() < MAX_CLIENTS)
+//	{
+//		struct pollfd	poll_fd = {
+//			.fd = _server_fd,
+//			.events = POLLIN,
+//			.revents = 0,
+//		};
+//		if (poll(&poll_fd, 1, 0) < 0) {
+//			FT_ASSERT(0 && "poll failed");
+//		}
+//		if (!(poll_fd.revents & POLLIN)) {
+//			return ;
+//		}
+//		new_client_fd = accept(_server_fd, _client_addr_ptr, &_client_addr_len);
+//		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+//			FT_ASSERT(0 && "Should have been handled by poll");
+//		}
+//		new_client_fd = set_fd_non_block(new_client_fd);
+//		if (new_client_fd < 0) {
+//			break ;
+//		}
+//		_connections.add_client(new_client_fd);
+//
+//		std::cout << "Connection accepted from address("
+//			<< inet_ntoa(_client_addr.sin_addr) << "): PORT("
+//			<< ntohs(_client_addr.sin_port) << ")\n";
+//	}
+//	errno = old_err;
+//}
 
 [[noreturn]]
 void	Webserv::run(void) {
+	_listener.run();
 	while (1) {
-		_accept_clients();
+		//_accept_clients();
 
 		if (_connections.get_count() == 0) {
 			continue ;
 		}
 		_connections.set_and_poll(POLLPRI | POLLIN);
-		//_set_client_poll_events(POLLPRI | POLLIN);
 		ClientConnections::PollIterator	it = _connections.begin(POLLPRI | POLLIN);
 		ClientConnections::PollIterator	end = _connections.end(POLLPRI | POLLIN);
 		while (it < end) {
