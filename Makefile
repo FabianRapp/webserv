@@ -24,6 +24,7 @@ SRCS := main.cpp \
 		ClientConnection.cpp \
 		ClientConnections.cpp \
 		NewClientListener.cpp \
+		config_parser.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 

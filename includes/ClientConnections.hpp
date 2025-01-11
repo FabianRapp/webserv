@@ -3,6 +3,7 @@
 #include <poll.h>
 #include <macros.h>
 
+/* NewClientListenter is only allowed to call add_client() and get_count() */
 class ClientConnections {
 public:
 	/* do not use these within the class */

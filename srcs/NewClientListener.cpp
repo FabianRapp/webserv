@@ -32,9 +32,8 @@ void	NewClientListener::_loop(void) {
 	errno = 0;
 	struct sockaddr_in		addr;
 	socklen_t				addr_len = static_cast<socklen_t>(sizeof addr);
-	struct sockaddr	*const addr_ptr =
+	struct sockaddr			*const addr_ptr =
 		reinterpret_cast<struct sockaddr *>(&addr);
-	memset(&addr, 0, sizeof addr)	;
 	std::cout << "entering listerner loop..\n";
 	while (!_exit) {
 		FT_ASSERT(_connections.get_count() <= MAX_CLIENTS);
@@ -52,11 +51,12 @@ void	NewClientListener::_loop(void) {
 				.revents = 0,
 			};
 			if (poll(&poll_fd, 1, 0) < 0) {
-				FT_ASSERT(0 && "poll failed");
+				FT_ASSERT(0 && "server_fd poll failed");
 			}
 			if (!(poll_fd.revents & POLLIN)) {
 				continue ;
 			}
+			memset(&addr, 0, sizeof addr);// might not be needed
 			new_client_fd = accept(_server_fd, addr_ptr, &addr_len);
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				FT_ASSERT(0 && "Should have been handled by poll");

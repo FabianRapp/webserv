@@ -10,13 +10,11 @@ static struct sockaddr_in	make_addr(unsigned short port) {
 	return (addr);
 }
 
-Webserv::Webserv(void):
+Webserv::Webserv(struct server_config):
 	_listener(_exit, _connections),
 	_exit(false),
 	_server_addr_len(static_cast<socklen_t>(sizeof _server_addr)),
-	_client_addr_len(static_cast<socklen_t>(sizeof _client_addr)),
-	_server_addr_ptr(reinterpret_cast<struct sockaddr *>(&_server_addr)),
-	_client_addr_ptr(reinterpret_cast<struct sockaddr *>(&_client_addr))
+	_server_addr_ptr(reinterpret_cast<struct sockaddr *>(&_server_addr))
 {
 	/* AF_INET : ipv4
 	 * AF_INET6: ipv6 */
@@ -44,62 +42,9 @@ Webserv::Webserv(void):
 	std::cout << "Started server on port 8080...\n";
 }
 
-/* todo: parse config file */
-Webserv::Webserv(const char * config_file_path):
-	_listener(_exit, _connections),
-	_exit(false),
-	_server_addr_len(static_cast<socklen_t>(sizeof _server_addr)),
-	_client_addr_len(static_cast<socklen_t>(sizeof _client_addr)),
-	_server_addr_ptr(reinterpret_cast<struct sockaddr *>(&_server_addr)),
-	_client_addr_ptr(reinterpret_cast<struct sockaddr *>(&_client_addr))
-{
-	FT_ASSERT(0 && "not implemented");
-	(void)config_file_path;
-}
-
 Webserv::~Webserv(void) {
 	_listener.join_thread();
 }
-
-//void	Webserv::_listener(void) {
-//	FT_ASSERT(_connections.get_count() <= MAX_CLIENTS);
-//	if (_connections.get_count() == MAX_CLIENTS) {
-//		/*todo: send basic error response */
-//		return ;
-//	}
-//	int	old_err = errno;
-//	errno = 0;
-//
-//	int	new_client_fd;
-//	while (_connections.get_count() < MAX_CLIENTS)
-//	{
-//		struct pollfd	poll_fd = {
-//			.fd = _server_fd,
-//			.events = POLLIN,
-//			.revents = 0,
-//		};
-//		if (poll(&poll_fd, 1, 0) < 0) {
-//			FT_ASSERT(0 && "poll failed");
-//		}
-//		if (!(poll_fd.revents & POLLIN)) {
-//			return ;
-//		}
-//		new_client_fd = accept(_server_fd, _client_addr_ptr, &_client_addr_len);
-//		if (errno == EAGAIN || errno == EWOULDBLOCK) {
-//			FT_ASSERT(0 && "Should have been handled by poll");
-//		}
-//		new_client_fd = set_fd_non_block(new_client_fd);
-//		if (new_client_fd < 0) {
-//			break ;
-//		}
-//		_connections.add_client(new_client_fd);
-//
-//		std::cout << "Connection accepted from address("
-//			<< inet_ntoa(_client_addr.sin_addr) << "): PORT("
-//			<< ntohs(_client_addr.sin_port) << ")\n";
-//	}
-//	errno = old_err;
-//}
 
 [[noreturn]]
 void	Webserv::run(void) {
