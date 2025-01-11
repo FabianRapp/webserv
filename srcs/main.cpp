@@ -67,7 +67,7 @@ int	main(int ac, char *av[]) {
 	std::vector<std::pair<std::thread, Webserv*>>	servers;
 	
 
-	struct total_config	total_config;
+	struct total_config		total_config;
 	struct server_config	server_config;
 	
 
