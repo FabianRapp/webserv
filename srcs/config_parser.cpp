@@ -1,11 +1,22 @@
 #include <Webserv.hpp>
 #include <config_parser.hpp>
 
+#include <fstream>
+
 struct total_config	parse_config(char *config_file) {
-	(void)config_file;
 	struct total_config	total_config;
-	
-	memset(&total_config, 0, sizeof total_config);
+
+	std::ifstream file(config_file);
+	if (!file.is_open() )
+	{
+		throw std::runtime_error("Failed to open config file");
+	}
+
+	std::cout << "File opened succesfully" << std::endl;
+
+	 file.close();
+
+	// memset(&total_config, 0, sizeof total_config);
 	/*todo: parsing */
 	return (total_config);
 }

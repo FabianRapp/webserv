@@ -1,0 +1,7 @@
+{
+	"files.associations": {
+		"*.c": "c",
+		"map": "cpp",
+		"utility": "cpp"
+	}
+}
