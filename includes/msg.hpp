@@ -69,4 +69,3 @@ typedef struct http_request {
 	std::unordered_map<HeaderType, std::string>	headers;
 	std::string									body = "";
 }	t_http_request;
-
