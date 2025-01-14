@@ -75,11 +75,15 @@ void	Webserv::run(void) {
 			//}
 
 			/* todo: check for earlyer chunks of the msg etc.. */
-			connection.parse();
-			bool testing_response = true;
-			if (testing_response || connection.completed_request()) {
+			if (Parser::is_header_present(connection.input) == true)
+			{
+				connection.parse();
+				bool testing_response = true;
+				if (testing_response || connection.completed_request()) {
 				Request	request = connection.get_request();
+
 				// _execute_request(request, connection);
+				}
 			} /* else if (something that has to be done without the full
 					request, example: the client expectes:CONTINUE)
 			{
@@ -87,7 +91,7 @@ void	Webserv::run(void) {
 			} */
 			else {
 				std::cout << FT_ANSI_YELLOW
-					"Warning: not completed requst(bug or long request?)\n"
+					"Warning: not completed request(bug or long request?)\n"
 					FT_ANSI_RESET;
 			}
 			++it;

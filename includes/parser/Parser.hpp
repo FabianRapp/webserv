@@ -8,6 +8,7 @@
 #include "../macros.h"
 #include <string>
 #include <iostream>
+#include <vector>
 
 // /* todo: parse(): main logic */
 // /* assumes one parser object per client connection */
@@ -45,19 +46,25 @@
 // 		Lexer			_lexer;
 // };
 
+using vector = std::vector<std::string>;
+
 class Parser {
 	private:
 		Request		_request;
-		// void		_handle_header(Token& token);
-		// void		_reset(void);
 		std::string	_request_content;
 
 	public:
 		Parser() = default;
 		~Parser() = default;
 
-		void	parse(std::string input);
-		bool	is_finished(void) const;
-		Request	get_request(void) const;
+		void		parse(std::string input);
+		void		parse_first_line(std::string input);
+		static bool	is_header_present(const std::string& str);
+		std::string extract_first_line(const std::string& request);
+		std::vector<std::string> split(const std::string& str, char delimiter);
 
+
+		bool		ends_with(const std::string& str, const std::string& suffix);
+		bool		is_finished(void) const;
+		Request		get_request(void) const;
 };
