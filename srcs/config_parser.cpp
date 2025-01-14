@@ -14,7 +14,7 @@ struct total_config	parse_config(char *config_file) {
 
 	std::cout << "File opened succesfully" << std::endl;
 
-	 file.close();
+	file.close();
 
 	// memset(&total_config, 0, sizeof total_config);
 	/*todo: parsing */

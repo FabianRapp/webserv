@@ -63,13 +63,13 @@ void	init(void) {
 
 int	main(int ac, char *av[]) {
 	init();
-	
+
 	std::vector<std::pair<std::thread, Webserv*>>	servers;
-	
+
 
 	struct total_config		total_config;
 	struct server_config	server_config;
-	
+
 
 	std::pair<std::thread, Webserv*>	cur;
 	if (ac == 1) {
@@ -80,8 +80,7 @@ int	main(int ac, char *av[]) {
 	} else if (ac == 2) {
 		/*todo: try catch errors.. */
 		total_config = parse_config(av[1]);
-		for (size_t server_idx = 0; server_idx < total_config.server_count;
-			server_idx++)
+		for (size_t server_idx = 0; server_idx < total_config.server_count; server_idx++)
 		{
 			server_config = get_server_config(total_config, server_idx);
 			cur.second = new Webserv(server_config);
