@@ -1,7 +1,7 @@
 #pragma once
 
-#include <enums.hpp>
-#include <macros.h>
+#include "../enums.hpp"
+#include "../macros.h"
 
 #include <string>
 #include <variant>

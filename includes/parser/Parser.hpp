@@ -1,11 +1,11 @@
 #pragma once
 
-#include <msg.hpp>
-#include <Token.hpp>
-#include <Lexer.hpp>
-#include <Request.hpp>
+#include "../msg.hpp"
+#include "Token.hpp"
+#include "Lexer.hpp"
+#include "../Request.hpp"
 
-#include <macros.h>
+#include "../macros.h"
 #include <string>
 #include <iostream>
 
@@ -28,36 +28,36 @@
 // 	Lexer			_lexer;
 // };
 
-class Parser {
-	public:
-		Parser(std::string & http_input);
-		~Parser(void);
-		void			parse(void);
-		bool			is_finished(void) const; /* to check wether the read request is complete or needs to be read further */
-		t_http_request	get_request(void) const; /* once is_finished is true this can be
-		called. Resets the parser/lexer for the next client request with the same
-		connection. */
-
-	private:
-		void			_reset(void);
-		void			_handle_header(Token & token);
-		t_http_request	_request;
-		Lexer			_lexer;
-};
-
 // class Parser {
-// 	private:
-// 		Request	_request;
-// 		Lexer	_lexer;
-// 		void	_handle_header(Token& token);
-// 		void	_reset(void);
-
 // 	public:
-// 		Parser(std::string & input);
-// 		~Parser();
+// 		Parser(std::string & http_input);
+// 		~Parser(void);
+// 		void			parse(void);
+// 		bool			is_finished(void) const; /* to check wether the read request is complete or needs to be read further */
+// 		t_http_request	get_request(void) const; /* once is_finished is true this can be
+// 		called. Resets the parser/lexer for the next client request with the same
+// 		connection. */
 
-// 		void	parse(void);
-// 		bool	is_finished(void) const;
-// 		Request	get_request(void) const;
-
+// 	private:
+// 		void			_reset(void);
+// 		void			_handle_header(Token & token);
+// 		t_http_request	_request;
+// 		Lexer			_lexer;
 // };
+
+class Parser {
+	private:
+		Request		_request;
+		// void		_handle_header(Token& token);
+		// void		_reset(void);
+		std::string	_request_content;
+
+	public:
+		Parser() = default;
+		~Parser() = default;
+
+		void	parse(std::string input);
+		bool	is_finished(void) const;
+		Request	get_request(void) const;
+
+};

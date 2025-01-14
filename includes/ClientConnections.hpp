@@ -1,7 +1,7 @@
 #pragma once
-#include <ClientConnection.hpp>
+#include "ClientConnection.hpp"
 #include <poll.h>
-#include <macros.h>
+#include "macros.h"
 
 /* NewClientListenter is only allowed to call add_client() and get_count() */
 class ClientConnections {

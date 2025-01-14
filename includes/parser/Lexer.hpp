@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Token.hpp>
+#include "Token.hpp"
 #include <cstdbool>
 #include <iostream>
 #include <cstdint>

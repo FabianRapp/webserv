@@ -1,14 +1,14 @@
 #pragma once
 
-#include <colors.h>
-#include <Token.hpp>
-#include <msg.hpp>
-#include <Parser.hpp>
-#include <utils.hpp>
-#include <types.hpp>
-#include <ClientConnection.hpp>
-#include <ClientConnections.hpp>
-#include <NewClientListener.hpp>
+#include "colors.h"
+#include "./parser/Token.hpp"
+#include "msg.hpp"
+#include "./parser/Parser.hpp"
+#include "utils.hpp"
+#include "types.hpp"
+#include "ClientConnection.hpp"
+#include "ClientConnections.hpp"
+#include "NewClientListener.hpp"
 
 #include <thread>
 #include <unistd.h>
