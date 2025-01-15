@@ -18,6 +18,7 @@ Webserv::Webserv(struct server_config):
 {
 	/* AF_INET : ipv4
 	 * AF_INET6: ipv6 */
+	init_status_codes(_codes);
 	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd < 0) {
 		std::cerr << "Error: server: socket: " << strerror(errno) << '\n';
@@ -75,20 +76,26 @@ void	Webserv::run(void) {
 			//}
 
 			/* todo: check for earlyer chunks of the msg etc.. */
-			connection.parse();
-			bool testing_response = true;
-			if (testing_response || connection.completed_request()) {
-				t_http_request	request = connection.get_request();
-				_execute_request(request, connection);
-			} /* else if (something that has to be done without the full
-					request, example: the client expectes:CONTINUE)
-			{
-					...
-			} */
-			else {
-				std::cout << FT_ANSI_YELLOW
-					"Warning: not completed requst(bug or long request?)\n"
-					FT_ANSI_RESET;
+			try {
+				throw(SendClientError(404, _codes[404], "testing", true));
+				connection.parse();
+				bool testing_response = true;
+				if (testing_response || connection.completed_request()) {
+					t_http_request	request = connection.get_request();
+					_execute_request(request, connection);
+				} /* else if (something that has to be done without the full
+						request, example: the client expectes:CONTINUE)
+				{
+						...
+				} */
+
+				else {
+					std::cout << FT_ANSI_YELLOW
+						"Warning: not completed requst(bug or long request?)\n"
+						FT_ANSI_RESET;
+				}
+			} catch (const SendClientError& err) {
+				_default_err_response(connection, err);
 			}
 			++it;
 		}
@@ -135,4 +142,37 @@ void	Webserv::_execute_request(t_http_request request, ClientConnection & connec
 	if (close_connection) {
 		_connections.close_client_connection(&connection); // placeholder
 	}
+}
+
+void	Webserv::_default_err_response(ClientConnection& connection,
+		const SendClientError& err)
+{
+	const std::string code_str = std::to_string(err.err_code);
+	std::string	response = "HTTP/1.1 " + code_str + " " + err.title + "\r\n";
+	std::string	body =
+		"<!DOCTYPE html>"
+		"<html>"
+		"<head><title>" + code_str + " " + err.title + "</title></head>"
+		"<body><h1>" + err.title + "</h1><p>" + err.msg + "</p></body>"
+		"</html>";
+	;
+	const std::string	content_len = "Content-Length: "
+		+ std::to_string(body.size())
+		+ "\r\n";
+	response += "Content-Type: text/html\r\n";
+	response += content_len;
+	response += "\r\n";
+	response += body;
+	//response += "0\r\n\r\n";
+	if (send(connection.fd, response.c_str(), response.length(), 0) < 0) {
+		std::cerr << "Error: send error: " << strerror(errno) << '\n';
+		exit(1);
+	}
+	if (err.close_connection) {
+		_connections.close_client_connection(&connection);
+	}
+}
+
+void	Webserv::set_exit(void) {
+	_exit = true;
 }

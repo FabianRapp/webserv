@@ -9,6 +9,7 @@
 #include <ClientConnection.hpp>
 #include <ClientConnections.hpp>
 #include <NewClientListener.hpp>
+#include <Exceptions.hpp>
 
 #include <thread>
 #include <unistd.h>
@@ -30,8 +31,12 @@ public:
 					~Webserv(void);
 	[[noreturn]]
 	void			run(void);
+	void			set_exit(void);
 private:
 	void			_execute_request(t_http_request request, ClientConnection & connection);
+
+	void			_default_err_response(ClientConnection& connection,
+						const SendClientError& err);
 
 private:
 	NewClientListener		_listener;
@@ -45,4 +50,5 @@ private:
 	ClientConnections		_connections;
 
 	std::string				_build_response(t_http_request request, bool & close_connection);
+	std::unordered_map<unsigned long, std::string>	_codes;
 };
