@@ -51,9 +51,9 @@ Webserv::~Webserv(void) {
 void	Webserv::run(void) {
 	_listener.run();
 	while (1) {
-		//_accept_clients();
-
 		if (_connections.get_count() == 0) {
+			/* todo: implement some wake up condition that the listener thread
+			 * can set to avoid this dead loop */
 			continue ;
 		}
 		_connections.set_and_poll(POLLPRI | POLLIN | POLLOUT);
@@ -75,13 +75,12 @@ void	Webserv::run(void) {
 				buffer[bytes_read] = 0;
 				std::cout << "Read:\n" << buffer << '\n';
 				connection.input += buffer;
-				//for (size_t i = 0; i < strlen(buffer); i++) {
-				//	printf("%x\n", buffer[i]);
-				//}
 
 				/* todo: check for earlyer chunks of the msg etc.. */
 				try {
-					throw (SendClientError(404, _codes[404], "testing", true));
+					/* todo: this throw is just for testing */
+					//throw (SendClientError(404, _codes[404], "testing", true));
+
 					connection.parse();
 					bool testing_response = true;
 					if (testing_response || connection.completed_request()) {
