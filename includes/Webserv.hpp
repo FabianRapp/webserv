@@ -25,6 +25,7 @@
 # define REQUEST_QUE_SIZE 10
 #endif
 
+
 class Webserv {
 public:
 					Webserv(struct server_config);
@@ -51,4 +52,5 @@ private:
 
 	std::string				_build_response(t_http_request request, bool & close_connection);
 	std::unordered_map<unsigned long, std::string>	_codes;
+
 };

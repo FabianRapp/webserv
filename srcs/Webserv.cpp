@@ -56,48 +56,69 @@ void	Webserv::run(void) {
 		if (_connections.get_count() == 0) {
 			continue ;
 		}
-		_connections.set_and_poll(POLLPRI | POLLIN);
-		ClientConnections::PollIterator	it = _connections.begin(POLLPRI | POLLIN);
-		ClientConnections::PollIterator	end = _connections.end(POLLPRI | POLLIN);
-		while (it < end) {
-			ClientConnection&	connection = *it;
-			char		buffer[4096];
-			int			recv_flags = 0;//MSG_ERRQUEUE <- has smth to do with error checks
-			long int	bytes_read = recv(connection.fd, buffer, sizeof buffer - 1, recv_flags);
-			if (bytes_read < 0) {
-				std::cerr << "Error: read failed\n";
-				FT_ASSERT(0);
-			}
-			buffer[bytes_read] = 0;
-			std::cout << "Read:\n" << buffer << '\n';
-			connection.input += buffer;
-			//for (size_t i = 0; i < strlen(buffer); i++) {
-			//	printf("%x\n", buffer[i]);
-			//}
-
-			/* todo: check for earlyer chunks of the msg etc.. */
-			try {
-				throw(SendClientError(404, _codes[404], "testing", true));
-				connection.parse();
-				bool testing_response = true;
-				if (testing_response || connection.completed_request()) {
-					t_http_request	request = connection.get_request();
-					_execute_request(request, connection);
-				} /* else if (something that has to be done without the full
-						request, example: the client expectes:CONTINUE)
-				{
-						...
-				} */
-
-				else {
-					std::cout << FT_ANSI_YELLOW
-						"Warning: not completed requst(bug or long request?)\n"
-						FT_ANSI_RESET;
+		_connections.set_and_poll(POLLPRI | POLLIN | POLLOUT);
+		{
+			ClientConnections::PollIterator	it = _connections.begin(POLLPRI | POLLIN);
+			ClientConnections::PollIterator	end = _connections.end(POLLPRI | POLLIN);
+			for (; it < end; ++it) {
+				ClientConnection&	connection = *it;
+				if (connection.current_mode != ConnectionMode::RESEIVING) {
+					continue ;
 				}
-			} catch (const SendClientError& err) {
-				_default_err_response(connection, err);
+				char		buffer[4096];
+				int			recv_flags = 0;//MSG_ERRQUEUE <- has smth to do with error checks
+				long int	bytes_read = recv(connection.fd, buffer, sizeof buffer - 1, recv_flags);
+				if (bytes_read < 0) {
+					std::cerr << "Error: read failed\n";
+					FT_ASSERT(0);
+				}
+				buffer[bytes_read] = 0;
+				std::cout << "Read:\n" << buffer << '\n';
+				connection.input += buffer;
+				//for (size_t i = 0; i < strlen(buffer); i++) {
+				//	printf("%x\n", buffer[i]);
+				//}
+
+				/* todo: check for earlyer chunks of the msg etc.. */
+				try {
+					throw (SendClientError(404, _codes[404], "testing", true));
+					connection.parse();
+					bool testing_response = true;
+					if (testing_response || connection.completed_request()) {
+						connection.current_mode = ConnectionMode::RESEIVING;
+						t_http_request	request = connection.get_request();
+						bool	placeholder_close_connection;
+						std::string	response = _build_response(request, placeholder_close_connection);
+						connection.set_response(std::move(response), placeholder_close_connection);
+					}
+				} catch (const SendClientError& err) {
+					_default_err_response(connection, err);
+				}
 			}
-			++it;
+		}
+		{
+			ClientConnections::PollIterator	it = _connections.begin(POLLOUT);
+			ClientConnections::PollIterator	end = _connections.end(POLLOUT);
+			for (; it < end; ++it) {
+				ClientConnection&	connection = *it;
+				if (connection.current_mode != ConnectionMode::SENDING) {
+					continue ;
+				}
+				//try {
+					connection.send_response();
+					if (connection.finished_sending()) {
+						if (connection.should_close_after_send()) {
+							connection.close_after_loop = true;
+							// todo: connections habe to be closed at the end of outer loop to not break iterators
+							_connections.close_client_connection(&connection);
+						} else {
+							connection.current_mode = ConnectionMode::RESEIVING;
+						}
+					}
+				//} catch (const & err) {
+					// todo: send/malloc fail handling
+				//}
+			}
 		}
 	}
 }
@@ -163,14 +184,9 @@ void	Webserv::_default_err_response(ClientConnection& connection,
 	response += content_len;
 	response += "\r\n";
 	response += body;
-	//response += "0\r\n\r\n";
-	if (send(connection.fd, response.c_str(), response.length(), 0) < 0) {
-		std::cerr << "Error: send error: " << strerror(errno) << '\n';
-		exit(1);
-	}
-	if (err.close_connection) {
-		_connections.close_client_connection(&connection);
-	}
+	//response += "0\r\n\r\n";//todo: this is only for chunked mode right?
+
+	connection.set_response(std::move(response), err.close_connection);
 }
 
 void	Webserv::set_exit(void) {
