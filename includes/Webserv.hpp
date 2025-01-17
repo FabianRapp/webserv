@@ -34,7 +34,6 @@ public:
 	~Server(void);
 
 
-
 private:
 	ClientConnections		_connections;
 };
@@ -49,11 +48,12 @@ public:
 
 	void	add_server(t_fd server_socket);
 	void	add_client(t_fd client_socket);
+	struct pollfd&	new_fd();
 
 	const size_t	server_count;
 	size_t			client_count;
-
-	std::vector<struct pollfd>	pollfds;
+private:
+	std::vector<struct pollfd>	_pollfds;
 };
 
 class Socket {
