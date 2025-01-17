@@ -4,12 +4,6 @@
 #include <fstream>
 #include <iostream>
 
-
-// struct total_config {
-// 	size_t	server_count;
-// 	std::vector<server_config> servers;
-// };
-
 struct location_config {
 	std::string path;						// Path of the route (e.g., "/assets")
 	bool	get_header;
@@ -77,7 +71,7 @@ struct total_config parse_config(char *config_file) {
 
 		// check if "{" starts before "}"
 		for(char c : line) {
-			if(c == '{') { 
+			if(c == '{') {
 				bracket_count++;
 			} else if (c == '}') {
 				bracket_count--;
@@ -127,31 +121,44 @@ struct total_config parse_config(char *config_file) {
 
 		// Parse key-value pairs inside a location block
 		if (in_location_block) {
-			if (line.find("allowed_methods") == 0) {
+			if (line.find("allowed_methods ") == 0) {
 				current_location.get_header = (line.find("GET") != std::string::npos);
 				current_location.post_header = (line.find("POST") != std::string::npos);
 				current_location.delete_header = (line.find("DELETE") != std::string::npos);
-			} else if (line.find("autoindex") == 0) {
+			} else if (line.find("autoindex ") == 0) {
 				current_location.autoindex = (line.substr(10) == "on");
-			} else if (line.find("upload_dir") == 0) {
+			} else if (line.find("upload_dir ") == 0) {
 				current_location.upload_dir = line.substr(11);
-			} else if (line.find("index") == 0) {
+			} else if (line.find("index ") == 0) {
 				current_location.index_file = line.substr(6);
+			} else {
+				//todo: EXIT
+				std::cout << "ERROR: config parser: line " << __LINE__
+					<< " file " << __FILE__ <<
+					"\nInvalid data: " << line << std::endl;
+				exit(1);
 			}
+
 			continue;
 		}
 
 		// Parse key-value pairs inside a server block
 		if (in_server_block) {
-			if (line.find("listen") == 0) {
+			if (line.find("listen ") == 0) {
 				current_server.port = std::stoi(line.substr(7));
-			} else if (line.find("server_name") == 0) {
+			} else if (line.find("server_name ") == 0) {
 				current_server.server_name = line.substr(12);
-			} else if (line.find("root") == 0) {
+			} else if (line.find("root ") == 0) {
 				current_server.root = line.substr(5);
-			} else if (line.find("error_page") == 0) {
+			} else if (line.find("error_page ") == 0) {
 				int code = std::stoi(line.substr(11, 3));
 				current_server.error_pages[code] = line.substr(15);
+			} else {
+				//todo: EXIT
+				std::cout << "ERROR: config parser: line " << __LINE__
+					<< " file " << __FILE__ <<
+					"\nInvalid data: " << line << std::endl;
+				exit(1);
 			}
 		}
 	}
@@ -190,7 +197,7 @@ int main(int ac, char **av)
 		std::cout<<"Server "<<i+1<<": port "<<config.servers[i].port<< std::endl;
 		std::cout<<"Server "<<i+1<<": root "<<config.servers[i].root<< std::endl;
 	}
-	
+
 	return EXIT_SUCCESS;
 }
 
