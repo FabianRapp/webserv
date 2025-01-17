@@ -42,7 +42,9 @@ int main() {
 	std::string request =
 		"GET / HTTP/1.1\r\n"
 		"Host: " + std::string(hostname) + "\r\n"
-		"Connection: close\r\n\r\n";
+		"Connection: close\r\n\r\n"
+		"heloo i would be" + "\r\n"
+		"the body" + "\r\n";
 
 	// Send the request
 	if (send(socket_fd, request.c_str(), request.length(), 0) < 0) {

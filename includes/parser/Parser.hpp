@@ -4,11 +4,48 @@
 #include "Token.hpp"
 #include "Lexer.hpp"
 #include "../Request.hpp"
-
+#include "../enums.hpp"
 #include "../macros.h"
 #include <string>
 #include <iostream>
+#include <exception>
+#include <ostream>
 #include <vector>
+
+using vector = std::vector<std::string>;
+using String = std::string;
+using Line = std::vector<String>;
+using StringArray = std::vector<Line>;
+
+class Parser {
+	private:
+		Request		_request;
+		std::string	_request_content;
+
+
+	public:
+		Parser() = default;
+		~Parser() = default;
+
+		void	parse(std::string input);
+		void	parse_first_line(const StringArray& array);
+		void	parse_headers(const StringArray& array);
+
+		// Setters
+		void setRequestMethod(const std::string& method);
+		void setUri(const std::string& uri);
+		void setVersion(const std::string& version);
+
+		// Utils
+		void		insertHeader(const std::string& key, const std::string& value);
+		static bool	is_header_present(const std::string& str);
+		std::string extract_first_line(const std::string& request);
+		std::vector<std::string> split(const std::string& str, char delimiter);
+		bool		ends_with(const std::string& str, const std::string& suffix);
+		bool		is_finished(void) const;
+		Request		get_request(void) const;
+};
+
 
 // /* todo: parse(): main logic */
 // /* assumes one parser object per client connection */
@@ -45,26 +82,3 @@
 // 		t_http_request	_request;
 // 		Lexer			_lexer;
 // };
-
-using vector = std::vector<std::string>;
-
-class Parser {
-	private:
-		Request		_request;
-		std::string	_request_content;
-
-	public:
-		Parser() = default;
-		~Parser() = default;
-
-		void		parse(std::string input);
-		void		parse_first_line(std::string input);
-		static bool	is_header_present(const std::string& str);
-		std::string extract_first_line(const std::string& request);
-		std::vector<std::string> split(const std::string& str, char delimiter);
-
-
-		bool		ends_with(const std::string& str, const std::string& suffix);
-		bool		is_finished(void) const;
-		Request		get_request(void) const;
-};
