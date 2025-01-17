@@ -34,10 +34,27 @@ public:
 	~Server(void);
 
 
+
 private:
 	ClientConnections		_connections;
 };
 
+class	PollManager {
+public:
+	PollManager(size_t server_count);
+	PollManager(const PollManager& old) = delete;
+	PollManager&	operator=(const PollManager& old)=delete;
+	PollManager(const PollManager&& old);
+	~PollManager(void);
+
+	void	add_server(t_fd server_socket);
+	void	add_client(t_fd client_socket);
+
+	const size_t	server_count;
+	size_t			client_count;
+
+	std::vector<struct pollfd>	pollfds;
+};
 
 class Socket {
 public:
@@ -48,10 +65,15 @@ public:
 	Socket&	operator=(const Socket& old) = delete;
 
 	struct pollfd&	poll_fd;
-	t_fd			fd;
 	unsigned short	port;
 };
 
+class Main {
+public:
+	std::vector<Server>	servers;
+	PollManager			poll_manager;
+
+};
 
 class Webserv {
 public:
