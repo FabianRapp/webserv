@@ -5,10 +5,11 @@
 #include <thread>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <vector>
 
 class NewClientListener {
 public:
-	NewClientListener(std::atomic<bool>& exit, ClientConnections& connections);
+	NewClientListener(ClientConnections& connections);
 	NewClientListener(void) = delete;
 	NewClientListener(const NewClientListener& old) = delete;
 	NewClientListener(const NewClientListener&& old) = delete;
@@ -21,7 +22,8 @@ public:
 private:
 	void	_loop(void);
 	std::thread			_thread;
-	int					_server_fd;
-	std::atomic<bool>&	_exit;
+	t_fd				_server_fd;
+
+	//std::vector<t_fd>&	_server_sockets;
 	ClientConnections&	_connections;
 };

@@ -4,10 +4,10 @@
 #include <vector>
 #include <Exceptions.hpp>
 
-
-
+std::atomic<bool>	exit_{false};
 
 void	init(void) {
+
 }
 
 
@@ -24,6 +24,12 @@ int	main(int ac, char *av[]) {
 	try {
 		if (ac == 1) {
 			memset(&server_config, 0, sizeof server_config);
+			server_config.port = 8080;
+			cur.second = new Webserv(server_config);
+			cur.first = std::thread(&Webserv::run, cur.second);
+			servers.push_back(std::move(cur));
+
+			server_config.port = 80;
 			cur.second = new Webserv(server_config);
 			cur.first = std::thread(&Webserv::run, cur.second);
 			servers.push_back(std::move(cur));
@@ -47,9 +53,7 @@ int	main(int ac, char *av[]) {
 			server.first.join();
 		}
 	} catch (const ForceFullExit& e) {
-		for (auto & server : servers) {
-			server.second->set_exit();
-		}
+		exit_.store(true);
 		for (auto & server : servers) {
 			server.first.join();
 		}

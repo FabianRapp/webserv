@@ -1,8 +1,7 @@
 #include <NewClientListener.hpp>
 
-NewClientListener::NewClientListener(std::atomic<bool>& exit,
-	ClientConnections& connections)
-	:_exit(exit),
+NewClientListener::NewClientListener(ClientConnections& connections)
+:
 	_connections(connections)
 {
 	_server_fd = -1;
@@ -35,7 +34,7 @@ void	NewClientListener::_loop(void) {
 	struct sockaddr			*const addr_ptr =
 		reinterpret_cast<struct sockaddr *>(&addr);
 	std::cout << "entering listerner loop..\n";
-	while (!_exit) {
+	while (!exit_) {
 		FT_ASSERT(_connections.get_count() <= MAX_CLIENTS);
 		if (_connections.get_count() == MAX_CLIENTS) {
 			/*todo: send basic error response */

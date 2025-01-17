@@ -8,6 +8,7 @@ struct total_config {
 };
 
 struct server_config {
+	unsigned short	port;
 };
 
 

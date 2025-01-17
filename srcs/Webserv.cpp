@@ -10,9 +10,8 @@ static struct sockaddr_in	make_addr(unsigned short port) {
 	return (addr);
 }
 
-Webserv::Webserv(struct server_config):
-	_listener(_exit, _connections),
-	_exit(false),
+Webserv::Webserv(struct server_config server_config):
+	_listener(_connections),
 	_server_addr_len(static_cast<socklen_t>(sizeof _server_addr)),
 	_server_addr_ptr(reinterpret_cast<struct sockaddr *>(&_server_addr))
 {
@@ -28,7 +27,7 @@ Webserv::Webserv(struct server_config):
 	if (server_fd < 0) {
 		exit(errno);
 	}
-	_server_addr = make_addr(8080);
+	_server_addr = make_addr(server_config.port);
 	if (bind(server_fd, _server_addr_ptr, _server_addr_len) < 0) {
 		close(server_fd);
 		std::cerr << "Error: " << strerror(errno) << '\n';
@@ -40,7 +39,7 @@ Webserv::Webserv(struct server_config):
 		exit(errno);
 	}
 	_listener.set_server_fd(server_fd);
-	std::cout << "Started server on port 8080...\n";
+	std::cout << "Started server on port " << server_config.port << "...\n";
 }
 
 Webserv::~Webserv(void) {
@@ -79,7 +78,7 @@ void	Webserv::run(void) {
 				/* todo: check for earlyer chunks of the msg etc.. */
 				try {
 					/* todo: this throw is just for testing */
-					//throw (SendClientError(404, _codes[404], "testing", true));
+					throw (SendClientError(404, _codes[404], "testing", true));
 
 					connection.parse();
 					bool testing_response = true;
@@ -120,7 +119,7 @@ void	Webserv::run(void) {
 			}
 		}
 	}
-}
+} 
 
 std::string	Webserv::_build_response(t_http_request request, bool & close_connection) {
 	std::string	response = "HTTP/1.1 ";
@@ -188,6 +187,3 @@ void	Webserv::_default_err_response(ClientConnection& connection,
 	connection.set_response(std::move(response), err.close_connection);
 }
 
-void	Webserv::set_exit(void) {
-	_exit = true;
-}
