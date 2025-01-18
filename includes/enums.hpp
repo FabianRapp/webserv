@@ -76,7 +76,8 @@ enum class HeaderType {
 
 	// Additional Optional Headers
 	ACCEPT_DATETIME,	  // Rare, for datetime-specific requests
-	EARLY_DATA			// Introduced in HTTP/2 extensions
+	EARLY_DATA,			// Introduced in HTTP/2 extensions
+	INVALID
 };
 
 enum class MethodType {

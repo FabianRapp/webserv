@@ -80,9 +80,8 @@ void	Webserv::run(void) {
 				connection.parse();
 				bool testing_response = true;
 				if (testing_response || connection.completed_request()) {
-				Request	request = connection.get_request();
-
-				// _execute_request(request, connection);
+					Request	request = connection.get_request();
+					// _execute_request(request, connection);
 				}
 			} /* else if (something that has to be done without the full
 					request, example: the client expectes:CONTINUE)

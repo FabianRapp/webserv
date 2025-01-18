@@ -30,6 +30,7 @@ class Parser {
 		void	parse(std::string input);
 		void	parse_first_line(const StringArray& array);
 		void	parse_headers(const StringArray& array);
+		void	parse_body(std::string& input);
 
 		// Setters
 		void setRequestMethod(const std::string& method);
@@ -37,6 +38,7 @@ class Parser {
 		void setVersion(const std::string& version);
 
 		// Utils
+		// std::string	getCleanBody(std::string& input);
 		void		insertHeader(const std::string& key, const std::string& value);
 		static bool	is_header_present(const std::string& str);
 		std::string extract_first_line(const std::string& request);

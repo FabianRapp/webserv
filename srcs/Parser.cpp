@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
+/*   By: adrherna <adrherna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/17 15:23:20 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/18 16:06:58 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,19 +94,25 @@ void	Parser::setVersion(const std::string& version) {
 	_request._version = version;
 }
 
-void Parser::insertHeader(const std::string& key, const std::string& value) {
-	_request._headers.insert({key, value});
+HeaderType	setType(const std::string& str) {
+	if (str == "Content-Length:")
+		return HeaderType::CONTENT_LENGTH;
+	else if (str == "Transfer-Encoding:")
+		return HeaderType::TRANSFER_ENCODING;
+	else if (str == "Connection:")
+		return HeaderType::CONNECTION;
+	else if (str == "Host:")
+		return HeaderType::HOST;
+	else
+		return HeaderType::INVALID;
 }
 
-void Parser::parse(std::string input) {
-	std::cout << "from parser:" <<std::endl << input << std::endl;
+void Parser::insertHeader(const std::string& key, const std::string& value) {
+	HeaderType keyType = setType(key);
+	_request._headers.insert({keyType, value});
 
-	StringArray array = splitIntoArrays(input, "\r\n", "\r\n\r\n");
-
-	parse_first_line(array);
-	parse_headers(array);
-	printStringArray(array);
-	_request.displayRequest();
+	std::cout << "Header:" << std::endl;
+	std::cout << "key: " << key << " value: " << value << std::endl; 
 }
 
 void	Parser::parse_first_line(const StringArray& array) {
@@ -134,6 +140,35 @@ void	Parser::parse_headers(const StringArray& array) {
 }
 
 
+void	Parser::parse_body(std::string& input) {
+	
+	if (_request._headers.find(HeaderType::CONTENT_LENGTH) != _request._headers.end())
+	{
+		// handle logic for unchunked body
+	}
+	else if (_request._headers.find(HeaderType::TRANSFER_ENCODING) != _request._headers.end())
+	{
+		// handle logic for chunked body
+	}
+	else
+	{
+		// handle logic for errors
+	}	
+}
+
+void Parser::parse(std::string input) {
+	std::cout << "from parser:" <<std::endl << input << std::endl;
+
+	StringArray array = splitIntoArrays(input, "\r\n", "\r\n\r\n");
+
+	parse_first_line(array);
+	parse_headers(array);
+	
+	
+	
+	printStringArray(array);
+	_request.displayRequest();
+}
 
 
 

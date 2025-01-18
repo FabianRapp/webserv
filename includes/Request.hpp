@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
+/*   By: adrherna <adrherna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/13 16:03:43 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/17 15:25:52 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/18 13:55:24 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include "enums.hpp"
 #include <unordered_map>
 
-using HeadersMap = std::unordered_map<std::string, std::string>;
+using HeadersMap = std::unordered_map<HeaderType, std::string>;
 
 class Request {
 	public:
@@ -37,10 +37,10 @@ class Request {
 			std::cout << "URI: " << _uri << std::endl;
 			std::cout << "Version: " << _version << std::endl;
 
-			std::cout << "Headers:" << std::endl;
-			for (const auto& header : _headers) {
-				std::cout << "|" << header.first << "|" << header.second << "|" << std::endl;
-			}
+			// std::cout << "Headers:" << std::endl;
+			// for (const auto& header : _headers) {
+			// 	std::cout << "|" << header.first << "|" << header.second << "|" << std::endl;
+			// }
 
 			std::cout << "Body: " << (_body.empty() ? "No body" : _body) << std::endl;
 		}
