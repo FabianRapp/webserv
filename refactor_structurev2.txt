@@ -1,0 +1,88 @@
+class DataManager {
+public:
+	DataManager(void): count(0) {}
+	~DataManager(void);
+	void	add_entry(BaseFd *entry, short poll_events);
+	void	remove_entry(BaseFd *entry);
+
+	void	process_closures() {
+		for (size_t idx = 0; idx < count; idx++) {
+			if (close_later[idx])
+				close(idx)
+	}
+	void	close(size_t idx) {
+		close(pollfds.fd[idx]);
+		pollfds[idx] = *(pollfds.end() - 1);
+		close_later[idx] = *(close_later.end() - 1);
+		fd_users[idx] = *(fd_users.end() - 1);
+		fd_users[idx]->data_idx = idx;
+		pollfds.pop_back();
+		too_close.pop_back();
+		fd_users.pop_back();
+	}
+
+	bool	is_ready(size_t idx, short event) {
+		return (pollfds[idx].revents & event);
+	}
+	
+	int	get_fd(size_t idx) {
+		return (pollfds[idx].fd);
+	}
+
+	void	poll() {
+		if (poll(pollfds.c_ptr(), count, 0) < 0) {
+			std::cerr << "Error: poll: " << strerror(errno) << '(' << errno << ")\n";
+			FT_ASSERT(0);
+		}
+	}
+
+	execute();
+
+	size_t							count;
+	std::vector<struct pollfd>		pollfds;
+	std::vector<bool>				close_later;
+	std::vector<BaseFd*>			fd_users;
+private:
+};
+
+
+class BaseFd {
+public:
+	BaseFd(struct data_vecs& data, int fd, short poll_events)
+	:	data(data),
+		fd(fd)
+	{
+		data.add_entry(this, poll_events);
+	}
+	virutal
+	~BaseFd(void) {
+		data.remove_entry(this);
+	}
+
+	bool				is_ready(short event) {
+		data.is_ready(data_idx, event);
+	}
+
+	virtual				execute(void) = 0;
+
+
+	struct data_vecs&	data;
+	int					fd;
+	int					data_idx;
+private:
+};
+
+class Server: public BaseFd {
+public:
+	Server(Config config)
+	:	BaseFd()
+	{
+	}
+	Config	config;
+private:
+};
+
+class FileIo: public BaseFd {
+     ssize_t	(*read_write)(int fildes, void *buf, size_t nbyte);
+
+};

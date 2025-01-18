@@ -35,6 +35,8 @@ Class Server(config);
 	Config				config;
 	accept_clients();
 	process_clients();
+	read_files();
+	write_files();
 	std::list<Client>	clients;
 
 Class Client(Server);
@@ -79,6 +81,7 @@ main_loop;
 	for server : servers {
 		accept_clients();
 		resive();
+		read_files();
 		respond();
 	}
 	SocketManager.process_closures();
