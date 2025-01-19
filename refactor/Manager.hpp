@@ -72,7 +72,7 @@ private:
 	}
 
 	void	_fd_close(size_t idx) {
-		//delete _fd_users[idx];
+		delete _fd_users[idx];
 		close(_pollfds[idx].fd);
 		_pollfds[idx] = *(_pollfds.end() - 1);
 		_close_later[idx] = *(_close_later.end() - 1);

@@ -25,18 +25,18 @@
 # define REQUEST_QUE_SIZE 10
 #endif
 
-class Server {
-public:
-	t_fd&	socket;
-	Server(struct server_config);
-	Server(const Server& old) = delete;
-	Server&	operator=(const Server& old) = delete;
-	~Server(void);
-
-
-private:
-	ClientConnections		_connections;
-};
+//class Server {
+//public:
+//	t_fd&	socket;
+//	Server(struct server_config);
+//	Server(const Server& old) = delete;
+//	Server&	operator=(const Server& old) = delete;
+//	~Server(void);
+//
+//
+//private:
+//	ClientConnections		_connections;
+//};
 
 class	PollManager {
 public:
@@ -70,7 +70,7 @@ public:
 
 class Main {
 public:
-	std::vector<Server>	servers;
+	//std::vector<Server>	servers;
 	PollManager			poll_manager;
 
 };

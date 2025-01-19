@@ -1,6 +1,6 @@
 #pragma once
 
-#include <variant>
+#include <Webserv.hpp>
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -46,11 +46,44 @@ private:
 
 class Server: public BaseFd {
 public:
-	Server(DataManager& data, Config& config)
-	:	BaseFd(data, POLLIN)
+	Server(DataManager& data, Config& config):
+		BaseFd(data, POLLIN),
+		config(config)
 	{
-		this->config = config;
-		//server init here
+		struct sockaddr_in		server_addr;
+		const socklen_t			server_addr_len = static_cast<socklen_t>(sizeof server_addr);
+		struct sockaddr	*const server_addr_ptr = reinterpret_cast<struct sockaddr *>(&server_addr);
+
+		/* AF_INET : ipv4
+		 * AF_INET6: ipv6 */
+		init_status_codes(_codes);
+		int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+		if (server_fd < 0) {
+			std::cerr << "Error: server: socket: " << strerror(errno) << '\n';
+			exit(errno);
+		}
+		server_fd = set_fd_non_block(server_fd);
+		if (server_fd < 0) {
+			exit(errno);
+		}
+
+		memset(&server_addr, 0, sizeof(struct sockaddr));
+		server_addr.sin_family = AF_INET;
+		server_addr.sin_addr.s_addr = INADDR_ANY;
+		server_addr.sin_port = htons(config.port);
+
+		if (bind(server_fd, server_addr_ptr, server_addr_len) < 0) {
+			close(server_fd);
+			std::cerr << "Error: " << strerror(errno) << '\n';
+			exit(errno);
+		}
+		if (listen(server_fd, REQUEST_QUE_SIZE) < 0) {
+			close(server_fd);
+			std::cerr << "Error: " << strerror(errno) << '\n';
+			exit(errno);
+		}
+		//_listener.set_server_fd(server_fd);
+		std::cout << "Started server on port " << config.port << "...\n";
 	}
 
 	~Server(void) {
@@ -59,92 +92,88 @@ public:
 	}
 
 	void	execute(void) {
+		/* to avoid pointer casts every where */
 		// accept new clients
 	}
 
 	Config	config;
 
 private:
+	std::unordered_map<unsigned long, std::string>	_codes;
 };
 
-class ReadFile: public BaseFd {
+class ReadFd: public BaseFd {
 public:
-	ReadFile(DataManager& data, std::string path):
-		BaseFd(data, POLLIN)
+	ReadFd(DataManager& data, std::string& target_buffer, int fd,
+			ssize_t byte_count, std::function<void()> completion_callback):
+		BaseFd(data, POLLIN), target_buf(target_buffer),
+		completion_callback(std::move(completion_callback))
 	{
-		struct stat		stats;
-		std::memset(&stats, 0, sizeof stats);
-		if (stat(path.c_str(), &stats) < 0) {
-			assert(0);
-		}
-		left_over_bytes = stats.st_size;
-
-		int read_flags = 0; /* todo: what flags */
-		fd = open(path.c_str(), O_RDONLY, read_flags);
-		assert(fd > 0);
+		left_over_bytes = byte_count;
+		this->fd = fd;
 	}
-	
-	~ReadFile(void) {
+
+	~ReadFd(void) {
 	}
 
 	void	execute(void) {
 		if (!is_ready(POLLIN)) {
 			return ;
 		}
-
-		ssize_t read_ret = read(fd, buffer, sizeof buffer);
+		size_t	read_size = sizeof buffer - 1 < static_cast<size_t>(left_over_bytes)
+			? sizeof buffer - 1: static_cast<size_t>(left_over_bytes);
+		ssize_t read_ret = read(fd, buffer, read_size);
 		assert(read_ret >= 0);
-
-
+		buffer[read_ret] = 0;
+		left_over_bytes -= read_ret;
+		target_buf += buffer;
+		if (left_over_bytes == 0) {
+			data.set_close(data_idx);
+			completion_callback();
+			return ;
+		}
 	}
+
+private:
+	std::string&						target_buf;
 	char								buffer[1024];
 	ssize_t								left_over_bytes;
-private:
-
+	std::function<void()>				completion_callback;
 };
 
-class FileIo: public BaseFd {
+class Client: public BaseFd {
 public:
-	typedef ssize_t (*t_read_fn)(int, void *, size_t);
-	typedef ssize_t (*t_write_fn)(int, const void *, size_t);
-
-	FileIo(DataManager& data, std::string path, IoMode mode): FileIo(data, path, mode, "") {}
-
-	FileIo(DataManager& data, std::string path, IoMode mode, std::string&& input):
-		BaseFd(data, mode == IoMode::READ ? POLLIN : POLLOUT)
+	Client(DataManager& data, Server* parent_server):
+		BaseFd(data, POLLIN | POLLOUT)
 	{
-		this->input = std::move(input);
-
-		if (mode == IoMode::READ) {
-			struct stat		stats;
-			std::memset(&stats, 0, sizeof stats);
-			if (stat(path.c_str(), &stats) < 0) {
-				assert(0);
-			}
-			left_over_bytes = stats.st_size;
-
-			read_write = read;
-			int read_flags = 0; /* todo: what flags */
-			fd = open(path.c_str(), O_RDONLY, read_flags);
-		} else if (mode == IoMode::WRITE) {
-			left_over_bytes = static_cast<ssize_t>(this->input.size());
-	
-			read_write = write;
-			int	write_flags = 0; /* todo: what flags */
-			fd = open(path.c_str(), O_WRONLY, write_flags);
-		} else {
-			assert(0);
+		this->server = parent_server;
+		assert(server->is_ready(POLLIN));
+		errno = 0;
+		struct sockaddr_in		addr;
+		socklen_t				addr_len = static_cast<socklen_t>(sizeof addr);
+		struct sockaddr			*const addr_ptr =
+			reinterpret_cast<struct sockaddr *>(&addr);
+		memset(&addr, 0, sizeof addr);// might not be needed
+		fd = accept(server->fd, addr_ptr, &addr_len);
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			FT_ASSERT(0 && "Should have been handled by poll");
 		}
-		assert(fd > 0);
+		//fd = set_fd_non_block(fd);
+		//if (new_client_fd < 0) {
+		//	FT_ASSERT(0);
+		//}
+		//_connections.add_client(new_client_fd);
+		std::cout << "Connection accepted from address("
+			<< inet_ntoa(addr.sin_addr) << "): PORT("
+			<< ntohs(addr.sin_port) << ")\n";
+	}
+
+	~Client(void) {
 	}
 
 	void	execute(void) {
-		read_write(fd, buffer, left_over_bytes);
 	}
 
-	std::string	input;
-	ssize_t		left_over_bytes;
-	std::variant<t_read_fn, t_write_fn>	read_write;
+	Server*	server;
 private:
-
 };
