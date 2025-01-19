@@ -4,6 +4,7 @@ NAME := webserv
 
 INCLUDES := -I./includes \
 			-I./includes/parser \
+			-I./refactor
 
 FSAN := address
 
@@ -26,6 +27,8 @@ SRCS := main.cpp \
 		NewClientListener.cpp \
 		config_parser.cpp \
 		Exceptions.cpp \
+		refactor/Manager.cpp \
+		refactor/FdClasses.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 

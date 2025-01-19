@@ -1,22 +1,10 @@
-#pragma once
-
-#include <cstdlib>
-#include <vector>
-#include <sys/poll.h>
-#include <unistd.h>
-#include <cassert>
-#include <cerrno>
-#include <iostream>
-
-
-class DataManager;
-class Server;
-class Config;
+#include <Manager.hpp>
 
 class DataManager {
 public:
 	DataManager(void): _count(0) {}
-	~DataManager(void);
+	~DataManager(void) {
+	}
 
 	Server*	new_server(Config config) {
 	 	Server* server = new Server(*this, config);

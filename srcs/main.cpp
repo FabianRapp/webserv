@@ -3,6 +3,8 @@
 #include <config_parser.hpp>
 #include <vector>
 #include <Exceptions.hpp>
+#include <Manager.hpp>
+#include <FdClasses.hpp>
 
 std::atomic<bool>	exit_{false};
 

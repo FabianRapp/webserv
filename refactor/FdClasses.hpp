@@ -6,7 +6,6 @@
 #include <sys/stat.h>
 #include "Manager.hpp"
 
-class DataManager;
 
 //placeholder
 class Config {
@@ -30,7 +29,7 @@ public:
 		data.set_close(data_idx);
 	}
 
-	bool	is_ready(short event) {
+	bool	is_ready(short event) const {
 		return (data.is_ready(data_idx, event));
 	}
 
