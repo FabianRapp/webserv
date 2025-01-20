@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/13 16:03:43 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/20 15:06:06 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/20 18:20:27 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ class Request {
 			// for (const auto& header : _headers) {
 			// 	std::cout << "|" << header.first << "|" << header.second << "|" << std::endl;
 			// }
-
+			std::cout << "Body len: " <<  _body.length() << std::endl;
 			std::cout << "Body: " << (_body.empty() ? "No body" : _body) << std::endl;
 		}
 

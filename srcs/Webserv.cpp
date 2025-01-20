@@ -45,7 +45,12 @@ Webserv::Webserv(struct server_config):
 Webserv::~Webserv(void) {
 	_listener.join_thread();
 }
-
+enum class PostParseAction {
+	WAIT,
+	SEND_CONTINUE,
+	EXECUTE_RESPONSE,
+	ERROR,
+};
 [[noreturn]]
 void	Webserv::run(void) {
 	_listener.run();
@@ -55,7 +60,7 @@ void	Webserv::run(void) {
 		if (_connections.get_count() == 0) {
 			continue ;
 		}
-		_connections.set_and_poll(POLLPRI | POLLIN);
+		_connections.set_and_poll(POLLPRI | POLLIN | POLLOUT);
 		ClientConnections::PollIterator	it = _connections.begin(POLLPRI | POLLIN);
 		ClientConnections::PollIterator	end = _connections.end(POLLPRI | POLLIN);
 		while (it < end) {

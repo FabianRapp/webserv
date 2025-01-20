@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/20 16:07:20 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/20 18:00:02 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,18 +203,39 @@ void printStringVector(const std::vector<std::string>& vec) {
 	}
 }
 
+int checkChunkedBody(const std::vector<std::string> bodyVector) {
+	if ((bodyVector.size() - 1) % 2 != 0)
+	{
+		std::cout << "bodyVector size check exited" << std::endl;
+		// handle error, this means that there is one line that doesnt also have a line with the size or vice versa
+		return -1;
+	}
+
+	// do testing with very small vectors
+	// checks that the last chunk is 0 in size and followed by an \r\n chunk
+	size_t start = bodyVector.size() - 3;
+	std::cout << bodyVector[start] << std::endl;
+	std::cout << bodyVector[start + 1] << std::endl;
+	std::cout << bodyVector[start + 2] << std::endl;
+	if (bodyVector[start] != "0" || bodyVector[start + 1] != "" || bodyVector[start + 2] != "")
+	{
+		std::cout << "body is not ending as expected" << std::endl;
+		return -1;
+	}
+	return 0;
+}
+
+
+
 // there will be probably more checks needed for the formatting of the parser
 void	Parser::parser_chunked(std::string& input) {
-
-	std::string chunkLine;
-	std::string chunkSizeLine;
-
 	std::vector<std::string> bodyVector = split(input, "\r\n");
 	std::cout << "here comes the body vector for chunked requests" << std::endl;
 
 	printStringVector(bodyVector);
 	std::cout << bodyVector.size() << std::endl;
 
+	// we can add also this next block to a function making checks
 	if ((bodyVector.size() - 1) % 2 != 0)
 	{
 		std::cout << "bodyVector size check exited" << std::endl;
@@ -223,18 +244,21 @@ void	Parser::parser_chunked(std::string& input) {
 	}
 
 	for (size_t i = 0; i < bodyVector.size(); i += 2) {
-		chunkSizeLine = bodyVector[i];
+		std::string chunkSizeLine = bodyVector[i];
+		int chunkSize = sizeLineToInt(chunkSizeLine);
 
 		std::cout << "chunkSizeLine " << chunkSizeLine << std::endl;
 
-		int chunkSize = sizeLineToInt(chunkSizeLine);
-
 		if (i + 1 < bodyVector.size()) {
-			chunkLine = bodyVector [i + 1];
-			std::cout << "chunk size = " << chunkSize << " actual chunk size " << chunkLine.size() << std::endl;
+			std::string chunkLine = bodyVector [i + 1];
 			_request._body += chunkLine;
+			// std::cout << "chunk size = " << chunkSize << " actual chunk size " << chunkLine.size() << std::endl;
 		}
+
 	}
+
+	// make checks to see ending of chunked body
+
 }
 
 void	Parser::parse_body(std::string& input) {
@@ -271,6 +295,7 @@ void Parser::parse(std::string input) {
 
 	parse_first_line(array);
 	parse_headers(array);
+
 	parse_body(input);
 
 	_request.displayRequest();

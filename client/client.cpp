@@ -10,7 +10,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
-
+#include <unistd.h>
 std::string toHex(int decimal) {
     std::stringstream stream;
     stream << std::hex << decimal;  // Convert the decimal number to hexadecimal
@@ -90,7 +90,15 @@ int main() {
 				+ chunkedBody;
 
 	// Send the request
-	if (send(socket_fd, request.c_str(), request.length(), 0) < 0) {
+	std::string m1 = request.substr(0, request.size() / 2 + 20);
+	std::string m2 = request.substr(request.size() / 2 + 20, request.size());
+	if (send(socket_fd, m1.c_str(), m1.length(), 0) < 0) {
+		std::cerr << "Error: Failed to send request: " << strerror(errno) << '\n';
+		close(socket_fd);
+		return 1;
+	}
+	sleep(10);
+	if (send(socket_fd, m2.c_str(), m2.length(), 0) < 0) {
 		std::cerr << "Error: Failed to send request: " << strerror(errno) << '\n';
 		close(socket_fd);
 		return 1;
