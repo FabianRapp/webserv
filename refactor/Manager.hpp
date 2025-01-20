@@ -12,6 +12,7 @@
 
 class BaseFd;
 class Server;
+class Client;
 class Config;
 
 class DataManager {
@@ -20,6 +21,7 @@ public:
 	~DataManager(void);
 
 	Server*	new_server(Config config);
+	Client*	new_client(Server* server);
 
 	void	set_close(size_t idx);
 

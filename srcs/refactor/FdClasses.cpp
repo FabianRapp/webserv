@@ -29,13 +29,13 @@ Server::Server(DataManager& data, Config& config):
 	/* AF_INET : ipv4
 	 * AF_INET6: ipv6 */
 	init_status_codes(_codes);
-	int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_fd < 0) {
+	fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (fd < 0) {
 		std::cerr << "Error: server: socket: " << strerror(errno) << '\n';
 		exit(errno);
 	}
-	server_fd = set_fd_non_block(server_fd);
-	if (server_fd < 0) {
+	fd = set_fd_non_block(fd);
+	if (fd < 0) {
 		exit(errno);
 	}
 
@@ -44,13 +44,13 @@ Server::Server(DataManager& data, Config& config):
 	server_addr.sin_addr.s_addr = INADDR_ANY;
 	server_addr.sin_port = htons(config.port);
 
-	if (bind(server_fd, server_addr_ptr, server_addr_len) < 0) {
-		close(server_fd);
+	if (bind(fd, server_addr_ptr, server_addr_len) < 0) {
+		close(fd);
 		std::cerr << "Error: " << strerror(errno) << '\n';
 		exit(errno);
 	}
-	if (listen(server_fd, REQUEST_QUE_SIZE) < 0) {
-		close(server_fd);
+	if (listen(fd, REQUEST_QUE_SIZE) < 0) {
+		close(fd);
 		std::cerr << "Error: " << strerror(errno) << '\n';
 		exit(errno);
 	}
@@ -64,8 +64,10 @@ Server::~Server(void) {
 }
 
 void	Server::execute(void) {
-	/* to avoid pointer casts every where */
-	// accept new clients
+	if (!is_ready(POLLIN)) {
+		return ;
+	}
+	data.new_client(this);
 }
 
 ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd,
@@ -127,4 +129,5 @@ Client::~Client(void) {
 }
 
 void	Client::execute(void) {
+	std::cout << "clinet exec\n";
 }

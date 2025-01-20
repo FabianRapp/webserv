@@ -11,6 +11,12 @@ Server*	DataManager::new_server(Config config) {
 	return (server);
 }
 
+Client*	DataManager::new_client(Server* server) {
+ 	Client* client = new Client(*this, server);
+	_add_entry(reinterpret_cast<BaseFd*>(client), client->poll_events);
+	return (client);
+}
+
 void	DataManager::set_close(size_t idx) {
 	_close_later[idx] = true;
 }
