@@ -2,6 +2,7 @@
 #define DEFAULT_ERROR_PAGES_HPP
 
 #include <map>
+#include <iostream>
 
 class DefaultErrorPages {
 private:
@@ -10,8 +11,14 @@ private:
 public:
 	DefaultErrorPages();
 
+	//setter
 	void addErrorPage(int err_code, const std::string& path);
 
+	//getter
+	const std::string& getErrorPage(int err_code) const;
+
+	//debug
+	void printErrorPages() const;
 };
 
 #endif

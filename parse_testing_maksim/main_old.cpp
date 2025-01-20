@@ -179,9 +179,22 @@ struct total_config parse_config(char *config_file) {
 	return (total_config);
 }
 
+#include <sys/stat.h>
 
 int main(int ac, char **av)
 {
+
+	struct total_config total_config;
+	total_config.server_count = 0;
+
+	std::string	path = "main.cpp";
+
+	struct stat	stats;
+
+	if (stat(path.c_str(), &stats) == -1) {
+		std::cerr << "Error: file: " << path << ": " << strerror(errno) << "\n";
+	}
+
 	if (ac < 2) {
 		std::cerr << "Usage: ./program <config_file>" << std::endl;
 		return EXIT_FAILURE;
