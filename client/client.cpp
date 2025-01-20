@@ -6,6 +6,17 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <cerrno>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <iomanip>
+
+std::string toHex(int decimal) {
+    std::stringstream stream;
+    stream << std::hex << decimal;  // Convert the decimal number to hexadecimal
+    return stream.str();
+}
+
 
 int main() {
 	const char *hostname = "localhost"; // Change to "google.com" for external requests
@@ -39,16 +50,44 @@ int main() {
 	}
 
 	// Prepare HTTP GET request
-	std::string hostnameReq = "example.com";  // Replace with your hostname
-	std::string body = "heloo i would be\r\nthe body\r\n";
-	size_t contentLength = body.length();
 
-	std::string request =
-		"GET / HTTP/1.1\r\n"
-		"Host: " + hostnameReq + "\r\n"
-		"Connection: close\r\n"
-		"Content-Length: " + std::to_string(contentLength) + "\r\n\r\n"
-		+ body;
+		// Example of unchunked request
+			// std::string hostnameReq = "example.com";  // Replace with your hostname
+			// std::string body = "heloo i would be\r\nthe body\r\n";
+			// size_t contentLength = body.length();
+
+			// std::string request =
+			// 	"GET / HTTP/1.1\r\n"
+			// 	"Host: " + hostnameReq + "\r\n"
+			// 	"Connection: close\r\n"
+			// 	"Content-Length: " + std::to_string(contentLength) + "\r\n\r\n"
+			// 	+ body;
+
+
+			std::string hostnameReq = "example.com";  // Replace with your hostname
+			std::string body = "heloo i would be\r\nthe body\r\n";
+
+			// Split the body into chunks
+			std::string chunk1 = "heloo i would be ";
+			std::string chunk2 = "the body";
+
+			// Calculate chunk sizes in hexadecimal
+			std::string chunk1Size = toHex(chunk1.size());  // Get the size of chunk1 and convert to hex
+			std::string chunk2Size = toHex(chunk2.size());  // Get the size of chunk2 and convert to hex
+
+			// Construct the chunked body
+			std::string chunkedBody =
+				chunk1Size + "\r\n" + chunk1 + "\r\n" +
+				chunk2Size + "\r\n" + chunk2 + "\r\n" +
+				"0\r\n\r\n";  // "0\r\n\r\n" indicates the end of the chunked body
+
+			// Construct the full HTTP request with chunked encoding
+			std::string request =
+				"GET / HTTP/1.1\r\n"
+				"Host: " + hostnameReq + "\r\n"
+				"Connection: close\r\n"
+				"Transfer-Encoding: chunked\r\n\r\n"  // Use chunked transfer encoding
+				+ chunkedBody;
 
 	// Send the request
 	if (send(socket_fd, request.c_str(), request.length(), 0) < 0) {
