@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adrherna <adrherna@student.42.fr>          +#+  +:+       +#+        */
+/*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/13 16:03:43 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/18 13:55:24 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/20 15:06:06 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,9 @@ using HeadersMap = std::unordered_map<HeaderType, std::string>;
 class Request {
 	public:
 		bool				_finished;
-		MethodType			_type; //done
-		std::string			_uri; //done
-		std::string			_version; //done
+		MethodType			_type;
+		std::string			_uri;
+		std::string			_version;
 		HeadersMap			_headers;
 		std::string			_body;
 

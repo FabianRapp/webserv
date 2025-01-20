@@ -11,6 +11,7 @@
 #include <exception>
 #include <ostream>
 #include <vector>
+#include <sstream>
 
 using vector = std::vector<std::string>;
 using String = std::string;

@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/20 14:02:21 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/20 16:07:20 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,16 @@
 // Connection Closure:
 // If neither Content-Length nor Transfer-Encoding is specified, the end of the body is signaled by the server closing the connection.
 // This is a fallback mechanism in HTTP/1.1 but is considered bad practice and is rarely used.
+
+int sizeLineToInt(const std::string& hexStr) {
+	int value = 0;
+	std::stringstream ss;
+
+	ss << std::hex << hexStr;
+	ss >> value;
+
+	return value;
+}
 
 std::string	cleanBody(const std::string& input) {
 	std::string	cleanBody;
@@ -193,15 +203,38 @@ void printStringVector(const std::vector<std::string>& vec) {
 	}
 }
 
+// there will be probably more checks needed for the formatting of the parser
 void	Parser::parser_chunked(std::string& input) {
 
-	// std::string chunkLine;
-	// std::string chunkSizeLine;
+	std::string chunkLine;
+	std::string chunkSizeLine;
 
 	std::vector<std::string> bodyVector = split(input, "\r\n");
-	std::cout << "here comes the body vector" << std::endl;
-	printStringVector(bodyVector);
+	std::cout << "here comes the body vector for chunked requests" << std::endl;
 
+	printStringVector(bodyVector);
+	std::cout << bodyVector.size() << std::endl;
+
+	if ((bodyVector.size() - 1) % 2 != 0)
+	{
+		std::cout << "bodyVector size check exited" << std::endl;
+		// handle error, this means that there is one line that doesnt also have a line with the size or vice versa
+		return;
+	}
+
+	for (size_t i = 0; i < bodyVector.size(); i += 2) {
+		chunkSizeLine = bodyVector[i];
+
+		std::cout << "chunkSizeLine " << chunkSizeLine << std::endl;
+
+		int chunkSize = sizeLineToInt(chunkSizeLine);
+
+		if (i + 1 < bodyVector.size()) {
+			chunkLine = bodyVector [i + 1];
+			std::cout << "chunk size = " << chunkSize << " actual chunk size " << chunkLine.size() << std::endl;
+			_request._body += chunkLine;
+		}
+	}
 }
 
 void	Parser::parse_body(std::string& input) {
@@ -217,6 +250,7 @@ void	Parser::parse_body(std::string& input) {
 	}
 	else if (_request._headers.find(HeaderType::TRANSFER_ENCODING) != _request._headers.end())
 	{
+		// this will later have to actually check what is the actual value of TRANSFER_ENCODING
 		std::cout << "parsing chunked:" << std::endl;
 		parser_chunked(body);
 	}
@@ -237,7 +271,6 @@ void Parser::parse(std::string input) {
 
 	parse_first_line(array);
 	parse_headers(array);
-
 	parse_body(input);
 
 	_request.displayRequest();
