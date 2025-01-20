@@ -16,8 +16,6 @@ bool	BaseFd::is_ready(short event) const {
 	return (data.is_ready(data_idx, event));
 }
 
-
-
 Server::Server(DataManager& data, Config& config):
 	BaseFd(data, POLLIN),
 	config(config)
@@ -101,7 +99,9 @@ void	ReadFd::execute(void) {
 }
 
 Client::Client(DataManager& data, Server* parent_server):
-	BaseFd(data, POLLIN | POLLOUT)
+	BaseFd(data, POLLIN | POLLOUT),
+	mode(ClientMode::RECEIVING),
+	_parser(input)
 {
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));
@@ -129,5 +129,54 @@ Client::~Client(void) {
 }
 
 void	Client::execute(void) {
-	std::cout << "clinet exec\n";
+	switch (this->mode) {
+		case (ClientMode::RECEIVING): {
+			if (!is_ready(POLLIN)) {
+				return ;
+			}
+			std::cout << "clinet exec\n";
+			char		buffer[4096];
+			int			recv_flags = 0;//MSG_ERRQUEUE <- has smth to do with error checks
+			long int	bytes_read = recv(this->fd, buffer, sizeof buffer - 1, recv_flags);
+			if (bytes_read < 0) {
+				std::cerr << "Error: read failed\n";
+				FT_ASSERT(0);
+			}
+			buffer[bytes_read] = 0;
+			std::cout << "Read:\n" << buffer << '\n';
+			this->input += buffer;
+
+			/* todo: check for earlyer chunks of the msg etc.. */
+			try {
+				/* todo: this throw is just for testing */
+				//throw (SendClientError(404, _codes[404], "testing", true));
+
+				this->parse();
+				bool testing_response = true;
+				//if (testing_response || connection.completed_request()) {
+				//	connection.current_mode = ClientMode::RECEIVING;
+				//	t_http_request	request = connection.get_request();
+				//	bool	placeholder_close_connection;
+				//	std::string	response = _build_response(request, placeholder_close_connection);
+				//	connection.set_response(std::move(response), placeholder_close_connection);
+				//}
+			} catch (const SendClientError& err) {
+				//_default_err_response(connection, err);
+			}
+
+		}
+		case (ClientMode::SENDING): {
+		}
+		case (ClientMode::READING_FILE): {
+		}
+		case (ClientMode::WRITING_FILE): {
+		}
+		case (ClientMode::READING_PIPE): {
+		}
+		case (ClientMode::WRITING_PIPE): {
+		}
+	}
+}
+
+void	Client::parse() {
 }

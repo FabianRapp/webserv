@@ -29,7 +29,7 @@ public:
 
 	bool	is_ready(size_t idx, short event);
 	
-	int	get_fd(size_t idx);
+	int		get_fd(size_t idx);
 
 	void	run_poll();
 

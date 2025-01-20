@@ -63,14 +63,27 @@ private:
 	std::function<void()>				completion_callback;
 };
 
+
+
 class Client: public BaseFd {
 public:
+	enum class ClientMode {
+		RECEIVING,
+		SENDING,
+		READING_FILE,
+		WRITING_FILE,
+		READING_PIPE,
+		WRITING_PIPE,
+	}	mode;
 	Client(DataManager& data, Server* parent_server);
 
 	~Client(void);
 
 	void	execute(void);
 
+	void	parse(void);
 	Server*	server;
+	std::string	input;
 private:
+	Parser			_parser;
 };
