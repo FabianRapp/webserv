@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/20 18:00:02 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/20 18:39:36 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -285,6 +285,11 @@ void	Parser::parse_body(std::string& input) {
 		// if there is no content lenght it can be an error,
 	}
 }
+
+// to do:
+// 1. finish the checking for the end of the body
+// 2. do more checking for chunked and unchunked bodies in multiple reads
+
 
 void Parser::parse(std::string input) {
 	std::cout << "from parser:" <<std::endl << input << std::endl;
