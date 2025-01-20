@@ -39,12 +39,16 @@ int main() {
 	}
 
 	// Prepare HTTP GET request
+	std::string hostnameReq = "example.com";  // Replace with your hostname
+	std::string body = "heloo i would be\r\nthe body\r\n";
+	size_t contentLength = body.length();
+
 	std::string request =
 		"GET / HTTP/1.1\r\n"
-		"Host: " + std::string(hostname) + "\r\n"
-		"Connection: close\r\n\r\n"
-		"heloo i would be" + "\r\n"
-		"the body" + "\r\n";
+		"Host: " + hostnameReq + "\r\n"
+		"Connection: close\r\n"
+		"Content-Length: " + std::to_string(contentLength) + "\r\n\r\n"
+		+ body;
 
 	// Send the request
 	if (send(socket_fd, request.c_str(), request.length(), 0) < 0) {

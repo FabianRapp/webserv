@@ -3,15 +3,37 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: adrherna <adrherna@student.42.fr>          +#+  +:+       +#+        */
+/*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/18 16:06:58 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/20 14:02:21 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/parser/Parser.hpp"
 #include <cstddef>
+#include <vector>
+
+// 1. No Content-Length or Transfer-Encoding in HTTP/1.1
+// Connection Closure:
+// If neither Content-Length nor Transfer-Encoding is specified, the end of the body is signaled by the server closing the connection.
+// This is a fallback mechanism in HTTP/1.1 but is considered bad practice and is rarely used.
+
+std::string	cleanBody(const std::string& input) {
+	std::string	cleanBody;
+	size_t		start;
+
+	start = input.find("\r\n\r\n");
+	if (start == std::string::npos) {
+		std::cout << "could not find end of headers" << std::endl;
+		// handle error logic
+		return ("");
+	}
+
+	cleanBody = input.substr(start + 4);
+
+	return (cleanBody);
+}
 
 void printStringArray(const StringArray& arr) {
 	for (size_t i = 0; i < arr.size(); ++i) {
@@ -24,14 +46,14 @@ void printStringArray(const StringArray& arr) {
 }
 
 //splits a string into the individual words and puts it inside a vector. Like in a char **.
-std::vector<std::string> split(const std::string& str, char delimiter) {
+std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
 	std::vector<std::string> tokens;
 	size_t start = 0;
 	size_t end = str.find(delimiter);
 
 	while (end != std::string::npos) {
 		tokens.push_back(str.substr(start, end - start));
-		start = end + 1;
+		start = end + delimiter.length();
 		end = str.find(delimiter, start);
 	}
 
@@ -57,7 +79,7 @@ StringArray splitIntoArrays(const String& input, const String& lineDl, const Str
 
 	while ((end = str.find(lineDl, start)) != std::string::npos) {
 		String line = str.substr(start, end - start);
-		Line lineV = split(line, ' ');
+		Line lineV = split(line, " ");
 		result.push_back(lineV);
 
 		start = end + lineDl.length();
@@ -65,7 +87,7 @@ StringArray splitIntoArrays(const String& input, const String& lineDl, const Str
 
 	if (start < str.length()) {
 		String lastLine = str.substr(start);
-		Line lastLineV = split(lastLine, ' ');
+		Line lastLineV = split(lastLine, " ");
 		result.push_back(lastLineV);
 	}
 
@@ -112,7 +134,7 @@ void Parser::insertHeader(const std::string& key, const std::string& value) {
 	_request._headers.insert({keyType, value});
 
 	std::cout << "Header:" << std::endl;
-	std::cout << "key: " << key << " value: " << value << std::endl; 
+	std::cout << "key: " << key << " value: " << value << std::endl;
 }
 
 void	Parser::parse_first_line(const StringArray& array) {
@@ -139,36 +161,90 @@ void	Parser::parse_headers(const StringArray& array) {
 	}
 }
 
+void	Parser::parser_unchunked(std::string& input) {
+
+	unsigned long bytesToRead = 0;
+	auto it = _request._headers.find(HeaderType::CONTENT_LENGTH);
+
+	if (it != _request._headers.end()) {
+		bytesToRead = std::stoul(it->second);
+	} else {
+		std::cout << "Content-Length header not found!" << std::endl;
+	}
+
+	// what happens if input is smaller than ConLen ? does that mean that we havent finished reading the full body ?
+	if (input.size() < bytesToRead) {
+		std::cout << "Input is smaller than Content-Length!" << std::endl;
+		return;
+	}
+
+	for (unsigned int i = 0; i < bytesToRead; ++i) {
+		char currentChar = input[i];
+		std::cout << currentChar;
+		_request._body.push_back(currentChar);
+	}
+
+	std::cout << "\nFinished reading unchunked body." << std::endl;
+}
+
+void printStringVector(const std::vector<std::string>& vec) {
+	for (const auto& str : vec) {
+		std::cout << "|" << str << "|" << std::endl;
+	}
+}
+
+void	Parser::parser_chunked(std::string& input) {
+
+	// std::string chunkLine;
+	// std::string chunkSizeLine;
+
+	std::vector<std::string> bodyVector = split(input, "\r\n");
+	std::cout << "here comes the body vector" << std::endl;
+	printStringVector(bodyVector);
+
+}
 
 void	Parser::parse_body(std::string& input) {
-	
+
+	// handle also errors when body here is empty
+	// this can go wrong if the full body is not already included in the input variable
+	std::string body = cleanBody(input);
+
 	if (_request._headers.find(HeaderType::CONTENT_LENGTH) != _request._headers.end())
 	{
-		// handle logic for unchunked body
+		std::cout << "parsing unchunked:" << std::endl;
+		parser_unchunked(body);
 	}
 	else if (_request._headers.find(HeaderType::TRANSFER_ENCODING) != _request._headers.end())
 	{
-		// handle logic for chunked body
+		std::cout << "parsing chunked:" << std::endl;
+		parser_chunked(body);
 	}
 	else
 	{
+		std::cout << "error parsing body" << std::endl;
 		// handle logic for errors
-	}	
+		// if there is no content lenght it can be an error,
+	}
 }
 
 void Parser::parse(std::string input) {
 	std::cout << "from parser:" <<std::endl << input << std::endl;
 
 	StringArray array = splitIntoArrays(input, "\r\n", "\r\n\r\n");
+	printStringArray(array);
+	std::cout << std::endl;
 
 	parse_first_line(array);
 	parse_headers(array);
-	
-	
-	
-	printStringArray(array);
+
+	parse_body(input);
+
 	_request.displayRequest();
 }
+
+
+
 
 
 

@@ -31,6 +31,8 @@ class Parser {
 		void	parse_first_line(const StringArray& array);
 		void	parse_headers(const StringArray& array);
 		void	parse_body(std::string& input);
+		void	parser_unchunked(std::string& input);
+		void	parser_chunked(std::string& input);
 
 		// Setters
 		void setRequestMethod(const std::string& method);
@@ -38,11 +40,11 @@ class Parser {
 		void setVersion(const std::string& version);
 
 		// Utils
-		// std::string	getCleanBody(std::string& input);
+		// std::string	cleanBody(const std::string& input);
 		void		insertHeader(const std::string& key, const std::string& value);
 		static bool	is_header_present(const std::string& str);
 		std::string extract_first_line(const std::string& request);
-		std::vector<std::string> split(const std::string& str, char delimiter);
+		// std::vector<std::string> split(const std::string& str, char delimiter);
 		bool		ends_with(const std::string& str, const std::string& suffix);
 		bool		is_finished(void) const;
 		Request		get_request(void) const;
