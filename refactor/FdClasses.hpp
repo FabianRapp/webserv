@@ -1,10 +1,11 @@
 #pragma once
 
 #include <Webserv.hpp>
+#include <Manager.hpp>
 
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <Manager.hpp>
+
 
 class DataManager;
 
@@ -23,6 +24,7 @@ public:
 	~BaseFd(void);
 
 	bool	is_ready(short event) const;
+	void	set_close(void);
 
 	virtual
 	void	execute(void) = 0;
@@ -84,6 +86,19 @@ public:
 	void	parse(void);
 	Server*	server;
 	std::string	input;
+
 private:
+
+	std::string		_build_response(t_http_request request, bool & close_connection);
+	void			_execute_request(t_http_request request, ClientConnection & connection);
+	void			_receive_request(void);
+
+	void			_send_response(void);
+	struct send_data {
+		std::string	response;
+		size_t		pos;
+		bool		close_after_send;
+	}	_send_data;
+
 	Parser			_parser;
 };
