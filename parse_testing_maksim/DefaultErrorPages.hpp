@@ -12,12 +12,20 @@ public:
 	DefaultErrorPages();
 
 	//setter
-	void addErrorPage(int err_code, const std::string& path);
+	// void addErrorPage(int err_code, const std::string& path);
+
+	// //getter
+	// const std::string& getErrorPage(int err_code) const;
+
+	// //debug
+	// void printErrorPages() const;
+
 
 	//getter
-	const std::string& getErrorPage(int err_code) const;
+	const std::string getErrorPageLink(int err_code) const;
+	//setter
+	void setErrorPageLink(int err_code, std::string link);
 
-	//debug
 	void printErrorPages() const;
 };
 

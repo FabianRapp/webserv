@@ -7,7 +7,7 @@ DefaultErrorPages::DefaultErrorPages() {
 	_error_pages[102] = "./default/error_pages/102.html"; // Processing (WebDAV)
 	_error_pages[103] = "./default/error_pages/103.html"; // Early Hints
 
-	// 2xx Success Responses (optional, rarely used for error pages)
+	// 2xx Success Responses
 	_error_pages[200] = "./default/error_pages/200.html"; // OK
 	_error_pages[201] = "./default/error_pages/201.html"; // Created
 	_error_pages[202] = "./default/error_pages/202.html"; // Accepted
@@ -19,7 +19,7 @@ DefaultErrorPages::DefaultErrorPages() {
 	_error_pages[208] = "./default/error_pages/208.html"; // Already Reported (WebDAV)
 	_error_pages[226] = "./default/error_pages/226.html"; // IM Used
 
-	// 3xx Redirection Responses (optional, rarely used for error pages)
+	// 3xx Redirection Responses
 	_error_pages[300] = "./default/error_pages/300.html"; // Multiple Choices
 	_error_pages[301] = "./default/error_pages/301.html"; // Moved Permanently
 	_error_pages[302] = "./default/error_pages/302.html"; // Found (Previously "Moved Temporarily")
@@ -79,4 +79,35 @@ DefaultErrorPages::DefaultErrorPages() {
 	_error_pages[511] = "./default/error_pages/511.html"; // Network Authentication Required (RFC 6585)
 }
 
-void DefaultErrorPages::addError
+// void DefaultErrorPages::getErrorPage()
+
+const std::string DefaultErrorPages::getErrorPageLink(int err_code) const {
+	auto it = _error_pages.find(err_code);
+
+	if(it != _error_pages.end()) {
+		return it->second;
+	} else {
+		//todo: trow error
+		std::cout << "Error code not found" << std::endl;
+	}
+	return 0;
+}
+
+void DefaultErrorPages::setErrorPageLink(int err_code, std::string link) {
+	auto it = _error_pages.find(err_code);
+
+	if(it != _error_pages.end()) {
+		it->second = link;
+		std::cout << "Replaced link for error code " << err_code << " with: "
+		<< link << std::endl;
+	} else {
+		//todo: trow error
+		std::cout << "Error code does not exists" << std::endl;
+	}
+}
+
+void DefaultErrorPages::printErrorPages() const {
+	for (const auto& [code, path] : _error_pages) {
+		std::cout << "Error Code " << code << ": " << path << "\n";
+	}
+}
