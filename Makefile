@@ -4,7 +4,6 @@ NAME := webserv
 
 INCLUDES := -I./includes \
 			-I./includes/parser \
-			-I./refactor
 
 FSAN := address
 
@@ -16,15 +15,11 @@ CXXFLAGS :=  $(WWW) -std=c++17 -g -fsanitize=$(FSAN) -O0 \
 
 SRCS_DIR := srcs/
 SRCS := main.cpp \
-		Webserv.cpp \
 		Parser.cpp \
 		Lexer.cpp \
 		Token.cpp \
 		utils.cpp \
 		to_string.cpp \
-		ClientConnection.cpp \
-		ClientConnections.cpp \
-		NewClientListener.cpp \
 		config_parser.cpp \
 		Exceptions.cpp \
 		refactor/Manager.cpp \

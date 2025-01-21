@@ -2,6 +2,7 @@
 #include <ClientConnection.hpp>
 #include <poll.h>
 #include <macros.h>
+#include <mutex>
 
 /* NewClientListenter is only allowed to call add_client() and get_count() */
 class ClientConnections {

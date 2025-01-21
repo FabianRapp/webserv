@@ -25,10 +25,10 @@ int	main(void) {
 		return (1);
 	}
 	struct sockaddr_in	server_addr = {
-		.sin_len = 0,
+		//.sin_len = 0,
 		.sin_family = AF_INET,
 		.sin_port = htons(port),
-		.sin_addr.s_addr = 0,
+		.sin_addr = {0},
 		.sin_zero = {0},
 	};
 	memcpy(&server_addr.sin_addr.s_addr, server->h_addr, server->h_length);

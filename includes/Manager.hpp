@@ -1,4 +1,21 @@
 #pragma once
+#include <colors.h>
+#include <Token.hpp>
+#include <msg.hpp>
+#include <Parser.hpp>
+#include <utils.hpp>
+#include <types.hpp>
+#include <Exceptions.hpp>
+
+#include <thread>
+#include <unistd.h>
+#include <cstring>
+#include <errno.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <iostream>
+#include <string>
+#include <poll.h>
 
 #include <cstdlib>
 #include <vector>
@@ -7,6 +24,11 @@
 #include <cassert>
 #include <cerrno>
 #include <iostream>
+
+#ifndef REQUEST_QUE_SIZE
+# define REQUEST_QUE_SIZE 10
+#endif
+
 
 #include <FdClasses.hpp>
 

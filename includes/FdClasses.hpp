@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Webserv.hpp>
-
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <Manager.hpp>
@@ -23,6 +21,7 @@ public:
 	~BaseFd(void);
 
 	bool	is_ready(short event) const;
+	void	set_close(void);
 
 	virtual
 	void	execute(void) = 0;
@@ -31,6 +30,8 @@ public:
 	DataManager&	data;
 	int				fd;
 	size_t			data_idx;
+protected:
+	void	_set_non_blocking(void);
 private:
 };
 
@@ -84,6 +85,9 @@ public:
 	void	parse(void);
 	Server*	server;
 	std::string	input;
+	std::string	output;
 private:
+	std::string		_build_response(t_http_request request, bool & close_connection);
 	Parser			_parser;
+	size_t			_output_pos;
 };

@@ -66,10 +66,13 @@ void	DataManager::_add_entry(BaseFd *entry, short poll_events) {
 void	DataManager::_fd_close(size_t idx) {
 	delete _fd_users[idx];
 	close(_pollfds[idx].fd);
-	_pollfds[idx] = *(_pollfds.end() - 1);
-	_close_later[idx] = *(_close_later.end() - 1);
-	_fd_users[idx] = *(_fd_users.end() - 1);
-	_fd_users[idx]->data_idx = idx;
+	_count--;
+	if (idx < _count) {
+		_pollfds[idx] = *(_pollfds.end() - 1);
+		_close_later[idx] = *(_close_later.end() - 1);
+		_fd_users[idx] = *(_fd_users.end() - 1);
+		_fd_users[idx]->data_idx = idx;
+	}
 	_pollfds.pop_back();
 	_close_later.pop_back();
 	_fd_users.pop_back();

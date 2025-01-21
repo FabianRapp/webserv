@@ -1,12 +1,11 @@
-#include <Webserv.hpp>
-#include <ClientConnections.hpp>
+#include <Manager.hpp>
 #include <config_parser.hpp>
 #include <vector>
 #include <Exceptions.hpp>
 #include <Manager.hpp>
 #include <FdClasses.hpp>
 
-std::atomic<bool>	exit_{false};
+bool	exit_ = false;
 
 void	init(void) {
 
@@ -25,6 +24,7 @@ int	main(int ac, char *av[]) {
 	while (!exit_) {
 		manager.run_poll();
 		manager.execute_all();
+		manager.process_closures();
 	}
 //	std::vector<std::pair<std::thread, Webserv*>>	servers;
 //	

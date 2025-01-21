@@ -12,8 +12,24 @@ BaseFd::~BaseFd(void) {
 	data.set_close(data_idx);
 }
 
+void	BaseFd::set_close(void) {
+	data.set_close(data_idx);
+}
+
 bool	BaseFd::is_ready(short event) const {
 	return (data.is_ready(data_idx, event));
+}
+
+void	BaseFd::_set_non_blocking(void) {
+	int	old_err = errno;
+	errno = 0;
+	int	flags = fcntl(fd, F_GETFL, 0);
+	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+	if (errno) {
+		std::cerr << "Error: fcntl: set non blocking" << strerror(errno) << '\n';
+		assert(0);
+	}
+	errno = old_err;
 }
 
 Server::Server(DataManager& data, Config& config):
@@ -32,7 +48,7 @@ Server::Server(DataManager& data, Config& config):
 		std::cerr << "Error: server: socket: " << strerror(errno) << '\n';
 		exit(errno);
 	}
-	fd = set_fd_non_block(fd);
+	_set_non_blocking();
 	if (fd < 0) {
 		exit(errno);
 	}
@@ -101,7 +117,8 @@ void	ReadFd::execute(void) {
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT),
 	mode(ClientMode::RECEIVING),
-	_parser(input)
+	_parser(input),
+	_output_pos(0)
 {
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));
@@ -115,7 +132,7 @@ Client::Client(DataManager& data, Server* parent_server):
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 		FT_ASSERT(0 && "Should have been handled by poll");
 	}
-	//fd = set_fd_non_block(fd);
+	_set_non_blocking();
 	//if (new_client_fd < 0) {
 	//	FT_ASSERT(0);
 	//}
@@ -153,19 +170,37 @@ void	Client::execute(void) {
 
 				this->parse();
 				bool testing_response = true;
-				//if (testing_response || connection.completed_request()) {
-				//	connection.current_mode = ClientMode::RECEIVING;
-				//	t_http_request	request = connection.get_request();
-				//	bool	placeholder_close_connection;
-				//	std::string	response = _build_response(request, placeholder_close_connection);
-				//	connection.set_response(std::move(response), placeholder_close_connection);
-				//}
+				if (testing_response || _parser.is_finished()) {
+					mode = ClientMode::RECEIVING;
+					t_http_request	request = _parser.get_request();
+					bool	placeholder_close_connection;
+					output = _build_response(request, placeholder_close_connection);
+				}
 			} catch (const SendClientError& err) {
 				//_default_err_response(connection, err);
 			}
 
 		}
 		case (ClientMode::SENDING): {
+			if (!is_ready(POLLOUT)) {
+				return ;
+			}
+			const int send_flags = 0;
+			ssize_t send_bytes = send(
+				fd,
+				output.c_str() + _output_pos,
+				output.size() - _output_pos,
+				send_flags
+			);
+			assert(send_bytes > 0);
+			_output_pos += static_cast<size_t>(send_bytes);
+			if (_output_pos == output.size()) {
+				output = "";
+				_output_pos = 0;
+				mode = ClientMode::RECEIVING;
+				/*placeholder */set_close();
+			}
+			return ;
 		}
 		case (ClientMode::READING_FILE): {
 		}
@@ -176,6 +211,32 @@ void	Client::execute(void) {
 		case (ClientMode::WRITING_PIPE): {
 		}
 	}
+}
+
+std::string	Client::_build_response(t_http_request request, bool & close_connection) {
+	std::string	response = "HTTP/1.1 ";
+
+	close_connection = true; /* default for now == true */
+	switch (request.type) {
+		
+		case (MethodType::GET): {
+			break ;
+		}
+		case (MethodType::POST): {
+			break ;
+		}
+		case (MethodType::DELETE): {
+			break ;
+		}
+		default: {
+			std::cerr << "Error: Unsupported request type: "
+				<< to_string(request.type) << "\n";
+			response += "405 Method Not Allowed\r\n";
+			//response += "\r\n\r\n";
+			close_connection = true;
+		}
+	}
+	return (response);
 }
 
 void	Client::parse() {
