@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/21 13:23:49 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/21 15:57:23 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,20 +57,28 @@ void printStringArray(const StringArray& arr) {
 
 
 //splits a string into the individual words and puts it inside a vector. Like in a char **.
+// still have to check why is this adding a \r\n after the chunk content line and not after the chunk size line
+// PRIORITY
 std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
 	std::vector<std::string> tokens;
 	size_t start = 0;
 	size_t end = str.find(delimiter);
 
 	while (end != std::string::npos) {
+		std::cout << "start: " << start << " end: " << end <<std::endl;
 		std::string token = str.substr(start, end - start);
-		// std::cout << "start: " << start << "end: " << end - start <<std::endl;
+		if (token == "")
+			token = "\r\n";
 		tokens.push_back(token);
 		start = end + delimiter.length();
 		end = str.find(delimiter, start);
 	}
 
-	tokens.push_back(str.substr(start));
+	std::cout << "final: start: " << start <<std::endl;
+	std::string token = str.substr(start);
+	if (token == "")
+			token = "\r\n";
+	tokens.push_back(token);
 
 	return tokens;
 }
@@ -206,7 +214,10 @@ void	Parser::parser_unchunked(std::string& input) {
 
 void printStringVector(const std::vector<std::string>& vec) {
 	for (const auto& str : vec) {
-		std::cout << "|" << str << "|" << std::endl;
+		if (str == "\r\n")
+			std::cout << "|" << "\\r\\n" << "|" << std::endl;
+		else
+			std::cout << "|" << str << "|" << std::endl;
 	}
 }
 
@@ -232,36 +243,31 @@ void	Parser::parser_chunked(std::string& input) {
 
 	std::vector<std::string> bodyVector = split(input, "\r\n");
 	std::cout << "here comes the body vector for chunked requests" << std::endl;
-	printStringVector(bodyVector);
 	std::cout << bodyVector.size() << std::endl;
 
 	if (isChunkedFinished(bodyVector)) {
 		std::cout << "Final chunk detected, chunked parsing finished\n" << std::endl;
 		_request._finished = true;
+		printStringVector(bodyVector);
 		return;
 	}
 
-	// we can add also this next block to a function making checks
-	if ((bodyVector.size() - 1) % 2 != 0)
-	{
-		std::cout << "bodyVector size check exited" << std::endl;
-		// handle error, this means that there is one line that doesnt also have a line with the size or vice versa
-		return;
-	}
 
-	for (size_t i = 0; i < bodyVector.size(); i += 2) {
-		std::string chunkSizeLine = bodyVector[i];
-		int chunkSize = sizeLineToInt(chunkSizeLine);
 
-		std::cout << "chunkSizeLine " << chunkSizeLine << std::endl;
+// this whole logic is not working
+	// for (size_t i = 0; i < bodyVector.size(); i += 2) {
+	// 	std::string chunkSizeLine = bodyVector[i];
+	// 	int chunkSize = sizeLineToInt(chunkSizeLine);
 
-		if (i + 1 < bodyVector.size()) {
-			std::string chunkLine = bodyVector [i + 1];
-			_request._body += chunkLine;
-			// std::cout << "chunk size = " << chunkSize << " actual chunk size " << chunkLine.size() << std::endl;
-		}
+	// 	std::cout << "chunkSizeLine " << chunkSizeLine << std::endl;
 
-	}
+	// 	if (i + 1 < bodyVector.size()) {
+	// 		std::string chunkLine = bodyVector [i + 1];
+	// 		_request._body += chunkLine;
+	// 		// std::cout << "chunk size = " << chunkSize << " actual chunk size " << chunkLine.size() << std::endl;
+	// 	}
+
+	// }
 	// make checks to see ending of chunked body
 }
 
