@@ -45,18 +45,19 @@ Webserv::Webserv(struct server_config):
 Webserv::~Webserv(void) {
 	_listener.join_thread();
 }
-enum class PostParseAction {
-	WAIT,
-	SEND_CONTINUE,
-	EXECUTE_RESPONSE,
-	ERROR,
-};
+// enum class PostParseAction {
+// 	WAIT,
+// 	SEND_CONTINUE,
+// 	EXECUTE_RESPONSE,
+// 	ERROR,
+// };
+
 [[noreturn]]
 void	Webserv::run(void) {
 	_listener.run();
 	while (1) {
 		//_accept_clients();
-
+		// std::cout << "looped\n" << std::endl;
 		if (_connections.get_count() == 0) {
 			continue ;
 		}
@@ -95,7 +96,7 @@ void	Webserv::run(void) {
 			} */
 			else {
 				std::cout << FT_ANSI_YELLOW
-					"Warning: not completed request(bug or long request?)\n"
+					"Warning: headers ending sequence not detected (bug or uncomplete request?)\n"
 					FT_ANSI_RESET;
 			}
 			++it;

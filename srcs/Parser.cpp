@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/20 18:39:36 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/21 13:23:49 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,7 @@ void printStringArray(const StringArray& arr) {
 	}
 }
 
+
 //splits a string into the individual words and puts it inside a vector. Like in a char **.
 std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
 	std::vector<std::string> tokens;
@@ -62,7 +63,9 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
 	size_t end = str.find(delimiter);
 
 	while (end != std::string::npos) {
-		tokens.push_back(str.substr(start, end - start));
+		std::string token = str.substr(start, end - start);
+		// std::cout << "start: " << start << "end: " << end - start <<std::endl;
+		tokens.push_back(token);
 		start = end + delimiter.length();
 		end = str.find(delimiter, start);
 	}
@@ -169,6 +172,8 @@ void	Parser::parse_headers(const StringArray& array) {
 		insertHeader(array[i][0], array[i][1]);
 		i++;
 	}
+	std::cout << "Headers were parsed\n" << std::endl;
+	_request._areHeadersParsed = true;
 }
 
 void	Parser::parser_unchunked(std::string& input) {
@@ -183,6 +188,7 @@ void	Parser::parser_unchunked(std::string& input) {
 	}
 
 	// what happens if input is smaller than ConLen ? does that mean that we havent finished reading the full body ?
+	// this is working bc we dont actually assing the input to the body until the full body is there.
 	if (input.size() < bytesToRead) {
 		std::cout << "Input is smaller than Content-Length!" << std::endl;
 		return;
@@ -194,6 +200,7 @@ void	Parser::parser_unchunked(std::string& input) {
 		_request._body.push_back(currentChar);
 	}
 
+	_request._finished = true;
 	std::cout << "\nFinished reading unchunked body." << std::endl;
 }
 
@@ -203,37 +210,36 @@ void printStringVector(const std::vector<std::string>& vec) {
 	}
 }
 
-int checkChunkedBody(const std::vector<std::string> bodyVector) {
-	if ((bodyVector.size() - 1) % 2 != 0)
-	{
-		std::cout << "bodyVector size check exited" << std::endl;
-		// handle error, this means that there is one line that doesnt also have a line with the size or vice versa
-		return -1;
+bool isChunkedFinished(const std::vector<std::string>& bodyVector) {
+	if (bodyVector.size() < 3) {
+		std::cout << "Error: The body is not long enough, possibly malformed." << std::endl;
+		return false;
 	}
-
-	// do testing with very small vectors
-	// checks that the last chunk is 0 in size and followed by an \r\n chunk
 	size_t start = bodyVector.size() - 3;
-	std::cout << bodyVector[start] << std::endl;
-	std::cout << bodyVector[start + 1] << std::endl;
-	std::cout << bodyVector[start + 2] << std::endl;
-	if (bodyVector[start] != "0" || bodyVector[start + 1] != "" || bodyVector[start + 2] != "")
-	{
-		std::cout << "body is not ending as expected" << std::endl;
-		return -1;
+
+	std::cout << "Last 3 elements: " << bodyVector[start] << ", " << bodyVector[start + 1] << ", " << bodyVector[start + 2] << std::endl;
+
+	if (bodyVector[start] != "0" || bodyVector[start + 1] != "\r\n" || bodyVector[start + 2] != "\r\n") {
+		std::cout << "Error: Body does not end as expected or is incomplete." << std::endl;
+		return false;
 	}
-	return 0;
+
+	return true;
 }
-
-
 
 // there will be probably more checks needed for the formatting of the parser
 void	Parser::parser_chunked(std::string& input) {
+
 	std::vector<std::string> bodyVector = split(input, "\r\n");
 	std::cout << "here comes the body vector for chunked requests" << std::endl;
-
 	printStringVector(bodyVector);
 	std::cout << bodyVector.size() << std::endl;
+
+	if (isChunkedFinished(bodyVector)) {
+		std::cout << "Final chunk detected, chunked parsing finished\n" << std::endl;
+		_request._finished = true;
+		return;
+	}
 
 	// we can add also this next block to a function making checks
 	if ((bodyVector.size() - 1) % 2 != 0)
@@ -256,9 +262,7 @@ void	Parser::parser_chunked(std::string& input) {
 		}
 
 	}
-
 	// make checks to see ending of chunked body
-
 }
 
 void	Parser::parse_body(std::string& input) {
@@ -292,16 +296,19 @@ void	Parser::parse_body(std::string& input) {
 
 
 void Parser::parse(std::string input) {
-	std::cout << "from parser:" <<std::endl << input << std::endl;
+	std::cout << "from parser:" <<std::endl << "|" << input << "|" << std::endl;
 
-	StringArray array = splitIntoArrays(input, "\r\n", "\r\n\r\n");
-	printStringArray(array);
-	std::cout << std::endl;
+	if (!_request._areHeadersParsed)
+	{
+		StringArray array = splitIntoArrays(input, "\r\n", "\r\n\r\n");
+		printStringArray(array);
+		std::cout << std::endl;
 
-	parse_first_line(array);
-	parse_headers(array);
-
-	parse_body(input);
+		parse_first_line(array);
+		parse_headers(array);
+	}
+	if (_request._areHeadersParsed)
+		parse_body(input);
 
 	_request.displayRequest();
 }
