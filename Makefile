@@ -4,6 +4,7 @@ NAME := webserv
 
 INCLUDES := -I./includes \
 			-I./includes/parser \
+			-I./includes/FdClasses \
 
 FSAN := address
 
@@ -22,8 +23,8 @@ SRCS := main.cpp \
 		to_string.cpp \
 		config_parser.cpp \
 		Exceptions.cpp \
-		refactor/Manager.cpp \
-		refactor/FdClasses.cpp \
+		Manager.cpp \
+		FdClasses/FdClasses.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 
