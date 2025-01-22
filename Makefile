@@ -24,7 +24,10 @@ SRCS := main.cpp \
 		config_parser.cpp \
 		Exceptions.cpp \
 		Manager.cpp \
-		FdClasses/FdClasses.cpp \
+		FdClasses/BaseFd.cpp \
+		FdClasses/Server.cpp \
+		FdClasses/Client.cpp \
+		FdClasses/ReadFd.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 

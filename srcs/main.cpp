@@ -3,7 +3,6 @@
 #include <vector>
 #include <Exceptions.hpp>
 #include <Manager.hpp>
-#include <FdClasses.hpp>
 
 bool	exit_ = false;
 

@@ -1,5 +1,6 @@
 #pragma once
-#include <colors.h>
+
+#include <general_includes.hpp>
 #include <Token.hpp>
 #include <msg.hpp>
 #include <Parser.hpp>
@@ -7,35 +8,30 @@
 #include <types.hpp>
 #include <Exceptions.hpp>
 
+#include <types.hpp>
+
+#include <Server.hpp>
+#include <Client.hpp>
+
 #include <thread>
 #include <unistd.h>
 #include <cstring>
 #include <errno.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <iostream>
 #include <string>
-#include <poll.h>
 
 #include <cstdlib>
 #include <vector>
-#include <sys/poll.h>
 #include <unistd.h>
 #include <cassert>
 #include <cerrno>
 #include <iostream>
 
-#ifndef REQUEST_QUE_SIZE
-# define REQUEST_QUE_SIZE 10
-#endif
 
 
-#include <FdClasses.hpp>
+#include <BaseFd.hpp>
+#include <types.hpp>
 
-class BaseFd;
-class Server;
-class Client;
-class Config;
 
 class DataManager {
 public:
