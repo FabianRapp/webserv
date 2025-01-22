@@ -42,6 +42,7 @@ class Parser {
 
 		// Utils
 		// std::string	cleanBody(const std::string& input);
+		void		checkForChunks(std::vector<std::string>& bodyVector);
 		void		addTokens(const std::string& str, const std::string& delimiter);
 		void		insertHeader(const std::string& key, const std::string& value);
 		static bool	is_header_present(const std::string& str);

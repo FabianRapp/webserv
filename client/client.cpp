@@ -158,9 +158,9 @@ int main() {
     // std::string chunk1 = "im string 1\r\n";
     // std::string chunk2 = "im string 2\r\n";
     // std::string chunk3 = "im string 3\r\n";
-    std::string chunk1 = "1";
-    std::string chunk2 = "22";
-    std::string chunk3 = "333";
+    std::string chunk1 = "im string 1 ";
+    std::string chunk2 = "im string 2 ";
+    std::string chunk3 = "im string 3";
     std::string headers =
         "GET / HTTP/1.1\r\n"
         "Host: " + hostnameReq + "\r\n"

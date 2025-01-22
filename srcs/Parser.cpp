@@ -6,12 +6,13 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/22 15:22:26 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/22 16:08:18 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/parser/Parser.hpp"
 #include <cstddef>
+#include <string>
 #include <vector>
 
 // 1. No Content-Length or Transfer-Encoding in HTTP/1.1
@@ -256,6 +257,48 @@ void Parser::addTokens(const std::string& str, const std::string& delimiter) {
 	}
 }
 
+void	Parser::checkForChunks(std::vector<std::string>& bodyVector) {
+	size_t		chunkSize;
+	std::string	chunk;
+
+	std::cout << "ENTERED FOR CHECKS" << std::endl;
+
+	if (bodyVector.size() < 4)
+	{
+		std::cout << "check for chunks returned, size is to small to contain a chunk" << std::endl;
+		return ;
+	}
+
+	if (bodyVector[1] != "\r\n" && bodyVector[3] != "\r\n")
+	{
+		std::cout << "tokens are not terminated by end sequence" << std::endl;
+		return;
+	}
+
+	// chunkSize = std::stoi(bodyVector[0]);
+	// std::cout << "Chunk size: " << chunkSize << std::endl;
+	chunk = bodyVector[2];
+	std::cout << "Chunk: " << chunk << std::endl;
+
+	// if (chunkSize != chunk.length())
+	// {
+	// 	std::cout << "Chunk and chunkSize are not matching" << std::endl;
+	// 	return;
+	// }
+	_request._body += chunk;
+	std::cout << "chunk added: |" << chunk << "|" <<std::endl;
+	
+	// removing elements bc they where parsed to the body
+	bodyVector.erase(bodyVector.begin(), bodyVector.begin() + 4);
+
+	if ((bodyVector.size() - 4) < 4)
+	{
+		// TEST this with a send that contains more than one chunk
+		std::cout << "Recursin for checkForChunks called\n";
+		checkForChunks(bodyVector);
+	}
+}
+
 // there will be probably more checks needed for the formatting of the parser
 // TO DO: try to parse one chunk at the time and continue the parsing at the next iter
 
@@ -267,12 +310,15 @@ void	Parser::parser_chunked(std::string& input) {
 	addTokens(input, "\r\n");
 
 	// here make check if there is a chunk present, if it is then parse t
+	checkForChunks(_request._bodyTokens);
 
 	std::cout << "here comes the body vector for chunked requests" << std::endl;
 
 	std::cout << _request._bodyTokens.size() << std::endl;
 	printStringVector( _request._bodyTokens);
 
+
+	// check what is happening with the ending and why is not being added to the body
 	if (isChunkedFinished( _request._bodyTokens)) {
 		std::cout << "Final chunk detected, chunked parsing finished\n" << std::endl;
 		_request._finished = true;
