@@ -65,6 +65,7 @@ void	Webserv::run(void) {
 		ClientConnections::PollIterator	it = _connections.begin(POLLPRI | POLLIN);
 		ClientConnections::PollIterator	end = _connections.end(POLLPRI | POLLIN);
 		while (it < end) {
+			std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAa\n";
 			ClientConnection&	connection = *it;
 			char		buffer[4096];
 			int			recv_flags = 0;//MSG_ERRQUEUE <- has smth to do with error checks

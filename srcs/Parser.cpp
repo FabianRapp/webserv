@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/22 13:18:48 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/22 15:22:26 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,24 +55,17 @@ void printStringArray(const StringArray& arr) {
 	}
 }
 
-
 //splits a string into the individual words and puts it inside a vector. Like in a char **.
-// PRIORITY
 std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
 	std::vector<std::string> tokens;
 	size_t start = 0;
 	size_t end = str.find(delimiter);
-
-	for (size_t i = 0; i < str.length(); i++) {
-		printf("%d\n", str.c_str()[i]);
-	}
 
 	while (end != std::string::npos) {
 		std::string token = str.substr(start, end - start);
 		if (end != start) {
 			tokens.push_back(token);
 		}
-		std::cout << "|" << token << "|\n";
 		if (str.find(delimiter, start) != std::string::npos) {
 			tokens.push_back(delimiter);
 		}
@@ -82,8 +75,6 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
 
 	return tokens;
 }
-
-// 3\r\n 1\r\n 4\r\n 22\r\n 5\r\n 333\r\n 0\r\n\r\n";
 
 // Function to split the input string into arrays (lines and words) and stop at stopDl
 // Dl = delimiter
@@ -240,18 +231,49 @@ bool isChunkedFinished(const std::vector<std::string>& bodyVector) {
 	return true;
 }
 
-// clinent->send_continue();
+void Parser::addTokens(const std::string& str, const std::string& delimiter) {
+	size_t end = str.find(delimiter, _request._startBodyIdx);
+
+	while (end != std::string::npos) {
+		std::string token = str.substr(_request._startBodyIdx, end - _request._startBodyIdx);
+		if (end != _request._startBodyIdx) {
+			_request._bodyTokens.push_back(token);
+			std::cout << "Added token |" << token << "|\n";
+		}
+
+		_request._bodyTokens.push_back(delimiter);
+		std::cout << "Added |delimiter|\n";
+
+		_request._startBodyIdx = end + delimiter.length();
+		end = str.find(delimiter, _request._startBodyIdx);
+	}
+
+	if (_request._startBodyIdx < str.length()) {
+		std::string token = str.substr(_request._startBodyIdx);
+		_request._bodyTokens.push_back(token);
+		std::cout << "Added final token |" << token << "|\n";
+		_request._startBodyIdx = str.length();
+	}
+}
 
 // there will be probably more checks needed for the formatting of the parser
 // TO DO: try to parse one chunk at the time and continue the parsing at the next iter
+
+// POSIBLE LOGIC: add line by line to _bodyTokens and then check the vector, if there is a pair of matching chunkSizeLine and chunkLine
+// then parse it, add it to the body and remove them from the vector
 void	Parser::parser_chunked(std::string& input) {
 
-	std::vector<std::string> bodyVector = split(input, "\r\n");
-	std::cout << "here comes the body vector for chunked requests" << std::endl;
-	std::cout << bodyVector.size() << std::endl;
-	printStringVector(bodyVector);
+	// still have to test this function with inputs that might not end with the delimiter
+	addTokens(input, "\r\n");
 
-	if (isChunkedFinished(bodyVector)) {
+	// here make check if there is a chunk present, if it is then parse t
+
+	std::cout << "here comes the body vector for chunked requests" << std::endl;
+
+	std::cout << _request._bodyTokens.size() << std::endl;
+	printStringVector( _request._bodyTokens);
+
+	if (isChunkedFinished( _request._bodyTokens)) {
 		std::cout << "Final chunk detected, chunked parsing finished\n" << std::endl;
 		_request._finished = true;
 		return;

@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/13 16:03:43 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/21 11:10:16 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/22 14:39:40 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,18 +15,21 @@
 #include <string>
 #include "enums.hpp"
 #include <unordered_map>
+#include <vector>
 
 using HeadersMap = std::unordered_map<HeaderType, std::string>;
 
 class Request {
 	public:
-		bool			_finished;
-		bool			_areHeadersParsed;
-		MethodType		_type;
-		std::string		_uri;
-		std::string		_version;
-		HeadersMap		_headers;
-		std::string		_body;
+		bool						_finished;
+		bool						_areHeadersParsed;
+		MethodType					_type;
+		std::string					_uri;
+		std::string					_version;
+		HeadersMap					_headers;
+		std::string					_body;
+		size_t						_startBodyIdx;
+		std::vector<std::string>	_bodyTokens;
 
 		Request();
 		~Request() = default;
