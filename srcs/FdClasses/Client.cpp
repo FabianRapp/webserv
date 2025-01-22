@@ -94,7 +94,6 @@ std::string	Client::_build_response(t_http_request request, bool & close_connect
 			file_fd, stats.st_size,
 			[this] () {
 				this->mode = ClientMode::BUILD_RESPONSE;
-
 			}
 		);
 		return (response);
