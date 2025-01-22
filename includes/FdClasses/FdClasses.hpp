@@ -1,8 +1,10 @@
 #pragma once
 
+#include <Manager.hpp>
+
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <Manager.hpp>
+
 
 class DataManager;
 
@@ -85,9 +87,16 @@ public:
 	void	parse(void);
 	Server*	server;
 	std::string	input;
-	std::string	output;
 private:
+
 	std::string		_build_response(t_http_request request, bool & close_connection);
+	void			_receive_request(void);
+
+	void			_send_response(void);
+	struct send_data {
+		std::string	response;
+		size_t		pos;
+		bool		close_after_send;
+	}	_send_data;
 	Parser			_parser;
-	size_t			_output_pos;
 };

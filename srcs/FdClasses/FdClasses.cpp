@@ -9,7 +9,7 @@ BaseFd::BaseFd(DataManager& data, short poll_events):
 }
 
 BaseFd::~BaseFd(void) {
-	data.set_close(data_idx);
+	//data.set_close(data_idx);
 }
 
 void	BaseFd::set_close(void) {
@@ -117,8 +117,8 @@ void	ReadFd::execute(void) {
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT),
 	mode(ClientMode::RECEIVING),
-	_parser(input),
-	_output_pos(0)
+	_send_data({"", 0, false}),
+	_parser(input)
 {
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));
@@ -145,71 +145,39 @@ Client::Client(DataManager& data, Server* parent_server):
 Client::~Client(void) {
 }
 
-void	Client::execute(void) {
-	switch (this->mode) {
-		case (ClientMode::RECEIVING): {
-			if (!is_ready(POLLIN)) {
-				return ;
-			}
-			std::cout << "clinet exec\n";
-			char		buffer[4096];
-			int			recv_flags = 0;//MSG_ERRQUEUE <- has smth to do with error checks
-			long int	bytes_read = recv(this->fd, buffer, sizeof buffer - 1, recv_flags);
-			if (bytes_read < 0) {
-				std::cerr << "Error: read failed\n";
-				FT_ASSERT(0);
-			}
-			buffer[bytes_read] = 0;
-			std::cout << "Read:\n" << buffer << '\n';
-			this->input += buffer;
+void	Client::_receive_request(void) {
+	if (!is_ready(POLLIN)) {
+		return ;
+	}
+	std::cout << "clinet exec\n";
+	char		buffer[4096];
+	int			recv_flags = 0;//MSG_ERRQUEUE <- has smth to do with error checks
+	long int	bytes_read = recv(this->fd, buffer, sizeof buffer - 1, recv_flags);
+	if (bytes_read < 0) {
+		std::cerr << "Error: read failed\n";
+		FT_ASSERT(0);
+	}
+	buffer[bytes_read] = 0;
+	std::cout << "Read:\n" << buffer << '\n';
+	this->input += buffer;
 
-			/* todo: check for earlyer chunks of the msg etc.. */
-			try {
-				/* todo: this throw is just for testing */
-				//throw (SendClientError(404, _codes[404], "testing", true));
+	/* todo: check for earlyer chunks of the msg etc.. */
+	try {
+		/* todo: this throw is just for testing */
+		//throw (SendClientError(404, _codes[404], "testing", true));
 
-				this->parse();
-				bool testing_response = true;
-				if (testing_response || _parser.is_finished()) {
-					mode = ClientMode::RECEIVING;
-					t_http_request	request = _parser.get_request();
-					bool	placeholder_close_connection;
-					output = _build_response(request, placeholder_close_connection);
-				}
-			} catch (const SendClientError& err) {
-				//_default_err_response(connection, err);
-			}
-
+		this->parse();
+		bool testing_response = true;
+		if (testing_response || _parser.is_finished()) {
+				mode = ClientMode::SENDING;
+			t_http_request	request = _parser.get_request();
+			bool	placeholder_close_connection;
+			_send_data.response = _build_response(request, placeholder_close_connection);
+			_send_data.pos = 0;
+			_send_data.close_after_send = true; /* placeholder */
 		}
-		case (ClientMode::SENDING): {
-			if (!is_ready(POLLOUT)) {
-				return ;
-			}
-			const int send_flags = 0;
-			ssize_t send_bytes = send(
-				fd,
-				output.c_str() + _output_pos,
-				output.size() - _output_pos,
-				send_flags
-			);
-			assert(send_bytes > 0);
-			_output_pos += static_cast<size_t>(send_bytes);
-			if (_output_pos == output.size()) {
-				output = "";
-				_output_pos = 0;
-				mode = ClientMode::RECEIVING;
-				/*placeholder */set_close();
-			}
-			return ;
-		}
-		case (ClientMode::READING_FILE): {
-		}
-		case (ClientMode::WRITING_FILE): {
-		}
-		case (ClientMode::READING_PIPE): {
-		}
-		case (ClientMode::WRITING_PIPE): {
-		}
+	} catch (const SendClientError& err) {
+		//_default_err_response(connection, err);
 	}
 }
 
@@ -218,7 +186,6 @@ std::string	Client::_build_response(t_http_request request, bool & close_connect
 
 	close_connection = true; /* default for now == true */
 	switch (request.type) {
-		
 		case (MethodType::GET): {
 			break ;
 		}
@@ -239,5 +206,71 @@ std::string	Client::_build_response(t_http_request request, bool & close_connect
 	return (response);
 }
 
-void	Client::parse() {
+void	Client::execute(void) {
+	switch (this->mode) {
+		case (ClientMode::RECEIVING): {
+			_receive_request();
+			if (this->mode != ClientMode::SENDING) {
+				break ;
+			}
+		}
+		case (ClientMode::SENDING): {
+			_send_response();
+			return ;
+		}
+		case (ClientMode::READING_FILE): {
+			break ;
+		}
+		case (ClientMode::WRITING_FILE): {
+			break ;
+		}
+		case (ClientMode::READING_PIPE): {
+			break ;
+		}
+		case (ClientMode::WRITING_PIPE): {
+			break ;
+		}
+	}
 }
+
+void	Client::parse() {
+	_parser.parse();
+}
+
+void	Client::_send_response(void) {
+	if (!this->is_ready(POLLOUT)) {
+		return ;
+	}
+
+	{
+		/* todo: poll to catch potential issues: remove later */
+		struct pollfd	test_poll = {fd, POLLOUT, 0};
+		poll(&test_poll, 1, 0);
+		FT_ASSERT(test_poll.revents & POLLOUT);
+	}
+
+	const int send_flags = 0;
+	ssize_t send_bytes = send(
+		fd,
+		_send_data.response.c_str() + _send_data.pos,
+		_send_data.response.size() - _send_data.pos,
+		send_flags
+	);
+	if (send_bytes <= 0) {
+		//todo:
+		std::cerr << "send_bytes: " << send_bytes << '\n';
+		std::cerr << "err: " << strerror(errno) << '\n';
+		assert(0);
+	}
+	_send_data.pos += static_cast<size_t>(send_bytes);
+	if (_send_data.pos == _send_data.response.size()) {
+		_send_data.response = "";
+		_send_data.pos = 0;
+		if (_send_data.close_after_send) {
+			set_close();
+			_send_data.close_after_send = false;
+		}
+		mode = ClientMode::RECEIVING;
+	}
+}
+
