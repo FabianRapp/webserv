@@ -1,9 +1,11 @@
 #include <Client.hpp>
 #include <Server.hpp>
+#include <Manager.hpp>
 
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT),
 	mode(ClientMode::RECEIVING),
+	_response_builder({"", nullptr}),
 	_send_data({"", 0, false}),
 	_parser(input)
 {
@@ -56,11 +58,10 @@ void	Client::_receive_request(void) {
 		this->parse();
 		bool testing_response = true;
 		if (testing_response || _parser.is_finished()) {
-				mode = ClientMode::SENDING;
-			t_http_request	request = _parser.get_request();
-			bool	placeholder_close_connection;
-			_send_data.response = _build_response(request, placeholder_close_connection);
+			_request = _parser.get_request();
+			mode = ClientMode::BUILD_RESPONSE;
 			_send_data.pos = 0;
+			_send_data.response = "";
 			_send_data.close_after_send = true; /* placeholder */
 		}
 	} catch (const SendClientError& err) {
@@ -68,8 +69,40 @@ void	Client::_receive_request(void) {
 	}
 }
 
+/* todo: should not return value */
 std::string	Client::_build_response(t_http_request request, bool & close_connection) {
-	std::string	response = "HTTP/1.1 ";
+	std::string	&response = _send_data.response;
+
+	if (response.size() == 0) {
+		// first call here
+		response = "HTTP/1.1 200 OK";
+		response += "\r\n";
+		_response_builder.body = "";
+	}
+
+	if (!_response_builder.body.length()) {
+		/* testing to load a file */
+		std::string	path = "hello_world.html";
+		struct stat	stats;
+		stat(path.c_str(), &stats);
+		int	file_fd = open(path.c_str(), O_RDONLY);
+		FT_ASSERT(file_fd > 0);
+
+		mode = ClientMode::READING_FILE;
+		_response_builder.reader = data.new_read_fd(
+			_response_builder.body,
+			file_fd, stats.st_size,
+			[this] () {
+				this->mode = ClientMode::BUILD_RESPONSE;
+
+			}
+		);
+		return (response);
+	}
+	if (_response_builder.reader != nullptr) {
+		_response_builder.reader->set_close();
+		_response_builder.reader = nullptr;
+	}
 
 	close_connection = true; /* default for now == true */
 	switch (request.type) {
@@ -90,6 +123,14 @@ std::string	Client::_build_response(t_http_request request, bool & close_connect
 			close_connection = true;
 		}
 	}
+	response += "Content-Length: ";
+	response += std::to_string(_response_builder.body.length());
+	response += "\r\n";
+	response += "Content-Type: text/html; charset=UTF-8";
+	response += "\r\n";
+	response += "\r\n";
+	response += _response_builder.body;
+	this->mode = ClientMode::SENDING;
 	return (response);
 }
 
@@ -100,6 +141,11 @@ void	Client::execute(void) {
 			if (this->mode != ClientMode::SENDING) {
 				break ;
 			}
+		}
+		case (ClientMode::BUILD_RESPONSE): {
+			bool	placeholder_close_connection;
+			_send_data.response = _build_response(_request, placeholder_close_connection);
+			break ;
 		}
 		case (ClientMode::SENDING): {
 			_send_response();
@@ -118,6 +164,7 @@ void	Client::execute(void) {
 			break ;
 		}
 	}
+
 }
 
 void	Client::parse() {
@@ -137,6 +184,7 @@ void	Client::_send_response(void) {
 	}
 
 	const int send_flags = 0;
+	std::cout << "sending:\n" << _send_data.response << "\n";
 	ssize_t send_bytes = send(
 		fd,
 		_send_data.response.c_str() + _send_data.pos,
@@ -151,12 +199,12 @@ void	Client::_send_response(void) {
 	}
 	_send_data.pos += static_cast<size_t>(send_bytes);
 	if (_send_data.pos == _send_data.response.size()) {
+		mode = ClientMode::RECEIVING;
 		_send_data.response = "";
 		_send_data.pos = 0;
 		if (_send_data.close_after_send) {
 			set_close();
 			_send_data.close_after_send = false;
 		}
-		mode = ClientMode::RECEIVING;
 	}
 }

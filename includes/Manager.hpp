@@ -12,6 +12,7 @@
 
 #include <Server.hpp>
 #include <Client.hpp>
+#include <ReadFd.hpp>
 
 #include <thread>
 #include <unistd.h>
@@ -40,9 +41,12 @@ public:
 
 	Server*	new_server(Config config);
 	Client*	new_client(Server* server);
+	ReadFd*	new_read_fd(std::string& target_buffer, int fd,
+			ssize_t byte_count, std::function<void()> callback);
 
 	void	set_close(size_t idx);
 
+	bool	closing(size_t idx) const;
 	void	process_closures();
 
 	bool	is_ready(size_t idx, short event);
@@ -55,6 +59,7 @@ public:
 
 
 private:
+	size_t	_total_entrys;
 	void	_add_entry(BaseFd *entry, short poll_events);
 
 	void	_fd_close(size_t idx);

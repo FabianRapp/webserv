@@ -18,7 +18,7 @@ void	BaseFd::set_close(void) {
 }
 
 bool	BaseFd::is_ready(short event) const {
-	return (data.is_ready(data_idx, event));
+	return (!data.closing(data_idx) && data.is_ready(data_idx, event));
 }
 
 void	BaseFd::_set_non_blocking(void) {

@@ -8,11 +8,13 @@
 #include <sys/socket.h>
 #include <poll.h>
 #include <sys/poll.h>
+#include <sys/stat.h>
 
 class Client: public BaseFd {
 public:
 	enum class ClientMode {
 		RECEIVING,
+		BUILD_RESPONSE,
 		SENDING,
 		READING_FILE,
 		WRITING_FILE,
@@ -32,6 +34,11 @@ private:
 
 	std::string		_build_response(t_http_request request, bool & close_connection);
 	void			_receive_request(void);
+	t_http_request	_request;
+	struct {
+		std::string		body;
+		ReadFd			*reader;
+	}				_response_builder;
 
 	void			_send_response(void);
 	struct send_data {

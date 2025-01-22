@@ -38,6 +38,7 @@ Server::Server(DataManager& data, Config& config):
 		std::cerr << "Error: " << strerror(errno) << '\n';
 		exit(errno);
 	}
+	_set_non_blocking();
 	//_listener.set_server_fd(server_fd);
 	std::cout << "Started server on port " << config.port << "...\n";
 }

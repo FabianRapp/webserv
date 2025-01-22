@@ -1,6 +1,7 @@
 #include <Manager.hpp>
 
-DataManager::DataManager(void): _count(0) {}
+
+DataManager::DataManager(void): _total_entrys(0), _count(0) {}
 
 DataManager::~DataManager(void) {
 }
@@ -17,8 +18,19 @@ Client*	DataManager::new_client(Server* server) {
 	return (client);
 }
 
+ReadFd*	DataManager::new_read_fd(std::string& target_buffer, int fd,
+			ssize_t byte_count, std::function<void()> callback) {
+	ReadFd*	reader = new ReadFd(*this, target_buffer, fd, byte_count, callback);
+	_add_entry(reinterpret_cast<BaseFd*>(reader), reader->poll_events);
+	return (reader);
+}
+
 void	DataManager::set_close(size_t idx) {
 	_close_later[idx] = true;
+}
+
+bool	DataManager::closing(size_t idx) const {
+	return (_close_later[idx]);
 }
 
 void	DataManager::process_closures() {
@@ -51,7 +63,9 @@ void	DataManager::execute_all(void) {
 }
 
 void	DataManager::_add_entry(BaseFd *entry, short poll_events) {
+	_total_entrys++;
 	entry->data_idx = _count++;
+	std::cout << "_add_entry: count: " << _count << " ; total count: " << _total_entrys << "\n";
 	assert(entry && entry->fd != -1);
 	struct pollfd	poll_fd = {
 		.fd = entry->fd,
