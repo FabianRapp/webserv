@@ -296,6 +296,6 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 }
 
 
-const std::vector<ServerConfigFile>& ConfigParser::getServers() const {
+const std::vector<ServerConfigFile> ConfigParser::getServers() const {
 	return _servers;
 }

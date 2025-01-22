@@ -21,7 +21,7 @@ public:
 	ConfigParser();
 	explicit ConfigParser(const std::string& config_file);
 
-	const std::vector<ServerConfigFile>& getServers() const;
+	const std::vector<ServerConfigFile> getServers() const;
 };
 
 #endif // CONFIG_PARSER_HPP

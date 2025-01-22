@@ -5,6 +5,7 @@ NAME := webserv
 INCLUDES := -I./includes \
 			-I./includes/parser \
 			-I./includes/FdClasses \
+			-I./includes/ConfigParser \
 
 FSAN := address
 
@@ -28,6 +29,10 @@ SRCS := main.cpp \
 		FdClasses/Server.cpp \
 		FdClasses/Client.cpp \
 		FdClasses/ReadFd.cpp \
+		ConfigParser/ConfigParser.cpp \
+		ConfigParser/DefaultErrorPages.cpp \
+		ConfigParser/LocationConfigFile.cpp\
+		ConfigParser/ServerConfigFile.cpp \
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 

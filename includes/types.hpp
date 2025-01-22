@@ -7,7 +7,6 @@
 
 typedef int	t_fd;
 
-class Config;
 class DataManager;
 class BaseFd;
 class Server;

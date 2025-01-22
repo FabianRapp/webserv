@@ -1,12 +1,12 @@
 #include <Manager.hpp>
-
+#include <ServerConfigFile.hpp>
 
 DataManager::DataManager(void): _total_entrys(0), _count(0) {}
 
 DataManager::~DataManager(void) {
 }
 
-Server*	DataManager::new_server(Config config) {
+Server*	DataManager::new_server(ServerConfigFile config) {
  	Server* server = new Server(*this, config);
 	_add_entry(reinterpret_cast<BaseFd*>(server), server->poll_events);
 	return (server);

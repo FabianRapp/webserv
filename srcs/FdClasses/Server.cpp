@@ -1,7 +1,7 @@
 #include <Server.hpp>
 #include <Manager.hpp>
 
-Server::Server(DataManager& data, Config& config):
+Server::Server(DataManager& data, ServerConfigFile& config):
 	BaseFd(data, POLLIN),
 	total_unique_clients(0),
 	config(config)
@@ -26,7 +26,7 @@ Server::Server(DataManager& data, Config& config):
 	memset(&server_addr, 0, sizeof(struct sockaddr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = INADDR_ANY;
-	server_addr.sin_port = htons(config.port);
+	server_addr.sin_port = htons(config.getPort());
 
 	if (bind(fd, server_addr_ptr, server_addr_len) < 0) {
 		close(fd);
@@ -40,7 +40,7 @@ Server::Server(DataManager& data, Config& config):
 	}
 	_set_non_blocking();
 	//_listener.set_server_fd(server_fd);
-	std::cout << "Started server on port " << config.port << "...\n";
+	std::cout << "Started server on port " << config.getPort() << "...\n";
 }
 
 Server::~Server(void) {

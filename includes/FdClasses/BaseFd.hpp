@@ -3,13 +3,6 @@
 #include <fcntl.h>
 #include <general_includes.hpp>
 
-//placeholder
-class Config {
-public:
-	int	port;
-private:
-};
-
 class BaseFd {
 public:
 	BaseFd(DataManager& data, short poll_events);

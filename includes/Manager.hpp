@@ -39,7 +39,7 @@ public:
 	DataManager(void);
 	~DataManager(void);
 
-	Server*	new_server(Config config);
+	Server*	new_server(ServerConfigFile config);
 	Client*	new_client(Server* server);
 	ReadFd*	new_read_fd(std::string& target_buffer, int fd,
 			ssize_t byte_count, std::function<void()> callback);
@@ -50,7 +50,7 @@ public:
 	void	process_closures();
 
 	bool	is_ready(size_t idx, short event);
-	
+
 	int		get_fd(size_t idx);
 
 	void	run_poll();

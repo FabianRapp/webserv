@@ -2,6 +2,7 @@
 
 #include <BaseFd.hpp>
 #include <types.hpp>
+#include <ServerConfigFile.hpp>
 
 #include <sys/socket.h>
 #include <unistd.h>
@@ -17,12 +18,12 @@
 
 class Server: public BaseFd {
 public:
-	Server(DataManager& data, Config& config);
+	Server(DataManager& data, ServerConfigFile& config);
 	~Server(void);
 
 	void	execute(void);
 	size_t	total_unique_clients;
-	Config	config;
+	ServerConfigFile	config;
 
 private:
 	std::unordered_map<unsigned long, std::string>	_codes;
