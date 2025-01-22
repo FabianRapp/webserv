@@ -11,63 +11,55 @@
 #include "ConfigParser.hpp"
 
 int main(int argc, char** argv) {
-	// Create a Location object
-	// LocationConfigFile loc1;
-	// loc1.setPath("/");
-	// loc1.setMethods(true, true, false); // Allow GET and POST only
-	// loc1.setAutoIndex(false);
-	// loc1.setIndexFile("index.html");
-
-	// LocationConfigFile loc2;
-	// loc2.setPath("/assets");
-	// loc2.setMethods(true, true, true); // Allow GET, POST, DELETE
-	// loc2.setAutoIndex(true);
-
-	// // Create a Server object
-	// ServerConfigFile server1;
-
-	// server1.setPort(8080);
-	// server1.setServerName("example.com");
-	// server1.setRoot("/www/default");
-
-	// server1.addErrorPage(404, "/errors/404.html");
-
-	// server1.addLocation(loc1);
-	// server1.addLocation(loc2);
-
-	// // Print the server configuration
-	// std::cout << "Testing Server Class:\n";
-
-	// server1.printServer();
-
-	// DefaultErrorPages err_object;
-	// err_object.setErrorPageLink(999, "randomLink");
-	// std::cout << "Error 404: " << err_object.getErrorPageLink(404) << std::endl;
-
-	try {
-		// Ensure a configuration file is provided as an argument
-		if (argc < 2) {
-			throw std::invalid_argument("Usage: ./program <config_file>");
-		}
-
-		// Create a ConfigParser object and parse the provided configuration file
-		ConfigParser parser(argv[1]);
-
-		// Retrieve the parsed servers
-		const auto& servers = parser.getServers();
-
-		// Print the parsed server configurations
-		std::cout << "Parsed Servers:\n";
-		for (size_t i = 0; i < servers.size(); ++i) {
-			std::cout << "\nServer " << i + 1 << ":\n";
-			//print all error codes + links
-			servers[i].printServer();
-		}
-
-	} catch (const std::exception& e) {
-		// Handle any exceptions thrown during parsing
-		std::cerr << "Error: " << e.what() << '\n';
+	// Ensure a configuration file is provided as an argument
+	if (argc < 2) {
+		std::cerr << "Usage: ./program <config_file>" << std::endl;
 		return EXIT_FAILURE;
+	}
+
+	// Parse the configuration file
+	ConfigParser parser(argv[1]);
+
+	// Retrieve servers as a vector
+	std::vector<ServerConfigFile> servers = parser.getServers();
+
+	// Print all parsed information step by step
+	std::cout << "Parsed Servers:\n";
+
+	for (size_t i = 0; i < servers.size(); ++i) {
+		ServerConfigFile server = servers[i];
+		std::cout << "\nServer " << i + 1 << ":\n";
+
+		// Print server details
+		std::cout << "Port: " << server.getPort() << "\n";
+		std::cout << "Server Name: " << server.getServerName() << "\n";
+		std::cout << "Root Directory: " << server.getRoot() << "\n";
+
+		// Print error pages
+		// std::cout << "Error Pages:\n";
+		// const std::map<int, std::string>& error_pages = server.getErrorPages();
+		// for (const auto& error_page : error_pages) {
+		// 	int code = error_page.first;
+		// 	std::string path = error_page.second;
+		// 	std::cout << "  Error Code " << code << ": " << path << "\n";
+		// }
+
+		// Print locations
+		std::cout << "Locations:\n";
+		const std::vector<LocationConfigFile>& locations = server.getLocations();
+		for (size_t j = 0; j < locations.size(); ++j) {
+			LocationConfigFile location = locations[j];
+			std::cout << "  Location Path: " << location.getPath() << "\n";
+			std::cout << "  Allowed Methods: ";
+			if (location.isGetAllowed()) std::cout << "GET ";
+			if (location.isPostAllowed()) std::cout << "POST ";
+			if (location.isDeleteAllowed()) std::cout << "DELETE ";
+			std::cout << "\n";
+			std::cout << "  Index File: " << location.getIndexFile() << "\n";
+			if (!location.getUploadDir().empty()) {
+				std::cout << "  Upload Directory: " << location.getUploadDir() << "\n";
+			}
+		}
 	}
 
 	return EXIT_SUCCESS;
