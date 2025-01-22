@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/21 15:57:23 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/22 13:18:48 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,31 +57,33 @@ void printStringArray(const StringArray& arr) {
 
 
 //splits a string into the individual words and puts it inside a vector. Like in a char **.
-// still have to check why is this adding a \r\n after the chunk content line and not after the chunk size line
 // PRIORITY
 std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
 	std::vector<std::string> tokens;
 	size_t start = 0;
 	size_t end = str.find(delimiter);
 
+	for (size_t i = 0; i < str.length(); i++) {
+		printf("%d\n", str.c_str()[i]);
+	}
+
 	while (end != std::string::npos) {
-		std::cout << "start: " << start << " end: " << end <<std::endl;
 		std::string token = str.substr(start, end - start);
-		if (token == "")
-			token = "\r\n";
-		tokens.push_back(token);
+		if (end != start) {
+			tokens.push_back(token);
+		}
+		std::cout << "|" << token << "|\n";
+		if (str.find(delimiter, start) != std::string::npos) {
+			tokens.push_back(delimiter);
+		}
 		start = end + delimiter.length();
 		end = str.find(delimiter, start);
 	}
 
-	std::cout << "final: start: " << start <<std::endl;
-	std::string token = str.substr(start);
-	if (token == "")
-			token = "\r\n";
-	tokens.push_back(token);
-
 	return tokens;
 }
+
+// 3\r\n 1\r\n 4\r\n 22\r\n 5\r\n 333\r\n 0\r\n\r\n";
 
 // Function to split the input string into arrays (lines and words) and stop at stopDl
 // Dl = delimiter
@@ -238,37 +240,22 @@ bool isChunkedFinished(const std::vector<std::string>& bodyVector) {
 	return true;
 }
 
+// clinent->send_continue();
+
 // there will be probably more checks needed for the formatting of the parser
+// TO DO: try to parse one chunk at the time and continue the parsing at the next iter
 void	Parser::parser_chunked(std::string& input) {
 
 	std::vector<std::string> bodyVector = split(input, "\r\n");
 	std::cout << "here comes the body vector for chunked requests" << std::endl;
 	std::cout << bodyVector.size() << std::endl;
+	printStringVector(bodyVector);
 
 	if (isChunkedFinished(bodyVector)) {
 		std::cout << "Final chunk detected, chunked parsing finished\n" << std::endl;
 		_request._finished = true;
-		printStringVector(bodyVector);
 		return;
 	}
-
-
-
-// this whole logic is not working
-	// for (size_t i = 0; i < bodyVector.size(); i += 2) {
-	// 	std::string chunkSizeLine = bodyVector[i];
-	// 	int chunkSize = sizeLineToInt(chunkSizeLine);
-
-	// 	std::cout << "chunkSizeLine " << chunkSizeLine << std::endl;
-
-	// 	if (i + 1 < bodyVector.size()) {
-	// 		std::string chunkLine = bodyVector [i + 1];
-	// 		_request._body += chunkLine;
-	// 		// std::cout << "chunk size = " << chunkSize << " actual chunk size " << chunkLine.size() << std::endl;
-	// 	}
-
-	// }
-	// make checks to see ending of chunked body
 }
 
 void	Parser::parse_body(std::string& input) {
