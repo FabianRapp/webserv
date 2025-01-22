@@ -7,9 +7,8 @@
 bool	exit_ = false;
 
 int	main(int ac, char *av[]) {
-
 	DataManager		manager;
-	
+
 	Config	config;
 	config.port = 8080;
 
