@@ -34,6 +34,7 @@ void	BaseFd::_set_non_blocking(void) {
 
 Server::Server(DataManager& data, Config& config):
 	BaseFd(data, POLLIN),
+	total_unique_clients(0),
 	config(config)
 {
 	struct sockaddr_in		server_addr;
@@ -82,6 +83,8 @@ void	Server::execute(void) {
 		return ;
 	}
 	data.new_client(this);
+	this->total_unique_clients++;
+	std::cout << "Added client numner " << this->total_unique_clients << "`\n";
 }
 
 ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd,

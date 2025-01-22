@@ -43,7 +43,7 @@ public:
 	~Server(void);
 
 	void	execute(void);
-
+	size_t	total_unique_clients;
 	Config	config;
 
 private:
