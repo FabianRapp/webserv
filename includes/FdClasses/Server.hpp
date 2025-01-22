@@ -24,7 +24,6 @@ public:
 	void	execute(void);
 	size_t	total_unique_clients;
 	ServerConfigFile	config;
-
 private:
 	std::unordered_map<unsigned long, std::string>	_codes;
 };
