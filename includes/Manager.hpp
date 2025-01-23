@@ -1,18 +1,18 @@
 #pragma once
 
-#include <general_includes.hpp>
-#include <Token.hpp>
-#include <msg.hpp>
-#include <Parser.hpp>
-#include <utils.hpp>
-#include <types.hpp>
-#include <Exceptions.hpp>
+#include "general_includes.hpp"
+#include "parser/Token.hpp"
+#include "msg.hpp"
+#include "parser/Parser.hpp"
+#include "utils.hpp"
+#include "types.hpp"
+#include "Exceptions.hpp"
 
-#include <types.hpp>
+// #include <types.hpp>
 
-#include <Server.hpp>
-#include <Client.hpp>
-#include <ReadFd.hpp>
+#include "FdClasses/Server.hpp"
+#include "FdClasses/Client.hpp"
+#include "FdClasses/ReadFd.hpp"
 
 #include <thread>
 #include <unistd.h>
@@ -30,8 +30,8 @@
 
 
 
-#include <BaseFd.hpp>
-#include <types.hpp>
+#include "FdClasses/BaseFd.hpp"
+// #include <types.hpp>
 
 
 class DataManager {

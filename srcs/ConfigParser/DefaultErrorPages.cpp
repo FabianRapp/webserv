@@ -1,4 +1,4 @@
-#include "DefaultErrorPages.hpp"
+#include "../../includes/ConfigParser/DefaultErrorPages.hpp"
 
 DefaultErrorPages::DefaultErrorPages() {
 	// 1xx Informational Responses

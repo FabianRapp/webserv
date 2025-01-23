@@ -1,5 +1,5 @@
-#include <Server.hpp>
-#include <Manager.hpp>
+#include "../../includes/FdClasses/Server.hpp"
+#include "../../includes/Manager.hpp"
 
 Server::Server(DataManager& data, ServerConfigFile& config):
 	BaseFd(data, POLLIN),

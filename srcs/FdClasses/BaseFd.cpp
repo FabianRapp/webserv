@@ -1,5 +1,5 @@
-#include <BaseFd.hpp>
-#include <Manager.hpp>
+#include "../../includes/FdClasses/BaseFd.hpp"
+#include "../../includes/Manager.hpp"
 
 BaseFd::BaseFd(DataManager& data, short poll_events):
 	poll_events(poll_events),

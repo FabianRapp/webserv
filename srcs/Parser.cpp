@@ -1,276 +1,451 @@
-#include <Parser.hpp>
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Parser.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
+/*   Updated: 2025/01/22 16:08:18 by adrherna         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-Parser::Parser(std::string & http_input)
-:	_lexer(http_input)
-{}
+#include "../includes/parser/Parser.hpp"
+#include <cstddef>
+#include <string>
+#include <vector>
 
-Parser::~Parser(void) {
+// 1. No Content-Length or Transfer-Encoding in HTTP/1.1
+// Connection Closure:
+// If neither Content-Length nor Transfer-Encoding is specified, the end of the body is signaled by the server closing the connection.
+// This is a fallback mechanism in HTTP/1.1 but is considered bad practice and is rarely used.
+
+int sizeLineToInt(const std::string& hexStr) {
+	int value = 0;
+	std::stringstream ss;
+
+	ss << std::hex << hexStr;
+	ss >> value;
+
+	return value;
 }
 
-void	Parser::_handle_header(Token & token) {
-	std::pair<HeaderType, std::string>	header = token.get_header();
-	_request.headers[header.first] = header.second;
-	//switch (header.first) {
-	//	case (HeaderType::ACCEPT): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::ACCEPT_CHARSET): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::ACCEPT_ENCODING): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::ACCEPT_LANGUAGE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::AUTHORIZATION): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::EXPECT): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::FROM): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::HOST): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::IF_MATCH): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::IF_MODIFIED_SINCE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::IF_NONE_MATCH): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::IF_RANGE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::IF_UNMODIFIED_SINCE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::MAX_FORWARDS): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::PROXY_AUTHORIZATION): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::RANGE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::REFERER): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::TE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::USER_AGENT): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::CACHE_CONTROL): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::CONNECTION): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::DATE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::PRAGMA): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::TRAILER): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::TRANSFER_ENCODING): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::UPGRADE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::VIA): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::WARNING): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::ALLOW): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::CONTENT_ENCODING): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::CONTENT_LANGUAGE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::CONTENT_LENGTH): {
-	//		/* todo: verify no illegel char that atoi does not throw for */
-	//		try {
-	//			_request.body_len = static_cast<size_t>(
-	//				std::stoi(header.second));
-	//		} catch (const std::invalid_argument & e) {
-	//			/* todo: */
-	//		} catch (const std::out_of_range & e) {
-	//			/* todo: */
-	//		}
-	//		break ;
-	//	}
-	//	case (HeaderType::CONTENT_LOCATION): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::CONTENT_MD5): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::CONTENT_RANGE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::CONTENT_TYPE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::EXPIRES): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::LAST_MODIFIED): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::COOKIE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::SET_COOKIE): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::DNT): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::ORIGIN): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::UPGRADE_INSECURE_REQUESTS): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::ACCEPT_DATETIME): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//	case (HeaderType::EARLY_DATA): {
-	//		/* todo: */
-	//		break ;
-	//	}
-	//}
+std::string	cleanBody(const std::string& input) {
+	std::string	cleanBody;
+	size_t		start;
+
+	start = input.find("\r\n\r\n");
+	if (start == std::string::npos) {
+		std::cout << "could not find end of headers" << std::endl;
+		// handle error logic
+		return ("");
+	}
+
+	cleanBody = input.substr(start + 4);
+
+	return (cleanBody);
 }
 
-void	Parser::parse(void) {
-	while (1) {
-		Token token = _lexer.next();
-		std::cout << "got token: " << token.full_string() << "\n";
-		if (_request.finished && token.type != TokenType::EOF_TOKEN) {
-			FT_ASSERT(0
-				&& "Likly piplined request miss handling");
+void printStringArray(const StringArray& arr) {
+	for (size_t i = 0; i < arr.size(); ++i) {
+		std::cout << "Line " << i + 1 << ": ";
+		for (const auto& word : arr[i]) {
+			std::cout << word << " ";
 		}
-		switch (token.type) {
-			case (TokenType::METHOD): {
-				_request.type = token.get_method();
-				break ;
-			}
-			case (TokenType::URI): {
-				_request.uri = s_uri(token.get_string());
-				break ;
-			}
-			case (TokenType::VERSION): {
-				_request.version = s_version(token.get_string());
-				break ;
-			}
-			case (TokenType::HEADER): {
-				_handle_header(token);
-				break ;
-			}
-			case (TokenType::HEADER_TERMINATION): {
-				auto	length_node = _request.headers.find(HeaderType::CONTENT_LENGTH);
-				if (length_node != _request.headers.end()) {
-					try {
-						_lexer.set_body_size(static_cast<size_t>(std::stoi(length_node->second)));
-					} catch (const std::invalid_argument & e) {
-						/* todo: */
-					} catch (const std::out_of_range & e) {
-						/* todo: */
-					}
-					_request.finished = true;
-				}
-				/*todo: do any other fields indicate a body? */
-				break ;
-			}
-			case (TokenType::BODY): {
-				_request.body = token.get_string();
-				break ;
-			}
-			case (TokenType::BODY_TERMINATION): {
-				_request.finished = true;
-				break ;
-			}
-			case (TokenType::EOF_TOKEN): {
-				/* place holder, should not set finished when other stuff
-				 * works */
-				_request.finished = true;
-				return ;
-			}
-			case (TokenType::UNFINISHED): {
-				return ;
-			}
+		std::cout << std::endl;
+	}
+}
+
+//splits a string into the individual words and puts it inside a vector. Like in a char **.
+std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
+	std::vector<std::string> tokens;
+	size_t start = 0;
+	size_t end = str.find(delimiter);
+
+	while (end != std::string::npos) {
+		std::string token = str.substr(start, end - start);
+		if (end != start) {
+			tokens.push_back(token);
+		}
+		if (str.find(delimiter, start) != std::string::npos) {
+			tokens.push_back(delimiter);
+		}
+		start = end + delimiter.length();
+		end = str.find(delimiter, start);
+	}
+
+	return tokens;
+}
+
+// Function to split the input string into arrays (lines and words) and stop at stopDl
+// Dl = delimiter
+StringArray splitIntoArrays(const String& input, const String& lineDl, const String& stopDl) {
+	String str;
+	StringArray result;
+	size_t start = 0, end = 0;
+
+	end = input.find(stopDl);
+	if (end == std::string::npos) {
+		std::cout << "could not find stopDl" << std::endl;
+		return result;
+	}
+
+	str = input.substr(start, end);
+
+	while ((end = str.find(lineDl, start)) != std::string::npos) {
+		String line = str.substr(start, end - start);
+		Line lineV = split(line, " ");
+		result.push_back(lineV);
+
+		start = end + lineDl.length();
+	}
+
+	if (start < str.length()) {
+		String lastLine = str.substr(start);
+		Line lastLineV = split(lastLine, " ");
+		result.push_back(lastLineV);
+	}
+
+	return result;
+}
+
+void Parser::setRequestMethod(const std::string& method) {
+	if (method == "GET") {
+		_request._type = MethodType::GET;
+	} else if (method == "POST") {
+		_request._type = MethodType::POST;
+	} else if (method == "PUT") {
+		_request._type = MethodType::PUT;
+	} else if (method == "DELETE") {
+		_request._type = MethodType::DELETE;
+	} else {
+		_request._type = MethodType::INVALID;
+	}
+}
+
+void	Parser::setUri(const std::string& uri) {
+	_request._uri = uri;
+}
+
+void	Parser::setVersion(const std::string& version) {
+	_request._version = version;
+}
+
+HeaderType	setType(const std::string& str) {
+	if (str == "Content-Length:")
+		return HeaderType::CONTENT_LENGTH;
+	else if (str == "Transfer-Encoding:")
+		return HeaderType::TRANSFER_ENCODING;
+	else if (str == "Connection:")
+		return HeaderType::CONNECTION;
+	else if (str == "Host:")
+		return HeaderType::HOST;
+	else
+		return HeaderType::INVALID;
+}
+
+void Parser::insertHeader(const std::string& key, const std::string& value) {
+	HeaderType keyType = setType(key);
+	_request._headers.insert({keyType, value});
+
+	std::cout << "Header:" << std::endl;
+	std::cout << "key: " << key << " value: " << value << std::endl;
+}
+
+void	Parser::parse_first_line(const StringArray& array) {
+	if (array[0].size() != 3)
+	{
+		//handle error logic, first line is incomplete
+	}
+	setRequestMethod(array[0][0]);
+	setUri(array[0][1]);
+	setVersion(array[0][2]);
+}
+
+void	Parser::parse_headers(const StringArray& array) {
+	size_t i = 1;
+
+	while (i < array.size())
+	{
+		if (array[i].size() != 2)
+		{
+			// handle logic when headers are not key pair value
+		}
+		insertHeader(array[i][0], array[i][1]);
+		i++;
+	}
+	std::cout << "Headers were parsed\n" << std::endl;
+	_request._areHeadersParsed = true;
+}
+
+void	Parser::parser_unchunked(std::string& input) {
+
+	unsigned long bytesToRead = 0;
+	auto it = _request._headers.find(HeaderType::CONTENT_LENGTH);
+
+	if (it != _request._headers.end()) {
+		bytesToRead = std::stoul(it->second);
+	} else {
+		std::cout << "Content-Length header not found!" << std::endl;
+	}
+
+	// what happens if input is smaller than ConLen ? does that mean that we havent finished reading the full body ?
+	// this is working bc we dont actually assing the input to the body until the full body is there.
+	if (input.size() < bytesToRead) {
+		std::cout << "Input is smaller than Content-Length!" << std::endl;
+		return;
+	}
+
+	for (unsigned int i = 0; i < bytesToRead; ++i) {
+		char currentChar = input[i];
+		std::cout << currentChar;
+		_request._body.push_back(currentChar);
+	}
+
+	_request._finished = true;
+	std::cout << "\nFinished reading unchunked body." << std::endl;
+}
+
+void printStringVector(const std::vector<std::string>& vec) {
+	for (const auto& str : vec) {
+		if (str == "\r\n")
+			std::cout << "|" << "\\r\\n" << "|" << std::endl;
+		else
+			std::cout << "|" << str << "|" << std::endl;
+	}
+}
+
+bool isChunkedFinished(const std::vector<std::string>& bodyVector) {
+	if (bodyVector.size() < 3) {
+		std::cout << "Error: The body is not long enough, possibly malformed." << std::endl;
+		return false;
+	}
+	size_t start = bodyVector.size() - 3;
+
+	std::cout << "Last 3 elements: " << bodyVector[start] << ", " << bodyVector[start + 1] << ", " << bodyVector[start + 2] << std::endl;
+
+	if (bodyVector[start] != "0" || bodyVector[start + 1] != "\r\n" || bodyVector[start + 2] != "\r\n") {
+		std::cout << "Error: Body does not end as expected or is incomplete." << std::endl;
+		return false;
+	}
+
+	return true;
+}
+
+void Parser::addTokens(const std::string& str, const std::string& delimiter) {
+	size_t end = str.find(delimiter, _request._startBodyIdx);
+
+	while (end != std::string::npos) {
+		std::string token = str.substr(_request._startBodyIdx, end - _request._startBodyIdx);
+		if (end != _request._startBodyIdx) {
+			_request._bodyTokens.push_back(token);
+			std::cout << "Added token |" << token << "|\n";
+		}
+
+		_request._bodyTokens.push_back(delimiter);
+		std::cout << "Added |delimiter|\n";
+
+		_request._startBodyIdx = end + delimiter.length();
+		end = str.find(delimiter, _request._startBodyIdx);
+	}
+
+	if (_request._startBodyIdx < str.length()) {
+		std::string token = str.substr(_request._startBodyIdx);
+		_request._bodyTokens.push_back(token);
+		std::cout << "Added final token |" << token << "|\n";
+		_request._startBodyIdx = str.length();
+	}
+}
+
+void	Parser::checkForChunks(std::vector<std::string>& bodyVector) {
+	size_t		chunkSize;
+	std::string	chunk;
+
+	std::cout << "ENTERED FOR CHECKS" << std::endl;
+
+	if (bodyVector.size() < 4)
+	{
+		std::cout << "check for chunks returned, size is to small to contain a chunk" << std::endl;
+		return ;
+	}
+
+	if (bodyVector[1] != "\r\n" && bodyVector[3] != "\r\n")
+	{
+		std::cout << "tokens are not terminated by end sequence" << std::endl;
+		return;
+	}
+
+	// chunkSize = std::stoi(bodyVector[0]);
+	// std::cout << "Chunk size: " << chunkSize << std::endl;
+	chunk = bodyVector[2];
+	std::cout << "Chunk: " << chunk << std::endl;
+
+	// if (chunkSize != chunk.length())
+	// {
+	// 	std::cout << "Chunk and chunkSize are not matching" << std::endl;
+	// 	return;
+	// }
+	_request._body += chunk;
+	std::cout << "chunk added: |" << chunk << "|" <<std::endl;
+	
+	// removing elements bc they where parsed to the body
+	bodyVector.erase(bodyVector.begin(), bodyVector.begin() + 4);
+
+	if ((bodyVector.size() - 4) < 4)
+	{
+		// TEST this with a send that contains more than one chunk
+		std::cout << "Recursin for checkForChunks called\n";
+		checkForChunks(bodyVector);
+	}
+}
+
+// there will be probably more checks needed for the formatting of the parser
+// TO DO: try to parse one chunk at the time and continue the parsing at the next iter
+
+// POSIBLE LOGIC: add line by line to _bodyTokens and then check the vector, if there is a pair of matching chunkSizeLine and chunkLine
+// then parse it, add it to the body and remove them from the vector
+void	Parser::parser_chunked(std::string& input) {
+
+	// still have to test this function with inputs that might not end with the delimiter
+	addTokens(input, "\r\n");
+
+	// here make check if there is a chunk present, if it is then parse t
+	checkForChunks(_request._bodyTokens);
+
+	std::cout << "here comes the body vector for chunked requests" << std::endl;
+
+	std::cout << _request._bodyTokens.size() << std::endl;
+	printStringVector( _request._bodyTokens);
+
+
+	// check what is happening with the ending and why is not being added to the body
+	if (isChunkedFinished( _request._bodyTokens)) {
+		std::cout << "Final chunk detected, chunked parsing finished\n" << std::endl;
+		_request._finished = true;
+		return;
+	}
+}
+
+void	Parser::parse_body(std::string& input) {
+
+	// handle also errors when body here is empty
+	// this can go wrong if the full body is not already included in the input variable
+	std::string body = cleanBody(input);
+
+	if (_request._headers.find(HeaderType::CONTENT_LENGTH) != _request._headers.end())
+	{
+		std::cout << "parsing unchunked:" << std::endl;
+		parser_unchunked(body);
+	}
+	else if (_request._headers.find(HeaderType::TRANSFER_ENCODING) != _request._headers.end())
+	{
+		// this will later have to actually check what is the actual value of TRANSFER_ENCODING
+		std::cout << "parsing chunked:" << std::endl;
+		parser_chunked(body);
+	}
+	else
+	{
+		std::cout << "error parsing body" << std::endl;
+		// handle logic for errors
+		// if there is no content lenght it can be an error,
+	}
+}
+
+// to do:
+// 1. finish the checking for the end of the body
+// 2. do more checking for chunked and unchunked bodies in multiple reads
+
+
+void Parser::parse(std::string input) {
+	std::cout << "from parser:" <<std::endl << "|" << input << "|" << std::endl;
+
+	if (!_request._areHeadersParsed)
+	{
+		StringArray array = splitIntoArrays(input, "\r\n", "\r\n\r\n");
+		printStringArray(array);
+		std::cout << std::endl;
+
+		parse_first_line(array);
+		parse_headers(array);
+	}
+	if (_request._areHeadersParsed)
+		parse_body(input);
+
+	_request.displayRequest();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// void	Parser::parse_first_line(std::string input) {
+
+// 	std::string first_line = extract_first_line(input);
+// 	vector line = split(first_line, ' ');
+
+// 	// this could be later a series of other checks
+// 	if (line.size() != 3)
+// 		throw std::exception();
+
+// 	setRequestMethod(line[0]);
+// 	setUri(line[1]);
+// 	setVersion(line[2]);
+
+// 	// std::cout << "size = " << line[0] << std::endl;
+
+// 	print_vector_with_delimiter(line);
+// }
+
+
+std::string Parser::extract_first_line(const std::string& line) {
+	size_t pos = line.find("\r\n");
+	if (pos != std::string::npos) {
+		return line.substr(0, pos);
+	}
+	return line;
+}
+
+void print_vector_with_delimiter(const std::vector<std::string>& vec) {
+	for (size_t i = 0; i < vec.size(); ++i) {
+		std::cout << "|" << vec[i] << "|";
+		if (i != vec.size() - 1) {  // Avoid printing delimiter after the last element
+			std::cout << " ";
 		}
 	}
+	std::cout << std::endl;
+}
+
+bool Parser::is_header_present(const std::string& str) {
+	size_t pos = str.find("\r\n\r\n");
+
+	return pos != std::string::npos;
 }
 
 /* to check wether the read request is complete or needs to be read further */
 bool	Parser::is_finished(void) const {
-	return (_request.finished);
+	return (_request._finished);
 }
 
-t_http_request	Parser::get_request(void) const {
+Request	Parser::get_request(void) const {
 	return (_request);
 }
+
+
+bool Parser::ends_with(const std::string& str, const std::string& suffix) {
+	if (str.size() < suffix.size()) {
+		return false;
+	}
+	return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
+}
+
 
 /* once is_finished is true this can be called.
  * Resets the parser/lexer for the next client request with the same
@@ -278,12 +453,11 @@ t_http_request	Parser::get_request(void) const {
  * todo: think of way to handle persistant connection (andvance input and reuse
 	it
 */
-void	Parser::_reset(void) {
-	_lexer.reset();
-	
-/* once is_finished is true this can be called.
- * Resets the parser/lexer for the next client request with the same
- 	connection.
-*/_request.finished = false;
-	/* todo: reset every field in _request */
-}
+// void	Parser::_reset(void) {
+
+// /* once is_finished is true this can be called.
+//  * Resets the parser/lexer for the next client request with the same
+//  	connection.
+// */_request.finished = false;
+// 	/* todo: reset every field in _request */
+// }

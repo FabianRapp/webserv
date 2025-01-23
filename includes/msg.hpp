@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <enums.hpp>
+#include "enums.hpp"
 #include <unordered_map>
 
 
@@ -69,4 +69,3 @@ typedef struct http_request {
 	std::unordered_map<HeaderType, std::string>	headers;
 	std::string									body = "";
 }	t_http_request;
-

@@ -1,5 +1,5 @@
-#include <Manager.hpp>
-#include <config_parser.hpp>
+#include "../includes/Manager.hpp"
+#include "../includes/ConfigParser/ConfigParser.hpp"
 
 #include <fstream>
 

@@ -33,6 +33,8 @@ SRCS := main.cpp \
 		ConfigParser/DefaultErrorPages.cpp \
 		ConfigParser/LocationConfigFile.cpp\
 		ConfigParser/ServerConfigFile.cpp \
+		Request.cpp \
+
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
 

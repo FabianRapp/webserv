@@ -1,8 +1,8 @@
 #pragma once
 
-#include <BaseFd.hpp>
-#include <types.hpp>
-#include <ServerConfigFile.hpp>
+#include "BaseFd.hpp"
+#include "../types.hpp"
+#include "../ConfigParser/ServerConfigFile.hpp"
 
 #include <sys/socket.h>
 #include <unistd.h>

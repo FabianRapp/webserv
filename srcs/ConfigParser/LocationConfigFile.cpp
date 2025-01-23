@@ -1,4 +1,4 @@
-#include "LocationConfigFile.hpp"
+#include "../../includes/ConfigParser/LocationConfigFile.hpp"
 
 LocationConfigFile::LocationConfigFile() {}
 

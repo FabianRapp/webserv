@@ -1,4 +1,4 @@
-#include <Token.hpp>
+#include "../includes/parser/Token.hpp"
 
 Token::Token(TokenType type,
 	std::variant<

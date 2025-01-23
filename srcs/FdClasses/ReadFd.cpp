@@ -1,5 +1,5 @@
-#include <ReadFd.hpp>
-#include <Manager.hpp>
+#include "../../includes/FdClasses/ReadFd.hpp"
+#include "../../includes/Manager.hpp"
 
 ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd,
 		ssize_t byte_count, std::function<void()> completion_callback):

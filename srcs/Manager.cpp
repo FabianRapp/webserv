@@ -1,5 +1,5 @@
-#include <Manager.hpp>
-#include <ServerConfigFile.hpp>
+#include "../includes/Manager.hpp"
+#include "../includes/ConfigParser/ServerConfigFile.hpp"
 
 DataManager::DataManager(void): _total_entrys(0), _count(0) {}
 

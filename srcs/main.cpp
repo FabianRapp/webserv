@@ -1,9 +1,7 @@
-#include <Manager.hpp>
-#include <config_parser.hpp>
+#include "../includes/Manager.hpp"
+#include "../includes/ConfigParser/ConfigParser.hpp"
 #include <vector>
-#include <Exceptions.hpp>
-#include <Manager.hpp>
-#include <ConfigParser.hpp>
+#include "../includes/Exceptions.hpp"
 
 bool	exit_ = false;
 

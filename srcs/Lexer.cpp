@@ -1,4 +1,4 @@
-#include <Lexer.hpp>
+#include "../includes/parser/Lexer.hpp"
 
 Lexer::Lexer(std::string  & raw_http_request)
 :	_input(raw_http_request),
@@ -196,7 +196,7 @@ Token	Lexer::_extract_header(void) {
 	std::pair<HeaderType, std::string>	placeholder_header;
 	placeholder_header.first = HeaderType::ACCEPT;
 	placeholder_header.second = "placeholder header content";
-	
+
 	/* todo: keep in mind:
 	 * for the CONTENT_LENGTH header the length has to be stored in _body_len
 	 * for what ever header determines chunked encoding the _body_len has to
@@ -257,7 +257,7 @@ bool	Lexer::_is_body_termination(void) {
 
 Token	Lexer::_extract_body_termination(void) {
 	const uint8_t	body_termination_size = 5;
-	
+
 	/* todo: some throw if _input.size() > _pos + body_termination_size to
 		indicate some kinds of error? */
 	FT_ASSERT(_input.size() >= _pos + body_termination_size);
