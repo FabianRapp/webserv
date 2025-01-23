@@ -32,9 +32,9 @@ public:
 	std::string	input;
 private:
 
-	std::string		_build_response(t_http_request request, bool & close_connection);
+	std::string		_build_response(bool & close_connection);
 	void			_receive_request(void);
-	t_http_request	_request;
+	Request			_request;
 	struct {
 		std::string		body;
 		ReadFd			*reader;

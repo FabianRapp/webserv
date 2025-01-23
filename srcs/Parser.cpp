@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/22 16:08:18 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/23 15:57:39 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,8 +148,8 @@ void Parser::insertHeader(const std::string& key, const std::string& value) {
 	HeaderType keyType = setType(key);
 	_request._headers.insert({keyType, value});
 
-	std::cout << "Header:" << std::endl;
-	std::cout << "key: " << key << " value: " << value << std::endl;
+	// std::cout << "Header:" << std::endl;
+	// std::cout << "key: " << key << " value: " << value << std::endl;
 }
 
 void	Parser::parse_first_line(const StringArray& array) {
@@ -239,11 +239,11 @@ void Parser::addTokens(const std::string& str, const std::string& delimiter) {
 		std::string token = str.substr(_request._startBodyIdx, end - _request._startBodyIdx);
 		if (end != _request._startBodyIdx) {
 			_request._bodyTokens.push_back(token);
-			std::cout << "Added token |" << token << "|\n";
+			// std::cout << "Added token |" << token << "|\n";
 		}
 
 		_request._bodyTokens.push_back(delimiter);
-		std::cout << "Added |delimiter|\n";
+		// std::cout << "Added |delimiter|\n";
 
 		_request._startBodyIdx = end + delimiter.length();
 		end = str.find(delimiter, _request._startBodyIdx);
@@ -252,7 +252,7 @@ void Parser::addTokens(const std::string& str, const std::string& delimiter) {
 	if (_request._startBodyIdx < str.length()) {
 		std::string token = str.substr(_request._startBodyIdx);
 		_request._bodyTokens.push_back(token);
-		std::cout << "Added final token |" << token << "|\n";
+		// std::cout << "Added final token |" << token << "|\n";
 		_request._startBodyIdx = str.length();
 	}
 }
@@ -261,7 +261,7 @@ void	Parser::checkForChunks(std::vector<std::string>& bodyVector) {
 	size_t		chunkSize;
 	std::string	chunk;
 
-	std::cout << "ENTERED FOR CHECKS" << std::endl;
+	// std::cout << "ENTERED FOR CHECKS" << std::endl;
 
 	if (bodyVector.size() < 4)
 	{
@@ -278,7 +278,7 @@ void	Parser::checkForChunks(std::vector<std::string>& bodyVector) {
 	// chunkSize = std::stoi(bodyVector[0]);
 	// std::cout << "Chunk size: " << chunkSize << std::endl;
 	chunk = bodyVector[2];
-	std::cout << "Chunk: " << chunk << std::endl;
+	// std::cout << "Chunk: " << chunk << std::endl;
 
 	// if (chunkSize != chunk.length())
 	// {
@@ -286,8 +286,8 @@ void	Parser::checkForChunks(std::vector<std::string>& bodyVector) {
 	// 	return;
 	// }
 	_request._body += chunk;
-	std::cout << "chunk added: |" << chunk << "|" <<std::endl;
-	
+	// std::cout << "chunk added: |" << chunk << "|" <<std::endl;
+
 	// removing elements bc they where parsed to the body
 	bodyVector.erase(bodyVector.begin(), bodyVector.begin() + 4);
 
@@ -312,10 +312,10 @@ void	Parser::parser_chunked(std::string& input) {
 	// here make check if there is a chunk present, if it is then parse t
 	checkForChunks(_request._bodyTokens);
 
-	std::cout << "here comes the body vector for chunked requests" << std::endl;
+	// std::cout << "here comes the body vector for chunked requests" << std::endl;
 
 	std::cout << _request._bodyTokens.size() << std::endl;
-	printStringVector( _request._bodyTokens);
+	// printStringVector( _request._bodyTokens);
 
 
 	// check what is happening with the ending and why is not being added to the body
@@ -357,13 +357,14 @@ void	Parser::parse_body(std::string& input) {
 
 
 void Parser::parse(std::string input) {
-	std::cout << "from parser:" <<std::endl << "|" << input << "|" << std::endl;
+	// std::cout << "from parser:" <<std::endl << "|" << input << "|" << std::endl;
+	std::cout << "Parsing started\n";
 
 	if (!_request._areHeadersParsed)
 	{
 		StringArray array = splitIntoArrays(input, "\r\n", "\r\n\r\n");
-		printStringArray(array);
-		std::cout << std::endl;
+		// printStringArray(array);
+		// std::cout << std::endl;
 
 		parse_first_line(array);
 		parse_headers(array);

@@ -2,7 +2,7 @@
 #include "../../includes/FdClasses/Server.hpp"
 #include "../../includes/Manager.hpp"
 #include "../../includes/macros.h"
-#include <errno.h>
+// #include <errno.h>
 
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT),
@@ -58,9 +58,11 @@ void	Client::_receive_request(void) {
 		//throw (SendClientError(404, _codes[404], "testing", true));
 
 		this->parse();
-		bool testing_response = true;
-		if (testing_response || _parser.is_finished()) {
-			// _request = _parser.get_request();
+		// bool testing_response = true;
+		std::cout << "Request STATUS = " << _parser.is_finished() << std::endl;
+		// if (testing_response || _parser.is_finished() == true)
+		if (_parser.is_finished() == true) {
+			_request = _parser.get_request();
 			mode = ClientMode::BUILD_RESPONSE;
 			_send_data.pos = 0;
 			_send_data.response = "";
@@ -72,7 +74,7 @@ void	Client::_receive_request(void) {
 }
 
 /* todo: should not return value */
-std::string	Client::_build_response(t_http_request request, bool & close_connection) {
+std::string	Client::_build_response(bool & close_connection) {
 	std::string	&response = _send_data.response;
 
 	if (response.size() == 0) {
@@ -106,7 +108,7 @@ std::string	Client::_build_response(t_http_request request, bool & close_connect
 	}
 
 	close_connection = true; /* default for now == true */
-	switch (request.type) {
+	switch (_request._type) {
 		case (MethodType::GET): {
 			break ;
 		}
@@ -118,7 +120,7 @@ std::string	Client::_build_response(t_http_request request, bool & close_connect
 		}
 		default: {
 			std::cerr << "Error: Unsupported request type: "
-				<< to_string(request.type) << "\n";
+				<< to_string(_request._type) << "\n";
 			response += "405 Method Not Allowed\r\n";
 			//response += "\r\n\r\n";
 			close_connection = true;
@@ -145,7 +147,7 @@ void	Client::execute(void) {
 		}
 		case (ClientMode::BUILD_RESPONSE): {
 			bool	placeholder_close_connection;
-			_send_data.response = _build_response(_request, placeholder_close_connection);
+			_send_data.response = _build_response(placeholder_close_connection);
 			break ;
 		}
 		case (ClientMode::SENDING): {
