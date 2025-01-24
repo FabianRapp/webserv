@@ -45,8 +45,9 @@ std::string	cleanBody(const std::string& input) {
 
 	return (cleanBody);
 }
-
+/*
 void printStringArray(const StringArray& arr) {
+	std::cout << "string arr:\n";
 	for (size_t i = 0; i < arr.size(); ++i) {
 		std::cout << "Line " << i + 1 << ": ";
 		for (const auto& word : arr[i]) {
@@ -55,7 +56,8 @@ void printStringArray(const StringArray& arr) {
 		std::cout << std::endl;
 	}
 }
-
+*/
+/*
 //splits a string into the individual words and puts it inside a vector. Like in a char **.
 std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
 	std::vector<std::string> tokens;
@@ -76,14 +78,17 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
 
 	return tokens;
 }
+*/
 
+/*
 // Function to split the input string into arrays (lines and words) and stop at stopDl
 // Dl = delimiter
 StringArray splitIntoArrays(const String& input, const String& lineDl, const String& stopDl) {
 	String str;
 	StringArray result;
 	size_t start = 0, end = 0;
-
+	
+	std::cout << "input: " << input << "\n";
 	end = input.find(stopDl);
 	if (end == std::string::npos) {
 		std::cout << "could not find stopDl" << std::endl;
@@ -108,6 +113,7 @@ StringArray splitIntoArrays(const String& input, const String& lineDl, const Str
 
 	return result;
 }
+*/
 
 void Parser::setRequestMethod(const std::string& method) {
 	if (method == "GET") {
@@ -169,7 +175,7 @@ void	Parser::parse_headers(const StringArray& array) {
 	{
 		if (array[i].size() != 2)
 		{
-			// handle logic when headers are not key pair value
+			// todo: handle logic when headers are not key pair value
 		}
 		insertHeader(array[i][0], array[i][1]);
 		i++;
@@ -183,6 +189,7 @@ void	Parser::parser_unchunked(std::string& input) {
 	unsigned long bytesToRead = 0;
 	auto it = _request._headers.find(HeaderType::CONTENT_LENGTH);
 
+	std::cout << "parsing unchunked body\n";
 	if (it != _request._headers.end()) {
 		bytesToRead = std::stoul(it->second);
 	} else {
@@ -273,11 +280,12 @@ void	Parser::checkForChunks(std::vector<std::string>& bodyVector) {
 	{
 		std::cout << "tokens are not terminated by end sequence" << std::endl;
 		return;
-	}
+	} else {
 
-	// chunkSize = std::stoi(bodyVector[0]);
-	// std::cout << "Chunk size: " << chunkSize << std::endl;
-	chunk = bodyVector[2];
+		// chunkSize = std::stoi(bodyVector[0]);
+		// std::cout << "Chunk size: " << chunkSize << std::endl;
+		chunk = bodyVector[2];
+	}
 	// std::cout << "Chunk: " << chunk << std::endl;
 
 	// if (chunkSize != chunk.length())
@@ -345,7 +353,11 @@ void	Parser::parse_body(std::string& input) {
 	}
 	else
 	{
-		std::cout << "error parsing body" << std::endl;
+		// note by fabi: updated: there is simply no body I think
+		_request._finished = true;
+		return ;
+		
+		//std::cout << "error parsing body" << std::endl;
 		// handle logic for errors
 		// if there is no content lenght it can be an error,
 	}
@@ -356,42 +368,37 @@ void	Parser::parse_body(std::string& input) {
 // 2. do more checking for chunked and unchunked bodies in multiple reads
 
 
-void Parser::parse(std::string input) {
+void Parser::parse(void) {
 	// std::cout << "from parser:" <<std::endl << "|" << input << "|" << std::endl;
 	std::cout << "Parsing started\n";
-
+	//std::cout << "parser input: " << _input << "\n";
+	StringArray	array;
 	if (!_request._areHeadersParsed)
 	{
-		StringArray array = splitIntoArrays(input, "\r\n", "\r\n\r\n");
-		// printStringArray(array);
-		// std::cout << std::endl;
+		StringArray		*arr_ptr;
+		try {
+			array = StringArray(_input, "\r\n", "\r\n\r\n");
+		} catch (const StringArray::NotTerminated& e) {
+			(void)e;
+			_request._finished = false;
+			return ;
+		}
+		FT_ASSERT(array.size());
+		std::cout << array;
 
 		parse_first_line(array);
 		parse_headers(array);
 	}
 	if (_request._areHeadersParsed)
-		parse_body(input);
+		parse_body(_input);
 
 	_request.displayRequest();
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 // void	Parser::parse_first_line(std::string input) {
 
 // 	std::string first_line = extract_first_line(input);
 // 	vector line = split(first_line, ' ');
-
 // 	// this could be later a series of other checks
 // 	if (line.size() != 3)
 // 		throw std::exception();
@@ -405,7 +412,7 @@ void Parser::parse(std::string input) {
 // 	print_vector_with_delimiter(line);
 // }
 
-
+/*
 std::string Parser::extract_first_line(const std::string& line) {
 	size_t pos = line.find("\r\n");
 	if (pos != std::string::npos) {
@@ -413,6 +420,7 @@ std::string Parser::extract_first_line(const std::string& line) {
 	}
 	return line;
 }
+*/
 
 void print_vector_with_delimiter(const std::vector<std::string>& vec) {
 	for (size_t i = 0; i < vec.size(); ++i) {

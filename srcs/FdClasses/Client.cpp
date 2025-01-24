@@ -2,14 +2,13 @@
 #include "../../includes/FdClasses/Server.hpp"
 #include "../../includes/Manager.hpp"
 #include "../../includes/macros.h"
-// #include <errno.h>
 
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT),
 	mode(ClientMode::RECEIVING),
 	_response_builder({"", nullptr}),
 	_send_data({"", 0, false}),
-	_parser()
+	_parser(input)
 {
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));
@@ -62,6 +61,7 @@ void	Client::_receive_request(void) {
 		std::cout << "Request STATUS = " << _parser.is_finished() << std::endl;
 		// if (testing_response || _parser.is_finished() == true)
 		if (_parser.is_finished() == true) {
+			std::cout << "HI1!!\n";
 			_request = _parser.get_request();
 			mode = ClientMode::BUILD_RESPONSE;
 			_send_data.pos = 0;
@@ -171,7 +171,7 @@ void	Client::execute(void) {
 }
 
 void	Client::parse() {
-	_parser.parse(input);
+	_parser.parse();
 }
 
 void	Client::_send_response(void) {

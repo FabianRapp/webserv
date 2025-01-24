@@ -14,20 +14,21 @@
 #include <vector>
 #include <sstream>
 
-using vector = std::vector<std::string>;
+#include "StringArray.hpp"
+
 using String = std::string;
-using Line = std::vector<String>;
-using StringArray = std::vector<Line>;
 
 class Parser {
 	private:
-		Request		_request;
+		Request			_request;
+		std::string&	_input;
+
 
 	public:
-		Parser() = default;
+		Parser(std::string& input): _input(input){};
 		~Parser() = default;
 
-		void	parse(std::string input);
+		void	parse(void);
 		void	parse_first_line(const StringArray& array);
 		void	parse_headers(const StringArray& array);
 		void	parse_body(std::string& input);

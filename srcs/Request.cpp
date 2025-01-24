@@ -21,3 +21,28 @@ Request::Request() {
 	_body = "";
 	_startBodyIdx = 0;
 }
+Request::Request(const Request& old)
+:	_finished(old._finished),
+	_areHeadersParsed(old._areHeadersParsed),
+	_type(old._type),
+	_uri(old._uri),
+	_version(old._version),
+	_body(old._body),
+	_startBodyIdx(old._startBodyIdx)
+{
+}
+
+Request	Request::operator=(const Request& old) {
+
+	if (this == &old) {
+		return (*this);
+	}
+	_finished = old._finished;
+	_areHeadersParsed = old._areHeadersParsed;
+	_type = old._type;
+	_uri = old._uri;
+	_version = old._version;
+	_body = old._body;
+	_startBodyIdx = old._startBodyIdx;
+	return (*this);
+}

@@ -32,6 +32,8 @@ class Request {
 		std::vector<std::string>	_bodyTokens;
 
 		Request();
+		Request(const Request& old);
+		Request	operator=(const Request& old);
 		~Request() = default;
 
 		void displayRequest() const {

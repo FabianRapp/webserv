@@ -34,6 +34,7 @@ SRCS := main.cpp \
 		ConfigParser/LocationConfigFile.cpp\
 		ConfigParser/ServerConfigFile.cpp \
 		Request.cpp \
+		StringArray.cpp \
 
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)
@@ -46,9 +47,9 @@ YELLOW	=	\033[33m
 CYAN	=	\033[0;36m
 CLEAR	=	\033[0m
 
-.PHONY: all normal leaks clean fclean re compile_commands.json client
+.PHONY: all normal leaks clean fclean re compile_commands.json
 
-all: $(NAME)
+all: $(NAME) client
 
 $(NAME): $(OBJS)
 	$(CPP) $(CXXFLAGS) $(OBJS) -o $(NAME)
@@ -57,8 +58,8 @@ $(NAME): $(OBJS)
 normal: $(NAME)
 	@echo "$(GREEN) Compiled $(NAME) $(CLEAR)"
 
-client: client/client.cpp
-	$(CPP) $(CXXFLAGS) client/client.cpp -o client.out
+client: client.cpp
+	$(CPP) $(CXXFLAGS) client.cpp -o client
 
 leaks: clean
 	make CXXFLAGS="$(CXXFLAGS) -g -DLEAKS"
@@ -70,11 +71,13 @@ $(OBJS_DIR)%.o: $(SRCS_DIR)%.cpp
 
 clean:
 	@rm -f $(OBJS)
+	@rm -f client.o
 	@echo "$(YELLOW) Cleaned object files $(CLEAR)"
 
 fclean:
 	@rm -rf $(OBJS_DIR)
 	@rm -f $(NAME)
+	@rm -f client
 	@echo "$(YELLOW) Cleaned object files, build directories and executables \
 		$(CLEAR)"
 
