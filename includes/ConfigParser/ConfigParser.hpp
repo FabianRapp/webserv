@@ -7,6 +7,11 @@
 #include "ServerConfigFile.hpp"
 #include "LocationConfigFile.hpp"
 
+class ConfigParseError: public std::runtime_error{
+public:
+	ConfigParseError(const std::string& msg): std::runtime_error(msg){}
+};
+
 class ConfigParser {
 private:
 	std::vector<ServerConfigFile> _servers; // List of parsed servers
@@ -16,7 +21,6 @@ private:
 	void parseFile(const std::string& config_file);
 	void parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count);
 	void parseLocationBlock(std::ifstream& file, LocationConfigFile& current_location, int& bracket_count);
-
 public:
 	ConfigParser();
 	explicit ConfigParser(const std::string& config_file);

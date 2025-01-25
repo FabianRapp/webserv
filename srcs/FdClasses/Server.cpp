@@ -30,12 +30,12 @@ Server::Server(DataManager& data, ServerConfigFile& config):
 
 	if (bind(fd, server_addr_ptr, server_addr_len) < 0) {
 		close(fd);
-		std::cerr << "Error: " << strerror(errno) << '\n';
+		std::cerr << "Error: bind:" << strerror(errno) << '\n';
 		exit(errno);
 	}
 	if (listen(fd, REQUEST_QUE_SIZE) < 0) {
 		close(fd);
-		std::cerr << "Error: " << strerror(errno) << '\n';
+		std::cerr << "Error: listen:" << strerror(errno) << '\n';
 		exit(errno);
 	}
 	_set_non_blocking();

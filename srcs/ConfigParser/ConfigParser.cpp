@@ -20,7 +20,7 @@ std::string ConfigParser::trimWhiteSpace(const std::string& str) const {
 // void ConfigParser::parseFile(const std::string& config_file) {
 // 	std::ifstream file(config_file);
 // 	if (!file.is_open()) {
-// 		throw std::runtime_error("ERROR: Cannot open configuration file.");
+// 		throw ConfigParseError("Cannot open configuration file.");
 // 	}
 
 // 	bool in_server_block = false;
@@ -39,7 +39,7 @@ std::string ConfigParser::trimWhiteSpace(const std::string& str) const {
 // 		// Handle server block start
 // 		// if (line == "server {") {
 // 		// 	if (in_server_block) {
-// 		// 		throw std::runtime_error("ERROR: Nested server blocks are not allowed.");
+// 		// 		throw ConfigParseError("Nested server blocks are not allowed.");
 // 		// 	}
 // 		// 	in_server_block = true;
 // 		// 	current_server = ServerConfigFile();
@@ -55,13 +55,13 @@ std::string ConfigParser::trimWhiteSpace(const std::string& str) const {
 // 		// 		bracket_count--;
 // 		// 		continue;
 // 		// 	} else {
-// 		// 		throw std::runtime_error("ERROR: Unmatched closing bracket.");
+// 		// 		throw ConfigParseError("Unmatched closing bracket.");
 // 		// 	}
 // 		// }
 
 // 	if (line == "server {") {
 // 		if (in_server_block) {
-// 			throw std::runtime_error("ERROR: Nested server blocks are not allowed.");
+// 			throw ConfigParseError("Nested server blocks are not allowed.");
 // 		}
 // 		in_server_block = true;
 // 		current_server = ServerConfigFile();
@@ -76,7 +76,7 @@ std::string ConfigParser::trimWhiteSpace(const std::string& str) const {
 // 			bracket_count--;
 // 			continue;
 // 		} else {
-// 			throw std::runtime_error("ERROR: Unmatched closing bracket.");
+// 			throw ConfigParseError("Unmatched closing bracket.");
 // 		}
 // 	}
 
@@ -88,14 +88,14 @@ std::string ConfigParser::trimWhiteSpace(const std::string& str) const {
 // 	}
 
 // 	if (bracket_count != 0) {
-// 		throw std::runtime_error("ERROR: Mismatched brackets in configuration file.");
+// 		throw ConfigParseError("Mismatched brackets in configuration file.");
 // 	}
 // }
 
 void ConfigParser::parseFile(const std::string& config_file) {
 	std::ifstream file(config_file);
 	if (!file.is_open()) {
-		throw std::runtime_error("ERROR: Cannot open configuration file.");
+		throw ConfigParseError("Cannot open configuration file.");
 	}
 
 	bool in_server_block = false;
@@ -117,7 +117,7 @@ void ConfigParser::parseFile(const std::string& config_file) {
 		// Handle start of server block
 		if (line == "server {") {
 			if (in_server_block) {
-				throw std::runtime_error("ERROR: Nested server blocks are not allowed.");
+				throw ConfigParseError("Nested server blocks are not allowed.");
 			}
 			in_server_block = true;
 			current_server = ServerConfigFile();
@@ -134,7 +134,7 @@ void ConfigParser::parseFile(const std::string& config_file) {
 
 		// Handle unmatched closing brackets
 		if (line == "}") {
-			throw std::runtime_error("ERROR: Unmatched closing bracket.");
+			throw ConfigParseError("Unmatched closing bracket.");
 		}
 	}
 
@@ -142,7 +142,7 @@ void ConfigParser::parseFile(const std::string& config_file) {
 	std::cout << "Final Bracket Count: " << bracket_count << "\n";
 
 	if (bracket_count != 0) {
-		throw std::runtime_error("ERROR: Mismatched brackets in configuration file.");
+		throw ConfigParseError("Mismatched brackets in configuration file.");
 	}
 }
 
@@ -193,7 +193,7 @@ void ConfigParser::parseFile(const std::string& config_file) {
 // 			}
 // 			// current_server.addErrorPage(200, index_file); // Optional: Store as "default" for successful requests
 // 		} else {
-// 			throw std::runtime_error("ERROR: Invalid directive inside server block: " + line);
+// 			throw ConfigParseError("Invalid directive inside server block: " + line);
 // 		}
 // 	}
 // }
@@ -249,7 +249,7 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			}
 			// Optional logic to store index file in the ServerConfigFile object.
 		} else {
-			throw std::runtime_error("ERROR: Invalid directive inside server block: " + line);
+			throw ConfigParseError("Invalid directive inside server block: " + line);
 		}
 	}
 }
@@ -290,7 +290,7 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 		} else if (line.find("index ") == 0) {
 			current_location.setIndexFile(line.substr(6));
 		} else {
-			throw std::runtime_error("ERROR: Invalid directive inside location block: " + line);
+			throw ConfigParseError("Invalid directive inside location block: " + line);
 		}
 	}
 }

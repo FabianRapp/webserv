@@ -15,13 +15,19 @@ int	main(int ac, char *av[]) {
 	signal(SIGINT, sig_int);
 	DataManager		manager;
 
-	ConfigParser	*parser;
-	if (ac == 1) {
-		parser = new ConfigParser("config/default.conf");
-	} else {
-		parser = new ConfigParser(av[1]);
+	ConfigParser					*parser;
+	std::vector<ServerConfigFile>	all_configs;
+	try {
+		if (ac == 1) {
+			parser = new ConfigParser("config/default.conf");
+		} else {
+			parser = new ConfigParser(av[1]);
+		}
+		all_configs = parser->getServers();
+	} catch (const ConfigParseError& err) {
+		std::cerr << "Config parse error: " << err.what() << "\n";
+		exit(1);
 	}
-	std::vector<ServerConfigFile> all_configs = parser->getServers();
 
 	for (auto & config : all_configs) {
 		manager.new_server(config);
