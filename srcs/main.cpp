@@ -1,11 +1,18 @@
 #include "../includes/Manager.hpp"
 #include "../includes/ConfigParser/ConfigParser.hpp"
 #include <vector>
+#include <csignal>
 #include "../includes/Exceptions.hpp"
 
-bool	exit_ = false;
+volatile
+sig_atomic_t	exit_ = 0;
+
+void	sig_int(int) {
+	exit_ = 1;
+}
 
 int	main(int ac, char *av[]) {
+	signal(SIGINT, sig_int);
 	DataManager		manager;
 
 	ConfigParser	*parser;

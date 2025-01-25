@@ -7,8 +7,7 @@
 #include <iostream>
 #include <cstring>
 
-extern
-bool	exit_;
+extern volatile sig_atomic_t	exit_;
 
 
 std::string	default_err_response(int err_code);

@@ -52,7 +52,10 @@ int	DataManager::get_fd(size_t idx) {
 void	DataManager::run_poll() {
 	if (poll(&_pollfds[0], static_cast<nfds_t>(_count), 0) < 0) {
 		std::cerr << "Error: poll: " << strerror(errno) << '(' << errno << ")\n";
-		assert(0);
+		for (auto& pollfd : _pollfds) {
+			pollfd.revents = 0;
+		}
+		return ;
 	}
 }
 
