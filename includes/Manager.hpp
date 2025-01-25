@@ -39,8 +39,8 @@ public:
 	DataManager(void);
 	~DataManager(void);
 
-	Server*	new_server(ServerConfigFile config);
-	Client*	new_client(Server* server);
+	void	new_server(ServerConfigFile config);
+	void	new_client(Server* server);
 	ReadFd*	new_read_fd(std::string& target_buffer, int fd,
 			ssize_t byte_count, std::function<void()> callback);
 

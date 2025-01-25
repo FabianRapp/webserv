@@ -15,12 +15,13 @@ Server::Server(DataManager& data, ServerConfigFile& config):
 	init_status_codes(_codes);
 	fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
-		std::cerr << "Error: server: socket: " << strerror(errno) << '\n';
-		exit(errno);
+		throw(ServerError("server: socket: " + std::string(strerror(errno))));
+		return ;
 	}
 	_set_non_blocking();
 	if (fd < 0) {
-		exit(errno);
+		throw(ServerError("server: set non blocking: " + std::string(strerror(errno))));
+		return ;
 	}
 
 	memset(&server_addr, 0, sizeof(struct sockaddr));
@@ -30,16 +31,14 @@ Server::Server(DataManager& data, ServerConfigFile& config):
 
 	if (bind(fd, server_addr_ptr, server_addr_len) < 0) {
 		close(fd);
-		std::cerr << "Error: bind:" << strerror(errno) << '\n';
-		exit(errno);
+		throw(ServerError("server: bind: " + std::string(strerror(errno))));
+		return ;
 	}
 	if (listen(fd, REQUEST_QUE_SIZE) < 0) {
 		close(fd);
-		std::cerr << "Error: listen:" << strerror(errno) << '\n';
-		exit(errno);
+		throw(ServerError("server: listen: " + std::string(strerror(errno))));
+		return ;
 	}
-	_set_non_blocking();
-	//_listener.set_server_fd(server_fd);
 	std::cout << "Started server on port " << config.getPort() << "...\n";
 }
 

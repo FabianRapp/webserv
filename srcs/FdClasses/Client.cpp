@@ -3,6 +3,7 @@
 #include "../../includes/Manager.hpp"
 #include "../../includes/macros.h"
 
+//todo: constructor err handling
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT),
 	mode(ClientMode::RECEIVING),
@@ -19,14 +20,14 @@ Client::Client(DataManager& data, Server* parent_server):
 		reinterpret_cast<struct sockaddr *>(&addr);
 	memset(&addr, 0, sizeof addr);// might not be needed
 	fd = accept(server->fd, addr_ptr, &addr_len);
+
+	// todo: this if statement is only for debugging and should not stay for
+	// submission
 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
 		FT_ASSERT(0 && "Should have been handled by poll");
 	}
+
 	_set_non_blocking();
-	//if (new_client_fd < 0) {
-	//	FT_ASSERT(0);
-	//}
-	//_connections.add_client(new_client_fd);
 	std::cout << "Connection accepted from address("
 		<< inet_ntoa(addr.sin_addr) << "): PORT("
 		<< ntohs(addr.sin_port) << ")\n";
@@ -45,7 +46,8 @@ void	Client::_receive_request(void) {
 	long int	bytes_read = recv(this->fd, buffer, sizeof buffer - 1, recv_flags);
 	if (bytes_read < 0) {
 		std::cerr << "Error: read failed\n";
-		FT_ASSERT(0);
+		set_close();
+		return ;
 	}
 	buffer[bytes_read] = 0;
 	std::cout << "Read:\n" << buffer << '\n';
@@ -57,11 +59,8 @@ void	Client::_receive_request(void) {
 		//throw (SendClientError(404, _codes[404], "testing", true));
 
 		this->parse();
-		// bool testing_response = true;
 		std::cout << "Request STATUS = " << _parser.is_finished() << std::endl;
-		// if (testing_response || _parser.is_finished() == true)
 		if (_parser.is_finished() == true) {
-			std::cout << "HI1!!\n";
 			_request = _parser.get_request();
 			mode = ClientMode::BUILD_RESPONSE;
 			_send_data.pos = 0;
@@ -124,6 +123,11 @@ std::string	Client::_build_response(bool & close_connection) {
 			response += "405 Method Not Allowed\r\n";
 			//response += "\r\n\r\n";
 			close_connection = true;
+			/*
+			 *todo:
+			 set_err(405);
+			 return;
+			*/
 		}
 	}
 	response += "Content-Length: ";
@@ -167,7 +171,6 @@ void	Client::execute(void) {
 			break ;
 		}
 	}
-
 }
 
 void	Client::parse() {
@@ -195,10 +198,11 @@ void	Client::_send_response(void) {
 		send_flags
 	);
 	if (send_bytes <= 0) {
-		//todo:
-		std::cerr << "send_bytes: " << send_bytes << '\n';
+		std::cerr << "Error: send: closing connection now\n";
+		//todo: the line below has to removed before submission according to subject
 		std::cerr << "err: " << strerror(errno) << '\n';
-		assert(0);
+		set_close();
+		return ;
 	}
 	_send_data.pos += static_cast<size_t>(send_bytes);
 	if (_send_data.pos == _send_data.response.size()) {

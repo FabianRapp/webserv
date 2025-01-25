@@ -27,8 +27,8 @@ void	BaseFd::_set_non_blocking(void) {
 	int	flags = fcntl(fd, F_GETFL, 0);
 	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 	if (errno) {
-		std::cerr << "Error: fcntl: set non blocking" << strerror(errno) << '\n';
-		assert(0);
+		std::cerr << "Error: fcntl: set non blocking: " << strerror(errno) << '\n';
+		set_close();
 	}
 	errno = old_err;
 }

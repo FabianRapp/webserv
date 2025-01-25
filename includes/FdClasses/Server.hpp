@@ -24,6 +24,10 @@ public:
 	void	execute(void);
 	size_t	total_unique_clients;
 	ServerConfigFile	config;
+	class ServerError: public std::runtime_error {
+	public:
+		 ServerError(const std::string& str): std::runtime_error(str) {}
+	};
 private:
 	std::unordered_map<unsigned long, std::string>	_codes;
 };

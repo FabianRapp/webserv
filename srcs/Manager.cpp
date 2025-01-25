@@ -6,16 +6,20 @@ DataManager::DataManager(void): _total_entrys(0), _count(0) {}
 DataManager::~DataManager(void) {
 }
 
-Server*	DataManager::new_server(ServerConfigFile config) {
- 	Server* server = new Server(*this, config);
+void	DataManager::new_server(ServerConfigFile config) {
+	Server*	server;
+	try {
+		server = new Server(*this, config);
+	} catch (const Server::ServerError& err) {
+		std::cerr << "Error creating server: " << err.what() << "\n";
+		return ;
+	}
 	_add_entry(reinterpret_cast<BaseFd*>(server), server->poll_events);
-	return (server);
 }
 
-Client*	DataManager::new_client(Server* server) {
+void	DataManager::new_client(Server* server) {
  	Client* client = new Client(*this, server);
 	_add_entry(reinterpret_cast<BaseFd*>(client), client->poll_events);
-	return (client);
 }
 
 ReadFd*	DataManager::new_read_fd(std::string& target_buffer, int fd,
@@ -27,6 +31,7 @@ ReadFd*	DataManager::new_read_fd(std::string& target_buffer, int fd,
 
 void	DataManager::set_close(size_t idx) {
 	_close_later[idx] = true;
+	_pollfds[idx].revents = 0;
 }
 
 bool	DataManager::closing(size_t idx) const {
