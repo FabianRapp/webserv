@@ -1,9 +1,14 @@
 #include "../includes/Manager.hpp"
 #include "../includes/ConfigParser/ServerConfigFile.hpp"
 
-DataManager::DataManager(void): _total_entrys(0), _count(0) {}
+DataManager::DataManager(void): _total_entrys(0), _count(0),
+	_consecutive_poll_fails(0)
+{}
 
 DataManager::~DataManager(void) {
+	while (_count) {
+		_fd_close(0);
+	}
 }
 
 void	DataManager::new_server(ServerConfigFile config) {
@@ -56,12 +61,19 @@ int	DataManager::get_fd(size_t idx) {
 
 void	DataManager::run_poll() {
 	if (poll(&_pollfds[0], static_cast<nfds_t>(_count), 0) < 0) {
-		std::cerr << "Error: poll: " << strerror(errno) << '(' << errno << ")\n";
+		std::cerr << "Error: poll: " << strerror(errno) << "\n";
+		_consecutive_poll_fails++;
+		/*todo:
+		if (_consecutive_poll_fails > some value) {
+			throw ( error to indicate exit);
+		}
+		*/
 		for (auto& pollfd : _pollfds) {
 			pollfd.revents = 0;
 		}
 		return ;
 	}
+	_consecutive_poll_fails = 0;
 }
 
 void	DataManager::execute_all(void) {

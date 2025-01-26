@@ -68,5 +68,6 @@ private:
 	std::vector<struct pollfd>		_pollfds;
 	std::vector<bool>				_close_later;
 	std::vector<BaseFd*>			_fd_users;
+	size_t							_consecutive_poll_fails;
 };
 

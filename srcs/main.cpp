@@ -11,11 +11,11 @@ void	sig_int(int) {
 	exit_ = 1;
 }
 
-int	main(int ac, char *av[]) {
-	signal(SIGINT, sig_int);
+void	webserv(int ac, char **av) {
 	DataManager		manager;
 
-	ConfigParser					*parser;
+	ConfigParser					*parser = nullptr;// todo: has to be in manager class to
+											// prevent leaks in case of errors
 	std::vector<ServerConfigFile>	all_configs;
 	try {
 		if (ac == 1) {
@@ -26,7 +26,8 @@ int	main(int ac, char *av[]) {
 		all_configs = parser->getServers();
 	} catch (const ConfigParseError& err) {
 		std::cerr << "Config parse error: " << err.what() << "\n";
-		exit(1);
+		delete parser;
+		return ;
 	}
 
 	for (auto & config : all_configs) {
@@ -37,6 +38,18 @@ int	main(int ac, char *av[]) {
 		manager.run_poll();
 		manager.execute_all();
 		manager.process_closures();
+	}
+}
+
+int	main(int ac, char *av[]) {
+	signal(SIGINT, sig_int);
+
+start:
+	try {
+		webserv(ac, av);
+	} catch (std::bad_alloc) {
+		std::cerr << "Bad alloc!\nRestarting servers..\n";
+		goto start;
 	}
 	return (0);
 }
