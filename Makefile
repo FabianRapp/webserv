@@ -29,6 +29,7 @@ SRCS := main.cpp \
 		FdClasses/Server.cpp \
 		FdClasses/Client.cpp \
 		FdClasses/ReadFd.cpp \
+		FdClasses/WriteFd.cpp \
 		ConfigParser/ConfigParser.cpp \
 		ConfigParser/DefaultErrorPages.cpp \
 		ConfigParser/LocationConfigFile.cpp\

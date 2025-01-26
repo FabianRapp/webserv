@@ -1,9 +1,6 @@
 #include "../../includes/FdClasses/ReadFd.hpp"
 #include "../../includes/Manager.hpp"
 
-//todo: err handling
-
-
 ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd,
 		ssize_t byte_count, std::function<void()> completion_callback):
 	BaseFd(data, POLLIN), target_buf(target_buffer),
