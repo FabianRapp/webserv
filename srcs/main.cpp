@@ -10,6 +10,10 @@ void	sig_int(int) {
 	exit_ = 1;
 }
 
+int	sort_ports(ServerConfigFile a, ServerConfigFile b) {
+	return (a.getPort() - b.getPort());
+}
+
 void	webserv(int ac, char **av) {
 	DataManager		manager;
 
@@ -25,12 +29,16 @@ void	webserv(int ac, char **av) {
 		std::cerr << "Config parse error: " << err.what() << "\n";
 		return ;
 	}
-
+	sort(all_configs.begin(), all_configs.end(), sort_ports);
+	//todo: each server needs to hold a vec of all the configs on the same port
+	//cliens need to select the correct config based on the request
 	for (auto & config : all_configs) {
 		manager.new_server(config);
 	}
+
 	delete manager.config_parser;
 	manager.config_parser = nullptr;
+
 	while (!exit_) {
 		manager.run_poll();
 		manager.execute_all();
