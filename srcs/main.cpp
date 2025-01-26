@@ -1,5 +1,4 @@
 #include "../includes/Manager.hpp"
-#include "../includes/ConfigParser/ConfigParser.hpp"
 #include <vector>
 #include <csignal>
 #include "../includes/Exceptions.hpp"
@@ -14,26 +13,24 @@ void	sig_int(int) {
 void	webserv(int ac, char **av) {
 	DataManager		manager;
 
-	ConfigParser					*parser = nullptr;// todo: has to be in manager class to
-											// prevent leaks in case of errors
 	std::vector<ServerConfigFile>	all_configs;
 	try {
 		if (ac == 1) {
-			parser = new ConfigParser("config/default.conf");
+			manager.config_parser = new ConfigParser("config/default.conf");
 		} else {
-			parser = new ConfigParser(av[1]);
+			manager.config_parser = new ConfigParser(av[1]);
 		}
-		all_configs = parser->getServers();
+		all_configs = manager.config_parser->getServers();
 	} catch (const ConfigParseError& err) {
 		std::cerr << "Config parse error: " << err.what() << "\n";
-		delete parser;
 		return ;
 	}
 
 	for (auto & config : all_configs) {
 		manager.new_server(config);
 	}
-	delete parser;
+	delete manager.config_parser;
+	manager.config_parser = nullptr;
 	while (!exit_) {
 		manager.run_poll();
 		manager.execute_all();

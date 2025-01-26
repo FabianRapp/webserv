@@ -1,11 +1,12 @@
 #include "../includes/Manager.hpp"
 #include "../includes/ConfigParser/ServerConfigFile.hpp"
 
-DataManager::DataManager(void): _total_entrys(0), _count(0),
+DataManager::DataManager(void): config_parser(nullptr), _total_entrys(0), _count(0),
 	_consecutive_poll_fails(0)
 {}
 
 DataManager::~DataManager(void) {
+	delete config_parser;
 	while (_count) {
 		_fd_close(0);
 	}

@@ -27,7 +27,7 @@
 #include <cassert>
 #include <cerrno>
 #include <iostream>
-
+#include "../includes/ConfigParser/ConfigParser.hpp"
 
 
 #include "FdClasses/BaseFd.hpp"
@@ -57,7 +57,7 @@ public:
 
 	void	execute_all(void);
 
-
+	ConfigParser	*config_parser;
 private:
 	size_t	_total_entrys;
 	void	_add_entry(BaseFd *entry, short poll_events);

@@ -15,7 +15,7 @@
 
 int	main(void) {
 	const char				*hostname = "localhost";
-	const int16_t			port = 8080;
+	const int16_t			port = 9090;
 	//const char				*hostname = "google.com";
 	//const int16_t			port = 80;
 	const struct hostent	*server = gethostbyname(hostname);
