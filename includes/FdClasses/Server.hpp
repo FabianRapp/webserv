@@ -18,12 +18,12 @@
 
 class Server: public BaseFd {
 public:
-	Server(DataManager& data, ServerConfigFile& config);
+	Server(DataManager& data, std::vector<ServerConfigFile>& configs);
 	~Server(void);
 
 	void	execute(void);
 	size_t	total_unique_clients;
-	ServerConfigFile	config;
+	std::vector<ServerConfigFile>	configs;
 	class ServerError: public std::runtime_error {
 	public:
 		 ServerError(const std::string& str): std::runtime_error(str) {}

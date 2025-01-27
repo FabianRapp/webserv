@@ -72,9 +72,27 @@ void	Client::_receive_request(void) {
 	}
 }
 
+ServerConfigFile&	select_config(std::vector<ServerConfigFile>& server_configs,
+						Request& request)
+{
+	std::string	host = request._headers[HeaderType::HOST];
+	std::transform(host.begin(), host.end(), host.begin(),
+		[](unsigned char c) { return (std::tolower(c));});
+
+	for (ServerConfigFile& config : server_configs) {
+		//todo: idk can a server config file have multiple different names?
+		if (config.getServerName() == host) {
+			return (config);
+		}
+	}
+	return (server_configs[0]);
+}
+
 /* todo: should not return value */
-std::string	Client::_build_response(bool & close_connection) {
+std::string	Client::_execute_response(bool & close_connection) {
 	std::string	&response = _send_data.response;
+	ServerConfigFile&	config = select_config(server->configs, _request);
+
 
 	if (response.size() == 0) {
 		// first call here
@@ -151,7 +169,7 @@ void	Client::execute(void) {
 		}
 		case (ClientMode::BUILD_RESPONSE): {
 			bool	placeholder_close_connection;
-			_send_data.response = _build_response(placeholder_close_connection);
+			_send_data.response = _execute_response(placeholder_close_connection);
 			break ;
 		}
 		case (ClientMode::SENDING): {

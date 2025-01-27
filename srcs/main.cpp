@@ -32,9 +32,18 @@ void	webserv(int ac, char **av) {
 	sort(all_configs.begin(), all_configs.end(), sort_ports);
 	//todo: each server needs to hold a vec of all the configs on the same port
 	//cliens need to select the correct config based on the request
+	
+	std::vector<ServerConfigFile>	matching_ports;
 	for (auto & config : all_configs) {
-		manager.new_server(config);
+		if (matching_ports.size() == 0 || matching_ports[0].getPort() == config.getPort()) {
+			matching_ports.push_back(config);
+			continue ;
+		}
+		manager.new_server(matching_ports);
+		matching_ports.clear();
+		matching_ports.push_back(config);
 	}
+	manager.new_server(matching_ports);
 
 	delete manager.config_parser;
 	manager.config_parser = nullptr;

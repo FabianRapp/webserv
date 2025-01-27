@@ -12,10 +12,10 @@ DataManager::~DataManager(void) {
 	}
 }
 
-void	DataManager::new_server(ServerConfigFile config) {
+void	DataManager::new_server(std::vector<ServerConfigFile>& configs) {
 	Server*	server;
 	try {
-		server = new Server(*this, config);
+		server = new Server(*this, configs);
 	} catch (const Server::ServerError& err) {
 		std::cerr << "Error creating server: " << err.what() << "\n";
 		return ;

@@ -7,7 +7,15 @@ void ServerConfigFile::setPort(int port) {
 }
 
 void ServerConfigFile::setServerName(const std::string& server_name) {
+	//todo: i think a server name can be made up of multiple names(so a vec of strings)
 	_server_name = server_name;
+
+	//update by fabi: made name always lower case
+	std::transform(_server_name.begin(), _server_name.end(), _server_name.begin(),
+		[](unsigned char c) {
+			return (std::tolower(c));
+		}
+	);
 }
 
 void ServerConfigFile::setRoot(const std::string& root) {

@@ -4,7 +4,7 @@
 #include "BaseFd.hpp"
 #include "../msg.hpp"
 #include "../parser/Parser.hpp"
-
+#include <algorithm>
 #include <sys/socket.h>
 #include <poll.h>
 #include <sys/poll.h>
@@ -32,7 +32,7 @@ public:
 	std::string	input;
 private:
 
-	std::string		_build_response(bool & close_connection);
+	std::string		_execute_response(bool & close_connection);
 	void			_receive_request(void);
 	Request			_request;
 	struct {

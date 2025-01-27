@@ -1,10 +1,10 @@
 #include "../../includes/FdClasses/Server.hpp"
 #include "../../includes/Manager.hpp"
 
-Server::Server(DataManager& data, ServerConfigFile& config):
+Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 	BaseFd(data, POLLIN),
 	total_unique_clients(0),
-	config(config)
+	configs(configs)
 {
 	struct sockaddr_in		server_addr;
 	const socklen_t			server_addr_len = static_cast<socklen_t>(sizeof server_addr);
@@ -27,7 +27,7 @@ Server::Server(DataManager& data, ServerConfigFile& config):
 	memset(&server_addr, 0, sizeof(struct sockaddr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = INADDR_ANY;
-	server_addr.sin_port = htons(config.getPort());
+	server_addr.sin_port = htons(configs[0].getPort());
 
 	if (bind(fd, server_addr_ptr, server_addr_len) < 0) {
 		close(fd);
@@ -39,7 +39,7 @@ Server::Server(DataManager& data, ServerConfigFile& config):
 		throw(ServerError("server: listen: " + std::string(strerror(errno))));
 		return ;
 	}
-	std::cout << "Started server on port " << config.getPort() << "...\n";
+	std::cout << "Started server on port " << configs[0].getPort() << "...\n";
 }
 
 Server::~Server(void) {
