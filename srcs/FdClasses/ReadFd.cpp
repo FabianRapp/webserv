@@ -3,7 +3,8 @@
 
 ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd,
 		ssize_t byte_count, std::function<void()> completion_callback):
-	BaseFd(data, POLLIN), target_buf(target_buffer),
+	BaseFd(data, POLLIN, "ReadFd"),
+	target_buf(target_buffer),
 	completion_callback(std::move(completion_callback))
 {
 	this->fd = fd;

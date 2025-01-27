@@ -102,9 +102,11 @@ void	DataManager::_add_entry(BaseFd *entry, short poll_events) {
 	_pollfds.push_back(poll_fd);
 	_fd_users.push_back(entry);
 	_close_later.push_back(false);
+	std::cout << "added fd " << _fd_users[_count - 1]->name << " with idx " << _count -1 << "\n";
 }
 
 void	DataManager::_fd_close(size_t idx) {
+	std::cout << "closing fd " << _fd_users[idx]->name << " with idx " << idx << "\n";
 	delete _fd_users[idx];
 	close(_pollfds[idx].fd);
 	_count--;

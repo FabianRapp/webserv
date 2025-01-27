@@ -1,3 +1,5 @@
+test_file.txt
+test_file_cmp.txt
 test.cpp
 client
 compile_commands.json

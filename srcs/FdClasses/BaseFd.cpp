@@ -1,11 +1,12 @@
 #include "../../includes/FdClasses/BaseFd.hpp"
 #include "../../includes/Manager.hpp"
 
-BaseFd::BaseFd(DataManager& data, short poll_events):
+BaseFd::BaseFd(DataManager& data, short poll_events, const std::string& name):
 	poll_events(poll_events),
 	data(data),
 	fd(-1),
-	data_idx(std::numeric_limits<size_t>::max())
+	data_idx(std::numeric_limits<size_t>::max()),
+	name(name)
 {
 }
 

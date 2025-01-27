@@ -5,7 +5,7 @@
 
 //todo: constructor err handling
 Client::Client(DataManager& data, Server* parent_server):
-	BaseFd(data, POLLIN | POLLOUT),
+	BaseFd(data, POLLIN | POLLOUT, "Client"),
 	mode(ClientMode::RECEIVING),
 	_response_builder({"", nullptr}),
 	_send_data({"", 0, false}),
@@ -181,6 +181,21 @@ std::string	Client::_execute_response(bool & close_connection) {
 	return (response);
 }
 
+// diff test_file.txt test_file_cmp.txt
+// -> should not show any diff
+// can be used as an intermediate mode for this->mode before entering SENDING mode
+void	Client::_test_write_fd() {
+	int fd = open("test_file.txt", O_WRONLY | O_APPEND | O_NONBLOCK | O_CREAT | O_TRUNC, 0666);
+	int fd2 = open("test_file_cmp.txt", O_WRONLY | O_APPEND | O_CREAT | O_TRUNC, 0666);
+	FT_ASSERT(fd > 0);
+	_fd_write_data = std::string_view(_send_data.response.c_str(), _send_data.response.size());
+	write(fd2, _fd_write_data.data(), _fd_write_data.size());
+	close(fd2);
+	_write_fd(ClientMode::SENDING, fd);
+	//mode = ClientMode::SENDING;
+	close(fd);
+}
+
 void	Client::execute(void) {
 	switch (this->mode) {
 		case (ClientMode::RECEIVING): {
@@ -205,8 +220,14 @@ void	Client::execute(void) {
 			break ;
 		}
 		case (ClientMode::WRITING_FD): {
+			// do nothing
 			break ;
 		}
+		case (ClientMode::TESTING_MODE): {
+			//_test_write_fd();
+			break ;
+		}
+
 	}
 }
 
@@ -227,7 +248,7 @@ void	Client::_send_response(void) {
 	}
 
 	const int send_flags = 0;
-	std::cout << "sending:\n" << _send_data.response << "\n";
+	//std::cout << "sending:\n" << _send_data.response << "\n";
 	ssize_t send_bytes = send(
 		fd,
 		_send_data.response.c_str() + _send_data.pos,

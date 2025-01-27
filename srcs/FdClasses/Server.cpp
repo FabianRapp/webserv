@@ -2,7 +2,7 @@
 #include "../../includes/Manager.hpp"
 
 Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
-	BaseFd(data, POLLIN),
+	BaseFd(data, POLLIN, "Server"),
 	total_unique_clients(0),
 	configs(configs)
 {

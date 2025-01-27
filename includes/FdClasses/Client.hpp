@@ -20,6 +20,7 @@ public:
 		READING_FILE,
 		WRITING_FD,
 		READING_PIPE,
+		TESTING_MODE,
 	}	mode;
 	Client(DataManager& data, Server* parent_server);
 
@@ -53,4 +54,8 @@ private:
 		bool		close_after_send;
 	}	_send_data;
 	Parser			_parser;
+
+
+
+	void			_test_write_fd();
 };

@@ -3,7 +3,8 @@
 
 WriteFd::WriteFd(DataManager& data, std::string_view& src, int fd,
 		std::function<void()> completion_callback):
-	BaseFd(data, POLLOUT), src(src),
+	BaseFd(data, POLLOUT, "Writer"),
+	src(src),
 	completion_callback(std::move(completion_callback)),
 	pos(0)
 {
@@ -23,8 +24,9 @@ void	WriteFd::execute(void) {
 	assert(write_ret >= 0);
 	pos += static_cast<size_t>(write_ret);
 	if (pos == src.size()) {
-		//data.set_close(data_idx);
+		data.set_close(data_idx);
 		completion_callback();
+		//std::cout << "writer finished\n";
 		return ;
 	}
 }

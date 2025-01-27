@@ -5,7 +5,7 @@
 
 class BaseFd {
 public:
-	BaseFd(DataManager& data, short poll_events);
+	BaseFd(DataManager& data, short poll_events, const std::string& name);
 
 	virtual
 	~BaseFd(void);
@@ -16,10 +16,11 @@ public:
 	virtual
 	void	execute(void) = 0;
 
-	const short		poll_events;
-	DataManager&	data;
-	int				fd;
-	size_t			data_idx;
+	const short			poll_events;
+	DataManager&		data;
+	int					fd;
+	size_t				data_idx;
+	const std::string	name;//for debugging
 protected:
 	void	_set_non_blocking(void);
 private:
