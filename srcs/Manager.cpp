@@ -35,6 +35,12 @@ ReadFd*	DataManager::new_read_fd(std::string& target_buffer, int fd,
 	return (reader);
 }
 
+WriteFd*	DataManager::new_write_fd(int fd, std::string_view& input_data, std::function<void()> callback) {
+	WriteFd*	writer = new WriteFd(*this, input_data, fd, callback);
+	_add_entry(reinterpret_cast<WriteFd*>(writer), writer->poll_events);
+	return (writer);
+}
+
 void	DataManager::set_close(size_t idx) {
 	_close_later[idx] = true;
 	_pollfds[idx].revents = 0;

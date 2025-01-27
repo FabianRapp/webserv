@@ -39,10 +39,12 @@ public:
 	DataManager(void);
 	~DataManager(void);
 
-	void	new_server(std::vector<ServerConfigFile>& configs);
-	void	new_client(Server* server);
-	ReadFd*	new_read_fd(std::string& target_buffer, int fd,
-			ssize_t byte_count, std::function<void()> callback);
+	void		new_server(std::vector<ServerConfigFile>& configs);
+	void		new_client(Server* server);
+	ReadFd*		new_read_fd(std::string& target_buffer, int fd,
+					ssize_t byte_count, std::function<void()> callback);
+	WriteFd*	new_write_fd(int fd, std::string_view& input_data, std::function<void()> callback);
+
 
 	void	set_close(size_t idx);
 

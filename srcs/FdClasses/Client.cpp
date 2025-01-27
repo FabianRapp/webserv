@@ -9,7 +9,8 @@ Client::Client(DataManager& data, Server* parent_server):
 	mode(ClientMode::RECEIVING),
 	_response_builder({"", nullptr}),
 	_send_data({"", 0, false}),
-	_parser(input)
+	_parser(input),
+	_writer(nullptr)
 {
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));
@@ -70,6 +71,27 @@ void	Client::_receive_request(void) {
 	} catch (const SendClientError& err) {
 		//_default_err_response(connection, err);
 	}
+}
+
+// Use this to write to a pipe or a file.
+// The input data has to be in Client::_fd_write_data
+// Switched int ClientMode::WRITING_FD, thus:
+// After calling this function the caller should return straight to Client::execute
+// without any more actions besides the following:
+// Uses dup() on the given fd, if the fd is not needed anywher else simply close
+// the fd after calling this.
+// Assumes the given fd to be valid.
+void	Client::_write_fd(ClientMode next_mode, int fd) {
+		FT_ASSERT(fd > 0);
+		fd = dup(fd);
+		mode = ClientMode::WRITING_FD;
+		_writer = data.new_write_fd(
+			fd, _fd_write_data,
+			[this, next_mode] () {
+				this->mode = next_mode;
+				//todo: maybe clear <this->_fd_write_data> here
+			}
+		);
 }
 
 ServerConfigFile&	select_config(std::vector<ServerConfigFile>& server_configs,
@@ -179,13 +201,10 @@ void	Client::execute(void) {
 		case (ClientMode::READING_FILE): {
 			break ;
 		}
-		case (ClientMode::WRITING_FILE): {
-			break ;
-		}
 		case (ClientMode::READING_PIPE): {
 			break ;
 		}
-		case (ClientMode::WRITING_PIPE): {
+		case (ClientMode::WRITING_FD): {
 			break ;
 		}
 	}

@@ -2,6 +2,7 @@
 
 #include "../general_includes.hpp"
 #include "BaseFd.hpp"
+#include "WriteFd.hpp"
 #include "../msg.hpp"
 #include "../parser/Parser.hpp"
 #include <algorithm>
@@ -17,9 +18,8 @@ public:
 		BUILD_RESPONSE,
 		SENDING,
 		READING_FILE,
-		WRITING_FILE,
+		WRITING_FD,
 		READING_PIPE,
-		WRITING_PIPE,
 	}	mode;
 	Client(DataManager& data, Server* parent_server);
 
@@ -39,6 +39,12 @@ private:
 		std::string		body;
 		ReadFd			*reader;
 	}				_response_builder;
+	WriteFd			*_writer;
+
+	/* interace for file/pipe IO */
+	void				_write_fd(ClientMode next_mode, int fd);
+	std::string			_fd_read_data;
+	std::string_view	_fd_write_data;
 
 	void			_send_response(void);
 	struct send_data {

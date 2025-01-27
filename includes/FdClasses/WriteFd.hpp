@@ -4,7 +4,7 @@
 
 class WriteFd: public BaseFd {
 public:
-	WriteFd(DataManager& data, std::string_view src, int fd,
+	WriteFd(DataManager& data, std::string_view& src, int fd,
 			std::function<void()> completion_callback);
 
 	~WriteFd(void);

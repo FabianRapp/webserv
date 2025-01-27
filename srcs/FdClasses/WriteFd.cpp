@@ -1,9 +1,9 @@
 #include "../../includes/FdClasses/WriteFd.hpp"
 #include "../../includes/Manager.hpp"
 
-WriteFd::WriteFd(DataManager& data, std::string_view src, int fd,
+WriteFd::WriteFd(DataManager& data, std::string_view& src, int fd,
 		std::function<void()> completion_callback):
-	BaseFd(data, POLLIN), src(src),
+	BaseFd(data, POLLOUT), src(src),
 	completion_callback(std::move(completion_callback)),
 	pos(0)
 {
