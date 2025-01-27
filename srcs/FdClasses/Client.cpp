@@ -7,7 +7,7 @@
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT, "Client"),
 	mode(ClientMode::RECEIVING),
-	_response_builder({"", nullptr}),
+	_response_builder({""}),
 	_send_data({"", 0, false}),
 	_parser(input),
 	_writer(nullptr)
@@ -73,6 +73,32 @@ void	Client::_receive_request(void) {
 	}
 }
 
+// Use this to read from from a pipe or a file.
+// Clears _fd_read_data and then writes the data to it.
+// Switched int ClientMode::WRITING_FD, thus:
+// After calling this function the caller should return straight to Client::execute
+// without any more actions besides the following:
+// Uses dup() on the given fd, if the fd is not needed anywher else simply close
+// the fd after calling this.
+// Assumes the given fd to be valid.
+void	Client::_read_fd(ClientMode next_mode, int read_fd, ssize_t byte_count) {
+	_fd_error.error = false;
+	_fd_read_data = "";
+	FT_ASSERT(read_fd > 0);
+	read_fd = dup(read_fd);
+	FT_ASSERT(read_fd > 0);
+	mode = ClientMode::READING_FD;
+	_reader = data.new_read_fd(
+		_fd_read_data,
+		read_fd,
+		byte_count,
+		[this, next_mode] () {
+			this->mode = next_mode;
+			this->_reader = nullptr;
+		}
+	);
+}
+
 // Use this to write to a pipe or a file.
 // The input data has to be in Client::_fd_write_data
 // Switched int ClientMode::WRITING_FD, thus:
@@ -81,17 +107,20 @@ void	Client::_receive_request(void) {
 // Uses dup() on the given fd, if the fd is not needed anywher else simply close
 // the fd after calling this.
 // Assumes the given fd to be valid.
-void	Client::_write_fd(ClientMode next_mode, int fd) {
-		FT_ASSERT(fd > 0);
-		fd = dup(fd);
-		mode = ClientMode::WRITING_FD;
-		_writer = data.new_write_fd(
-			fd, _fd_write_data,
-			[this, next_mode] () {
-				this->mode = next_mode;
-				//todo: maybe clear <this->_fd_write_data> here
-			}
-		);
+void	Client::_write_fd(ClientMode next_mode, int write_fd) {
+	_fd_error.error = false;
+	FT_ASSERT(write_fd > 0);
+	write_fd = dup(write_fd);
+	mode = ClientMode::WRITING_FD;
+	_writer = data.new_write_fd(
+		write_fd,
+		_fd_write_data,
+		[this, next_mode] () {
+			this->mode = next_mode;
+			this->_writer = nullptr;
+			//todo: maybe clear <this->_fd_write_data> here
+		}
+	);
 }
 
 ServerConfigFile&	select_config(std::vector<ServerConfigFile>& server_configs,
@@ -115,7 +144,6 @@ std::string	Client::_execute_response(bool & close_connection) {
 	std::string	&response = _send_data.response;
 	ServerConfigFile&	config = select_config(server->configs, _request);
 
-
 	if (response.size() == 0) {
 		// first call here
 		response = "HTTP/1.1 200 OK";
@@ -123,27 +151,18 @@ std::string	Client::_execute_response(bool & close_connection) {
 		_response_builder.body = "";
 	}
 
-	if (!_response_builder.body.length()) {
-		/* testing to load a file */
+	/* testing to load a file */
+	if (!_response_builder.body.length() && !_fd_read_data.size()) {
 		std::string	path = "hello_world.html";
 		struct stat	stats;
 		stat(path.c_str(), &stats);
 		int	file_fd = open(path.c_str(), O_RDONLY);
 		FT_ASSERT(file_fd > 0);
-
-		mode = ClientMode::READING_FILE;
-		_response_builder.reader = data.new_read_fd(
-			_response_builder.body,
-			file_fd, stats.st_size,
-			[this] () {
-				this->mode = ClientMode::BUILD_RESPONSE;
-			}
-		);
+		_read_fd(ClientMode::BUILD_RESPONSE, file_fd, stats.st_size);
+		close(file_fd);
 		return (response);
-	}
-	if (_response_builder.reader != nullptr) {
-		_response_builder.reader->set_close();
-		_response_builder.reader = nullptr;
+	} else if (!_response_builder.body.length()) {
+		_response_builder.body = _fd_read_data;
 	}
 
 	close_connection = true; /* default for now == true */
@@ -213,12 +232,7 @@ void	Client::execute(void) {
 			_send_response();
 			return ;
 		}
-		case (ClientMode::READING_FILE): {
-			break ;
-		}
-		case (ClientMode::READING_PIPE): {
-			break ;
-		}
+		case (ClientMode::READING_FD):
 		case (ClientMode::WRITING_FD): {
 			// do nothing
 			break ;

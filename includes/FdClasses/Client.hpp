@@ -17,9 +17,8 @@ public:
 		RECEIVING,
 		BUILD_RESPONSE,
 		SENDING,
-		READING_FILE,
+		READING_FD,
 		WRITING_FD,
-		READING_PIPE,
 		TESTING_MODE,
 	}	mode;
 	Client(DataManager& data, Server* parent_server);
@@ -38,14 +37,21 @@ private:
 	Request			_request;
 	struct {
 		std::string		body;
-		ReadFd			*reader;
 	}				_response_builder;
-	WriteFd			*_writer;
 
-	/* interace for file/pipe IO */
+	/********************** interace for file/pipe IO ************************/
+	//todo: make this a class?
 	void				_write_fd(ClientMode next_mode, int fd);
+	void				_read_fd(ClientMode next_mode, int fd, ssize_t byte_count);
 	std::string			_fd_read_data;
 	std::string_view	_fd_write_data;
+	struct {
+		bool				error;//check this to check if there is any error
+		//todo: add data for error handling
+	}					_fd_error;
+	WriteFd*			_writer;
+	ReadFd*				_reader;
+	/*************************************************************************/
 
 	void			_send_response(void);
 	struct send_data {

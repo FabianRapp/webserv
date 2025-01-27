@@ -23,7 +23,7 @@ void	ReadFd::execute(void) {
 	size_t	read_size = sizeof buffer - 1 < static_cast<size_t>(left_over_bytes)
 		? sizeof buffer - 1: static_cast<size_t>(left_over_bytes);
 	ssize_t read_ret = read(fd, buffer, read_size);
-	assert(read_ret >= 0);
+	FT_ASSERT(read_ret >= 0);
 	buffer[read_ret] = 0;
 	left_over_bytes -= read_ret;
 	target_buf += buffer;
@@ -32,7 +32,7 @@ void	ReadFd::execute(void) {
 	//std::cout << "read_ret: " << read_ret << "\n";
 	//std::cout << "left_over_bytes: " << left_over_bytes << "\n";
 	if (left_over_bytes == 0) {
-		//data.set_close(data_idx);
+		data.set_close(data_idx);
 		completion_callback();
 		return ;
 	}
