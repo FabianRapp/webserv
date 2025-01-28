@@ -29,8 +29,8 @@ class Parser {
 		~Parser() = default;
 
 		void	parse(void);
-		void	parse_first_line(const StringArray& array);
-		void	parse_headers(const StringArray& array);
+		void	parse_first_line(const RequestArray& array);
+		void	parse_headers(const RequestArray& array);
 		void	parse_body(std::string& input);
 		void	parser_unchunked(std::string& input);
 		void	parser_chunked(std::string& input);

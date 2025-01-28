@@ -46,7 +46,7 @@ std::string	cleanBody(const std::string& input) {
 	return (cleanBody);
 }
 /*
-void printStringArray(const StringArray& arr) {
+void printRequestArray(const RequestArray& arr) {
 	std::cout << "string arr:\n";
 	for (size_t i = 0; i < arr.size(); ++i) {
 		std::cout << "Line " << i + 1 << ": ";
@@ -83,9 +83,9 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
 /*
 // Function to split the input string into arrays (lines and words) and stop at stopDl
 // Dl = delimiter
-StringArray splitIntoArrays(const String& input, const String& lineDl, const String& stopDl) {
+RequestArray splitIntoArrays(const String& input, const String& lineDl, const String& stopDl) {
 	String str;
-	StringArray result;
+	RequestArray result;
 	size_t start = 0, end = 0;
 	
 	std::cout << "input: " << input << "\n";
@@ -158,7 +158,7 @@ void Parser::insertHeader(const std::string& key, const std::string& value) {
 	// std::cout << "key: " << key << " value: " << value << std::endl;
 }
 
-void	Parser::parse_first_line(const StringArray& array) {
+void	Parser::parse_first_line(const RequestArray& array) {
 	if (array[0].size() != 3)
 	{
 		//handle error logic, first line is incomplete
@@ -168,7 +168,7 @@ void	Parser::parse_first_line(const StringArray& array) {
 	setVersion(array[0][2]);
 }
 
-void	Parser::parse_headers(const StringArray& array) {
+void	Parser::parse_headers(const RequestArray& array) {
 	size_t i = 1;
 
 	while (i < array.size())
@@ -372,13 +372,13 @@ void Parser::parse(void) {
 	// std::cout << "from parser:" <<std::endl << "|" << input << "|" << std::endl;
 	std::cout << "Parsing started\n";
 	//std::cout << "parser input: " << _input << "\n";
-	StringArray	array;
+	RequestArray	array;
 	if (!_request._areHeadersParsed)
 	{
-		StringArray		*arr_ptr;
+		RequestArray		*arr_ptr;
 		try {
-			array = StringArray(_input, "\r\n", "\r\n\r\n");
-		} catch (const StringArray::NotTerminated& e) {
+			array = RequestArray(_input);
+		} catch (const RequestArray::NotTerminated& e) {
 			(void)e;
 			_request._finished = false;
 			return ;

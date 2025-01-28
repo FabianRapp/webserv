@@ -84,7 +84,12 @@ void	DataManager::run_poll() {
 }
 
 void	DataManager::execute_all(void) {
-	for (auto & user : _fd_users) {
+	size_t	count = _count;
+	for (size_t i = 0; i < _count; i++) {
+		BaseFd* user = _fd_users[i];
+		if (user->name != "Server") {
+			std::cout << "Manger: execec " << user->name << "\n";
+		}
 		user->execute();
 	}
 }
