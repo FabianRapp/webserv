@@ -138,16 +138,45 @@ void	Parser::setVersion(const std::string& version) {
 }
 
 HeaderType	setType(const std::string& str) {
-	if (str == "Content-Length:")
-		return HeaderType::CONTENT_LENGTH;
-	else if (str == "Transfer-Encoding:")
-		return HeaderType::TRANSFER_ENCODING;
-	else if (str == "Connection:")
-		return HeaderType::CONNECTION;
-	else if (str == "Host:")
-		return HeaderType::HOST;
-	else
-		return HeaderType::INVALID;
+	std::pair<const std::string, HeaderType>	matches[] = {
+		{"Accept:",                  HeaderType::ACCEPT},
+		{"Accept-Charset:",          HeaderType::ACCEPT_CHARSET},
+		{"Accept-Encoding:",         HeaderType::ACCEPT_ENCODING},
+		{"Accept-Language:",         HeaderType::ACCEPT_LANGUAGE},
+		{"Authorization:",           HeaderType::AUTHORIZATION},
+		{"Expect:",                  HeaderType::EXPECT},
+		{"From:",                    HeaderType::FROM},
+		{"Host:",                    HeaderType::HOST},
+		{"If-Match:",                HeaderType::IF_MATCH},
+		{"If-Modified-Since:",       HeaderType::IF_MODIFIED_SINCE},
+		{"If-None-Match:",           HeaderType::IF_NONE_MATCH},
+		{"If-Range:",                HeaderType::IF_RANGE},
+		{"If-Unmodified-Since:",     HeaderType::IF_UNMODIFIED_SINCE},
+		{"Range:",                   HeaderType::RANGE},
+		{"Referer:",                 HeaderType::REFERER},
+		{"TE:",                      HeaderType::TE},
+		{"User-Agent:",              HeaderType::USER_AGENT},
+
+		{"Cache-Control:",           HeaderType::CACHE_CONTROL},
+		{"Connection:",              HeaderType::CONNECTION},
+		{"Date:",                    HeaderType::DATE},
+		{"Pragma:",                  HeaderType::PRAGMA},
+		{"Trailer:",                 HeaderType::TRAILER},
+		{"Transfer-Encoding:",       HeaderType::TRANSFER_ENCODING},
+		{"Upgrade:",                 HeaderType::UPGRADE},
+		{"Via:",                     HeaderType::VIA},
+		{"Warning:",                 HeaderType::WARNING},
+
+		{"Cookie:",                  HeaderType::COOKIE},
+		{"Set-Cookie:",              HeaderType::SET_COOKIE},
+	};
+	
+	for (const auto& type : matches) {
+		if (type.first == str) {
+			return (type.second);
+		}
+	}
+	return (HeaderType::INVALID);
 }
 
 void Parser::insertHeader(const std::string& key, const std::string& value) {
