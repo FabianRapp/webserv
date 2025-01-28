@@ -80,6 +80,7 @@ enum class HeaderType {
 	INVALID
 };
 
+
 enum class MethodType {
 	OPTIONS,
 	GET,

@@ -1,4 +1,5 @@
 #include "../../includes/ConfigParser/ServerConfigFile.hpp"
+#include "../../includes/parser/StringArray.hpp"
 
 ServerConfigFile::ServerConfigFile() {}
 
@@ -6,16 +7,17 @@ void ServerConfigFile::setPort(int port) {
 	_port = port;
 }
 
-void ServerConfigFile::setServerName(const std::string& server_name) {
-	//todo: i think a server name can be made up of multiple names(so a vec of strings)
-	_server_name = server_name;
+void ServerConfigFile::setServerNames(const std::string& server_names) {
+	Line	names(server_names, " ");
+	_server_names = names;
 
-	//update by fabi: made name always lower case
-	std::transform(_server_name.begin(), _server_name.end(), _server_name.begin(),
-		[](unsigned char c) {
-			return (std::tolower(c));
-		}
-	);
+	for (auto& name : _server_names) {
+		std::transform(name.begin(), name.end(), name.begin(),
+			[](unsigned char c) {
+				return (std::tolower(c));
+			}
+		);
+	}
 }
 
 void ServerConfigFile::setRoot(const std::string& root) {
@@ -46,8 +48,8 @@ int ServerConfigFile::getPort() const {
 	return _port;
 }
 
-const std::string& ServerConfigFile::getServerName() const {
-	return _server_name;
+const std::vector<std::string>& ServerConfigFile::getServerNames() const {
+	return _server_names;
 }
 
 const std::string& ServerConfigFile::getRoot() const {
@@ -69,8 +71,9 @@ const std::vector<LocationConfigFile>& ServerConfigFile::getLocations() const {
 // Debug
 void ServerConfigFile::printServer() const {
 	std::cout << "Server Port: " << _port << "\n";
-	if (!_server_name.empty()) {
-		std::cout << "Server Name: " << _server_name << "\n";
+	std::cout << "Server Names:\n";
+	for (const auto& name : _server_names) {
+		std::cout << "\t" << name << "\n";
 	}
 	std::cout << "Root Directory: " << _root << "\n";
 

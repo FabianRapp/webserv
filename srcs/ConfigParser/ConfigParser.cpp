@@ -232,7 +232,7 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 		if (line.find("listen ") == 0) {
 			current_server.setPort(std::stoi(line.substr(7)));
 		} else if (line.find("server_name ") == 0) {
-			current_server.setServerName(line.substr(12));
+			current_server.setServerNames(line.substr(12));
 		} else if (line.find("root ") == 0) {
 			current_server.setRoot(line.substr(5));
 		} else if (line.find("error_page ") == 0) {

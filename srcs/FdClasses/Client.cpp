@@ -126,14 +126,19 @@ void	Client::_write_fd(ClientMode next_mode, int write_fd) {
 ServerConfigFile&	select_config(std::vector<ServerConfigFile>& server_configs,
 						Request& request)
 {
-	std::string	host = request._headers[HeaderType::HOST];
-	std::transform(host.begin(), host.end(), host.begin(),
+	//std::string	host = request._headers[HeaderType::HOST];
+	//i think authorization is the one to look at
+	std::string	requested_name = request._headers[HeaderType::AUTHORIZATION];
+
+	std::transform(requested_name.begin(), requested_name.end(), requested_name.begin(),
 		[](unsigned char c) { return (std::tolower(c));});
 
 	for (ServerConfigFile& config : server_configs) {
-		//todo: idk can a server config file have multiple different names?
-		if (config.getServerName() == host) {
-			return (config);
+		const std::vector<std::string>&	names = config.getServerNames();
+		for (const auto& name : names) {
+			if (name == requested_name) {
+				return (config);
+			}
 		}
 	}
 	return (server_configs[0]);

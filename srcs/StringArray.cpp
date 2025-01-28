@@ -134,7 +134,7 @@ RequestArray::RequestArray(const String& input):
 	String stopDl = "\r\n\r\n";
 	String str;
 	size_t start = 0, end = 0;
-	const bool	debug = true;
+	const bool	debug = false;
 	
 	//if (debug) {std::cout << "input: " << input << "\n";}
 	end = input.find(stopDl);
@@ -164,37 +164,6 @@ RequestArray::RequestArray(const String& input):
 		if (debug) { std::cout << "line: " << lastLine << "\n";}
 		push_back(lastLine);
 	}
-	/*
-	String str;
-	size_t start = 0, end = 0;
-	const bool	debug = true;
-	
-	//if (debug) {std::cout << "input: " << input << "\n";}
-	end = input.find(stopDl);
-	if (end == String::npos) {
-		std::cout << "could not find stopDl" << std::endl;
-		throw (StringArray::NotTerminated());
-	}
-
-	str = input.substr(start, end);
-
-	Line line(str.substr(start, end - start), " ", 3);
-	if (debug) { std::cout << "line: " << line << "\n";}
-	push_back(line);
-	start = end + lineDl.length();
-	while ((end = str.find(lineDl, start)) != String::npos) {
-		Line line(str.substr(start, end - start), " ", -1);
-		if (debug) { std::cout << "line: " << line << "\n";}
-		push_back(line);
-		start = end + lineDl.length();
-	}
-
-	if (start < str.length()) {
-		Line lastLine(str.substr(start), " ", -1);
-		if (debug) { std::cout << "line: " << lastLine << "\n";}
-		push_back(lastLine);
-	}
-	*/
 	// remove/add this if the final /r/n/r/n shouldn't be in the arr
 	// _lines.push_back(stopDl);
 }
@@ -218,7 +187,7 @@ RequestArray	RequestArray::operator=(const RequestArray& old) {
 }
 
 std::ostream	&operator<<(std::ostream &output, const RequestArray &arr) {
-	output << "String array:\n";
+	output << "Request array:\n";
 	for (size_t idx = 0; idx < arr.size(); idx++) {
 		output << idx << ": " << arr[idx] << '\n';
 	}
