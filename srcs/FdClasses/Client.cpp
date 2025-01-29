@@ -148,32 +148,15 @@ ServerConfigFile&	select_config(std::vector<ServerConfigFile>& server_configs,
 
 /* todo: should not return value */
 void	Client::_execute_response(bool & close_connection) {
-	// std::string	&response = _send_data.response;
 	ServerConfigFile&	config = select_config(server->configs, _request);
 
 	if (_response == nullptr)
 		_response = new Response(config, _request, *this);
 
-// Block 1
-// ****************************************************************************************************
 	if (_response->getBody().length() == 0)
 	{
 		_response->appendToBody("HTTP/1.1 200 OK\r\n");
 	}
-
-
-	// if (response.size() == 0) {
-	// 	// first call here
-	// 	response = "HTTP/1.1 200 OK";
-	// 	response += "\r\n";
-	// 	_response_builder.body = "";
-	// }
-// ****************************************************************************************************
-
-
-
-// Block 2
-// ****************************************************************************************************
 
 	if (!_response->getReadContent().length() && !_fd_read_data.size()) {
 		std::string	path = "hello_world.html";
@@ -184,31 +167,9 @@ void	Client::_execute_response(bool & close_connection) {
 		_read_fd(ClientMode::BUILD_RESPONSE, file_fd, stats.st_size);
 		close(file_fd);
 		return ;
-	} else if (_response->getReadContent().length()) {
+	} else if (!_response->getReadContent().length()) {
 		_response->appendToRead( _fd_read_data);
 	}
-
-
-	// /* testing to load a file */
-	// if (!_response_builder.body.length() && !_fd_read_data.size()) {
-	// 	std::string	path = "hello_world.html";
-	// 	struct stat	stats;
-	// 	stat(path.c_str(), &stats);
-	// 	int	file_fd = open(path.c_str(), O_RDONLY);
-	// 	FT_ASSERT(file_fd > 0);
-	// 	_read_fd(ClientMode::BUILD_RESPONSE, file_fd, stats.st_size);
-	// 	close(file_fd);
-	// 	return ;
-	// } else if (!_response_builder.body.length()) {
-	// 	_response_builder.body = _fd_read_data;
-	// 	_response->appendToRead( _response_builder.body);
-	// }
-
-// ****************************************************************************************************
-
-
-// Block 3
-// ****************************************************************************************************
 
 	close_connection = true; /* default for now == true */
 	switch (_request._type) {
@@ -242,46 +203,8 @@ void	Client::_execute_response(bool & close_connection) {
 	_response->appendToBody("\r\n");
 	_response->appendToBody(_response->getReadContent());
 	this->mode = ClientMode::SENDING;
-	// std::cout << "HERE COMES BODY:\n" << _response->getBody() << "HERE ENDS BODY:\n";
+	std::cout << "HERE COMES BODY:\n" << _response->getBody() << "HERE ENDS BODY:\n";
 	return;
-
-
-
-	// close_connection = true; /* default for now == true */
-	// switch (_request._type) {
-	// 	case (MethodType::GET): {
-	// 		break ;
-	// 	}
-	// 	case (MethodType::POST): {
-	// 		break ;
-	// 	}
-	// 	case (MethodType::DELETE): {
-	// 		break ;
-	// 	}
-	// 	default: {
-	// 		std::cerr << "Error: Unsupported request type: "
-	// 			<< to_string(_request._type) << "\n";
-	// 		_response->appendToBody("405 Method Not Allowed\r\n");
-	// 		//response += "\r\n\r\n";
-	// 		close_connection = true;
-	// 		/*
-	// 		 *todo:
-	// 		 set_err(405);
-	// 		 return;
-	// 		*/
-	// 	}
-	// }
-	// _response->appendToBody("Content-Length: ");
-	// _response->appendToBody(std::to_string(_response_builder.body.length()));
-	// _response->appendToBody("\r\n");
-	// _response->appendToBody("Content-Type: text/html; charset=UTF-8");
-	// _response->appendToBody("\r\n");
-	// _response->appendToBody("\r\n");
-	// _response->appendToBody(_response->getReadContent());
-
-	// this->mode = ClientMode::SENDING;
-	// return ;
-	// ****************************************************************************************************
 }
 
 // diff test_file.txt test_file_cmp.txt
