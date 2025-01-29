@@ -33,7 +33,7 @@ public:
 	std::string	input;
 private:
 
-	std::string		_execute_response(bool & close_connection);
+	void		_execute_response(bool & close_connection);
 	void			_receive_request(void);
 	Request			_request;
 	Response*		_response;

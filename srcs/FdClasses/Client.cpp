@@ -147,8 +147,8 @@ ServerConfigFile&	select_config(std::vector<ServerConfigFile>& server_configs,
 }
 
 /* todo: should not return value */
-std::string	Client::_execute_response(bool & close_connection) {
-	std::string	&response = _send_data.response;
+void	Client::_execute_response(bool & close_connection) {
+	// std::string	&response = _send_data.response;
 	ServerConfigFile&	config = select_config(server->configs, _request);
 
 	if (_response == nullptr)
@@ -162,20 +162,20 @@ std::string	Client::_execute_response(bool & close_connection) {
 	}
 
 
-	if (response.size() == 0) {
-		// first call here
-		response = "HTTP/1.1 200 OK";
-		response += "\r\n";
-		_response_builder.body = "";
-	}
+	// if (response.size() == 0) {
+	// 	// first call here
+	// 	response = "HTTP/1.1 200 OK";
+	// 	response += "\r\n";
+	// 	_response_builder.body = "";
+	// }
 // ****************************************************************************************************
 
 
 
 // Block 2
 // ****************************************************************************************************
-	/* testing to load a file */
-	if (!_response_builder.body.length() && !_fd_read_data.size()) {
+
+	if (!_response->getReadContent().length() && !_fd_read_data.size()) {
 		std::string	path = "hello_world.html";
 		struct stat	stats;
 		stat(path.c_str(), &stats);
@@ -183,16 +183,33 @@ std::string	Client::_execute_response(bool & close_connection) {
 		FT_ASSERT(file_fd > 0);
 		_read_fd(ClientMode::BUILD_RESPONSE, file_fd, stats.st_size);
 		close(file_fd);
-		return (response);
-	} else if (!_response_builder.body.length()) {
-		_response_builder.body = _fd_read_data;
-		_response->appendToRead( _response_builder.body);
+		return ;
+	} else if (_response->getReadContent().length()) {
+		_response->appendToRead( _fd_read_data);
 	}
 
+
+	// /* testing to load a file */
+	// if (!_response_builder.body.length() && !_fd_read_data.size()) {
+	// 	std::string	path = "hello_world.html";
+	// 	struct stat	stats;
+	// 	stat(path.c_str(), &stats);
+	// 	int	file_fd = open(path.c_str(), O_RDONLY);
+	// 	FT_ASSERT(file_fd > 0);
+	// 	_read_fd(ClientMode::BUILD_RESPONSE, file_fd, stats.st_size);
+	// 	close(file_fd);
+	// 	return ;
+	// } else if (!_response_builder.body.length()) {
+	// 	_response_builder.body = _fd_read_data;
+	// 	_response->appendToRead( _response_builder.body);
+	// }
+
 // ****************************************************************************************************
 
-	
+
+// Block 3
 // ****************************************************************************************************
+
 	close_connection = true; /* default for now == true */
 	switch (_request._type) {
 		case (MethodType::GET): {
@@ -207,7 +224,7 @@ std::string	Client::_execute_response(bool & close_connection) {
 		default: {
 			std::cerr << "Error: Unsupported request type: "
 				<< to_string(_request._type) << "\n";
-			response += "405 Method Not Allowed\r\n";
+			_response->appendToBody("405 Method Not Allowed\r\n");
 			//response += "\r\n\r\n";
 			close_connection = true;
 			/*
@@ -217,15 +234,54 @@ std::string	Client::_execute_response(bool & close_connection) {
 			*/
 		}
 	}
-	response += "Content-Length: ";
-	response += std::to_string(_response_builder.body.length());
-	response += "\r\n";
-	response += "Content-Type: text/html; charset=UTF-8";
-	response += "\r\n";
-	response += "\r\n";
-	response += _response_builder.body;
+	_response->appendToBody("Content-Length: ");
+	_response->appendToBody(std::to_string(_response_builder.body.length()));
+	_response->appendToBody("\r\n");
+	_response->appendToBody("Content-Type: text/html; charset=UTF-8");
+	_response->appendToBody("\r\n");
+	_response->appendToBody("\r\n");
+	_response->appendToBody(_response->getReadContent());
 	this->mode = ClientMode::SENDING;
-	return (response);
+	// std::cout << "HERE COMES BODY:\n" << _response->getBody() << "HERE ENDS BODY:\n";
+	return;
+
+
+
+	// close_connection = true; /* default for now == true */
+	// switch (_request._type) {
+	// 	case (MethodType::GET): {
+	// 		break ;
+	// 	}
+	// 	case (MethodType::POST): {
+	// 		break ;
+	// 	}
+	// 	case (MethodType::DELETE): {
+	// 		break ;
+	// 	}
+	// 	default: {
+	// 		std::cerr << "Error: Unsupported request type: "
+	// 			<< to_string(_request._type) << "\n";
+	// 		_response->appendToBody("405 Method Not Allowed\r\n");
+	// 		//response += "\r\n\r\n";
+	// 		close_connection = true;
+	// 		/*
+	// 		 *todo:
+	// 		 set_err(405);
+	// 		 return;
+	// 		*/
+	// 	}
+	// }
+	// _response->appendToBody("Content-Length: ");
+	// _response->appendToBody(std::to_string(_response_builder.body.length()));
+	// _response->appendToBody("\r\n");
+	// _response->appendToBody("Content-Type: text/html; charset=UTF-8");
+	// _response->appendToBody("\r\n");
+	// _response->appendToBody("\r\n");
+	// _response->appendToBody(_response->getReadContent());
+
+	// this->mode = ClientMode::SENDING;
+	// return ;
+	// ****************************************************************************************************
 }
 
 // diff test_file.txt test_file_cmp.txt
@@ -253,7 +309,7 @@ void	Client::execute(void) {
 		}
 		case (ClientMode::BUILD_RESPONSE): {
 			bool	placeholder_close_connection;
-			_send_data.response = _execute_response(placeholder_close_connection);
+			_execute_response(placeholder_close_connection);
 			break ;
 		}
 		case (ClientMode::SENDING): {
@@ -315,3 +371,42 @@ void	Client::_send_response(void) {
 		}
 	}
 }
+
+// void	Client::_send_response(void) {
+// 	if (!this->is_ready(POLLOUT)) {
+// 		return ;
+// 	}
+
+// 	{
+// 		/* todo: poll to catch potential issues: remove later */
+// 		struct pollfd	test_poll = {fd, POLLOUT, 0};
+// 		poll(&test_poll, 1, 0);
+// 		FT_ASSERT(test_poll.revents & POLLOUT);
+// 	}
+
+// 	const int send_flags = 0;
+// 	//std::cout << "sending:\n" << _send_data.response << "\n";
+// 	ssize_t send_bytes = send(
+// 		fd,
+// 		_response->getBody().c_str() + _send_data.pos,
+// 		_response->getBody().size() - _send_data.pos,
+// 		send_flags
+// 	);
+// 	if (send_bytes <= 0) {
+// 		std::cerr << "Error: send: closing connection now\n";
+// 		//todo: the line below has to removed before submission according to subject
+// 		std::cerr << "err: " << strerror(errno) << '\n';
+// 		set_close();
+// 		return ;
+// 	}
+// 	_send_data.pos += static_cast<size_t>(send_bytes);
+// 	if (_send_data.pos == _response->getBody().size()) {
+// 		mode = ClientMode::RECEIVING;
+// 		_send_data.response = "";
+// 		_send_data.pos = 0;
+// 		if (_send_data.close_after_send) {
+// 			set_close();
+// 			_send_data.close_after_send = false;
+// 		}
+// 	}
+// }
