@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/28 13:00:16 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/29 13:48:16 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/29 15:38:08 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ class Response {
 		void	appendToStatusLine(std::string content);
 		void	appendToBody(std::string content);
 		void	appendToRead(std::string content);
-		std::string&	expandTarget(Request& request);
+		std::string	getExpandedTarget(Request& request);
 };
 
 #endif

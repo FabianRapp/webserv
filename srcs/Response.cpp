@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/28 13:09:21 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/29 13:15:43 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/29 15:41:59 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,26 @@ void	Response::appendToRead(std::string content) {
 	_readContent += content;
 };
 
-std::string&	Response::expandTarget(Request& request) {
-	// has yet to be implemented
-	return _target;
+std::string	Response::getExpandedTarget(Request& request) {
+	std::vector<LocationConfigFile> locations = _config.getLocations();
+	std::string expandedTarget = _target;
+
+	for (auto location: locations)
+	{
+		location.printLocation();
+	}
+
+	std::cout << "ENTERING EXPANDER\n";
+
+	for (auto location: locations)
+	{
+		if (_target == location.getPath() && location.getUploadDir() != "")
+		{
+			expandedTarget = _config.getRoot() + location.getUploadDir();
+			std::cout << "NEW TARGET: " << _target << std::endl;
+		}
+	}
+
+	std::cout << "EXITING EXPANDER\n";
+	return expandedTarget;
 }

@@ -159,7 +159,8 @@ void	Client::_execute_response(bool & close_connection) {
 	}
 
 	if (!_response->getReadContent().length() && !_fd_read_data.size()) {
-		std::string	path = "hello_world.html";
+		// std::string	path = "hello_world.html";
+		std::string	path = _response->getExpandedTarget(_request);
 		struct stat	stats;
 		stat(path.c_str(), &stats);
 		int	file_fd = open(path.c_str(), O_RDONLY);
@@ -255,45 +256,6 @@ void	Client::execute(void) {
 void	Client::parse() {
 	_parser.parse();
 }
-
-// void	Client::_send_response(void) {
-// 	if (!this->is_ready(POLLOUT)) {
-// 		return ;
-// 	}
-
-// 	{
-// 		/* todo: poll to catch potential issues: remove later */
-// 		struct pollfd	test_poll = {fd, POLLOUT, 0};
-// 		poll(&test_poll, 1, 0);
-// 		FT_ASSERT(test_poll.revents & POLLOUT);
-// 	}
-
-// 	const int send_flags = 0;
-// 	//std::cout << "sending:\n" << _send_data.response << "\n";
-// 	ssize_t send_bytes = send(
-// 		fd,
-// 		_send_data.response.c_str() + _send_data.pos,
-// 		_send_data.response.size() - _send_data.pos,
-// 		send_flags
-// 	);
-// 	if (send_bytes <= 0) {
-// 		std::cerr << "Error: send: closing connection now\n";
-// 		//todo: the line below has to removed before submission according to subject
-// 		std::cerr << "err: " << strerror(errno) << '\n';
-// 		set_close();
-// 		return ;
-// 	}
-// 	_send_data.pos += static_cast<size_t>(send_bytes);
-// 	if (_send_data.pos == _send_data.response.size()) {
-// 		mode = ClientMode::RECEIVING;
-// 		_send_data.response = "";
-// 		_send_data.pos = 0;
-// 		if (_send_data.close_after_send) {
-// 			set_close();
-// 			_send_data.close_after_send = false;
-// 		}
-// 	}
-// }
 
 void	Client::_send_response(void) {
 	if (!this->is_ready(POLLOUT)) {
