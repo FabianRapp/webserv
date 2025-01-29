@@ -126,17 +126,20 @@ void	Client::_write_fd(ClientMode next_mode, int write_fd) {
 ServerConfigFile&	select_config(std::vector<ServerConfigFile>& server_configs,
 						Request& request)
 {
-	//std::string	host = request._headers[HeaderType::HOST];
-	//i think authorization is the one to look at
-	std::string	requested_name = request._headers[HeaderType::AUTHORIZATION];
+	if (request._headers.find(HeaderType::HOST) == request._headers.end()) {
+		return (server_configs[0]);
+	}
+	std::string	to_match = request._headers[HeaderType::HOST];
+	//not sure which one
+	//std::string	to_match = request._headers[HeaderType::AUTHORIZATION];
 
-	std::transform(requested_name.begin(), requested_name.end(), requested_name.begin(),
+	std::transform(to_match.begin(), to_match.end(), to_match.begin(),
 		[](unsigned char c) { return (std::tolower(c));});
 
 	for (ServerConfigFile& config : server_configs) {
 		const std::vector<std::string>&	names = config.getServerNames();
 		for (const auto& name : names) {
-			if (name == requested_name) {
+			if (name == to_match) {
 				return (config);
 			}
 		}
