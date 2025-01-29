@@ -229,6 +229,9 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 		}
 
 		// Parse key-value pairs inside the server block
+		if (!line.empty() && line.back() == ';') {
+				line.pop_back(); // Remove trailing semicolon
+			}
 		if (line.find("listen ") == 0) {
 			current_server.setPort(std::stoi(line.substr(7)));
 		} else if (line.find("server_name ") == 0) {
@@ -238,9 +241,6 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 		} else if (line.find("error_page ") == 0) {
 			int code = std::stoi(line.substr(11, 3)); // Extract error code
 			std::string path = trimWhiteSpace(line.substr(15)); // Extract path
-			if (!path.empty() && path.back() == ';') {
-				path.pop_back(); // Remove trailing semicolon
-			}
 			current_server.addErrorPage(code, path);
 		} else if (line.find("index ") == 0) { // Handle index directive
 			std::string index_file = trimWhiteSpace(line.substr(6)); // Extract index file

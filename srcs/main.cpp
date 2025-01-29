@@ -30,11 +30,10 @@ void	webserv(int ac, char **av) {
 		return ;
 	}
 	sort(all_configs.begin(), all_configs.end(), sort_ports);
-	//todo: each server needs to hold a vec of all the configs on the same port
-	//cliens need to select the correct config based on the request
 	
 	std::vector<ServerConfigFile>	matching_ports;
 	for (auto & config : all_configs) {
+		//config.printServer();
 		if (matching_ports.size() == 0 || matching_ports[0].getPort() == config.getPort()) {
 			matching_ports.push_back(config);
 			continue ;
