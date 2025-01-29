@@ -1,6 +1,7 @@
 #include "../../includes/FdClasses/Client.hpp"
 #include "../../includes/FdClasses/Server.hpp"
 #include "../../includes/Manager.hpp"
+#include "../../includes/Response.hpp"
 #include "../../includes/macros.h"
 
 //todo: constructor err handling
