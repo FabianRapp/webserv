@@ -10,6 +10,7 @@
 #include <poll.h>
 #include <sys/poll.h>
 #include <sys/stat.h>
+#include "../Response.hpp"
 
 class Client: public BaseFd {
 public:
@@ -35,6 +36,7 @@ private:
 	std::string		_execute_response(bool & close_connection);
 	void			_receive_request(void);
 	Request			_request;
+	Response*		_response;
 	struct {
 		std::string		body;
 	}				_response_builder;

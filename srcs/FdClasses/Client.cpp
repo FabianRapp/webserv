@@ -11,7 +11,8 @@ Client::Client(DataManager& data, Server* parent_server):
 	_response_builder({""}),
 	_send_data({"", 0, false}),
 	_parser(input),
-	_writer(nullptr)
+	_writer(nullptr),
+	_response(nullptr)
 {
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));
@@ -150,13 +151,29 @@ std::string	Client::_execute_response(bool & close_connection) {
 	std::string	&response = _send_data.response;
 	ServerConfigFile&	config = select_config(server->configs, _request);
 
+	if (_response == nullptr)
+		_response = new Response(config, _request, *this);
+
+// Block 1
+// ****************************************************************************************************
+	if (_response->getBody().length() == 0)
+	{
+		_response->appendToBody("HTTP/1.1 200 OK\r\n");
+	}
+
+
 	if (response.size() == 0) {
 		// first call here
 		response = "HTTP/1.1 200 OK";
 		response += "\r\n";
 		_response_builder.body = "";
 	}
+// ****************************************************************************************************
 
+
+
+// Block 2
+// ****************************************************************************************************
 	/* testing to load a file */
 	if (!_response_builder.body.length() && !_fd_read_data.size()) {
 		std::string	path = "hello_world.html";
@@ -169,8 +186,13 @@ std::string	Client::_execute_response(bool & close_connection) {
 		return (response);
 	} else if (!_response_builder.body.length()) {
 		_response_builder.body = _fd_read_data;
+		_response->appendToRead( _response_builder.body);
 	}
 
+// ****************************************************************************************************
+
+	
+// ****************************************************************************************************
 	close_connection = true; /* default for now == true */
 	switch (_request._type) {
 		case (MethodType::GET): {
