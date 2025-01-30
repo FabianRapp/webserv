@@ -399,7 +399,7 @@ void	Parser::parse_body(std::string& input) {
 
 void Parser::parse(void) {
 	// std::cout << "from parser:" <<std::endl << "|" << input << "|" << std::endl;
-	std::cout << "Parsing started\n";
+	//std::cout << "Parsing started\n";
 	//std::cout << "parser input: " << _input << "\n";
 	RequestArray	array;
 	if (!_request._areHeadersParsed)
@@ -421,7 +421,7 @@ void Parser::parse(void) {
 	if (_request._areHeadersParsed)
 		parse_body(_input);
 
-	_request.displayRequest();
+	//_request.displayRequest();
 }
 
 // void	Parser::parse_first_line(std::string input) {

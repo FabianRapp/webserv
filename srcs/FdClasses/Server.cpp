@@ -18,11 +18,17 @@ Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 		throw(ServerError("server: socket: " + std::string(strerror(errno))));
 		return ;
 	}
+
+	int	option_val = 1;
+	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option_val, sizeof option_val) < 0) {
+		throw(ServerError("server: setsockopt: " + std::string(strerror(errno))));
+	}
 	_set_non_blocking();
 	if (fd < 0) {
 		throw(ServerError("server: set non blocking: " + std::string(strerror(errno))));
 		return ;
 	}
+
 
 	memset(&server_addr, 0, sizeof(struct sockaddr));
 	server_addr.sin_family = AF_INET;

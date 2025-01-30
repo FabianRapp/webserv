@@ -1,14 +1,19 @@
 #include "../../includes/FdClasses/WriteFd.hpp"
 #include "../../includes/Manager.hpp"
 
-WriteFd::WriteFd(DataManager& data, std::string_view& src, int fd,
+WriteFd::WriteFd(DataManager& data, std::string_view& src, int fd, bool close_fd,
 		std::function<void()> completion_callback):
 	BaseFd(data, POLLOUT, "Writer"),
 	src(src),
 	completion_callback(std::move(completion_callback)),
 	pos(0)
 {
-	this->fd = fd;
+	if (close_fd) {
+		this->fd = fd;
+	} else {
+		this->fd = dup(fd);
+		//todo: verify fd >0
+	}
 	_set_non_blocking();
 }
 

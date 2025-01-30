@@ -29,14 +29,16 @@ void	DataManager::new_client(Server* server) {
 }
 
 ReadFd*	DataManager::new_read_fd(std::string& target_buffer, int fd,
-			ssize_t byte_count, std::function<void()> callback) {
-	ReadFd*	reader = new ReadFd(*this, target_buffer, fd, byte_count, callback);
+			ssize_t byte_count, bool close_fd, std::function<void()> callback) {
+	ReadFd*	reader = new ReadFd(*this, target_buffer, fd, byte_count, close_fd,
+						callback);
 	_add_entry(reinterpret_cast<BaseFd*>(reader), reader->poll_events);
 	return (reader);
 }
 
-WriteFd*	DataManager::new_write_fd(int fd, std::string_view& input_data, std::function<void()> callback) {
-	WriteFd*	writer = new WriteFd(*this, input_data, fd, callback);
+WriteFd*	DataManager::new_write_fd(int fd, std::string_view& input_data,
+				bool close_fd, std::function<void()> callback) {
+	WriteFd*	writer = new WriteFd(*this, input_data, fd, close_fd, callback);
 	_add_entry(reinterpret_cast<WriteFd*>(writer), writer->poll_events);
 	return (writer);
 }
@@ -51,9 +53,13 @@ bool	DataManager::closing(size_t idx) const {
 }
 
 void	DataManager::process_closures() {
-	for (size_t idx = 0; idx < _count; idx++) {
+	size_t idx = 0;
+	
+	while (idx < _count) {
 		if (_close_later[idx]) {
 			_fd_close(idx);
+		} else {
+			idx++;
 		}
 	}
 }
@@ -67,13 +73,14 @@ int	DataManager::get_fd(size_t idx) {
 }
 
 void	DataManager::run_poll() {
+	std::cout << "polling " << static_cast<nfds_t>(_count) << "\n";
 	if (poll(&_pollfds[0], static_cast<nfds_t>(_count), 0) < 0) {
 		std::cerr << "Error: poll: " << strerror(errno) << "\n";
 		_consecutive_poll_fails++;
 		/*todo:
 		if (_consecutive_poll_fails > some value) {
 			throw ( error to indicate exit);
-		}
+		} 
 		*/
 		for (auto& pollfd : _pollfds) {
 			pollfd.revents = 0;
@@ -85,11 +92,12 @@ void	DataManager::run_poll() {
 
 void	DataManager::execute_all(void) {
 	size_t	count = _count;
+	std::cout << count << "=count\n";
 	for (size_t i = 0; i < _count; i++) {
 		BaseFd* user = _fd_users[i];
-		if (user->name != "Server") {
-			std::cout << "Manger: execec " << user->name << "\n";
-		}
+		//if (user->name != "Server") {
+		//	std::cout << "Manger: execec " << user->name << "\n";
+		//}
 		user->execute();
 	}
 }
@@ -124,5 +132,7 @@ void	DataManager::_fd_close(size_t idx) {
 	_pollfds.pop_back();
 	_close_later.pop_back();
 	_fd_users.pop_back();
+
+	std::cout << _count << "--count\n";
 }
 

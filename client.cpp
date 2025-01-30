@@ -52,6 +52,10 @@ int	main(void) {
 		std::cerr << "Error: send error: " << strerror(errno) << '\n';
 		return (1);
 	}
+	if (send(fd, request.c_str(), request.length(), 0) < 0) {
+		std::cerr << "Error: send error: " << strerror(errno) << '\n';
+		return (1);
+	}
 	std::cout << "requst send..\n";
 	int received;
 

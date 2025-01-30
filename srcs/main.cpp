@@ -48,6 +48,7 @@ void	webserv(int ac, char **av) {
 	manager.config_parser = nullptr;
 
 	while (!exit_) {
+		sleep(1);
 		manager.run_poll();
 		manager.execute_all();
 		manager.process_closures();

@@ -10,6 +10,13 @@
 #include <poll.h>
 #include <sys/poll.h>
 #include <sys/stat.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <chrono>
+
+#include "../../includes/ConfigParser/ServerConfigFile.hpp"
+
+
 
 class Client: public BaseFd {
 public:
@@ -32,8 +39,20 @@ public:
 	std::string	input;
 private:
 
-	std::string		_execute_response(bool & close_connection);
+	void			_execute_response(void);
 	void			_receive_request(void);
+;
+
+	void			_handle_get(std::string& path, ServerConfigFile& config);
+	void			_handle_auto_index(std::string& path,
+						std::vector<std::string>&files, ServerConfigFile& config);
+	void			_handle_get_file(const std::string& path, ServerConfigFile& config);
+
+	void			_handle_post(std::string& path, ServerConfigFile& config);
+
+	void			_handle_delete(std::string& path, ServerConfigFile& config);
+
+
 	Request			_request;
 	struct {
 		std::string		body;
@@ -41,9 +60,8 @@ private:
 
 	/********************** interace for file/pipe IO ************************/
 	//todo: make this a class?
-	void				_write_fd(ClientMode next_mode, int fd);
-	void				_read_fd(ClientMode next_mode, int fd, ssize_t byte_count);
-	std::string			_fd_read_data;
+	void				_write_fd(ClientMode next_mode, int fd, bool close_fd);
+	void				_read_fd(ClientMode next_mode, int fd, ssize_t byte_eount, bool close_fd);
 	std::string_view	_fd_write_data;
 	struct {
 		bool				error;//check this to check if there is any error
@@ -60,8 +78,8 @@ private:
 		bool		close_after_send;
 	}	_send_data;
 	Parser			_parser;
-
-
-
 	void			_test_write_fd();
+
+	std::chrono::steady_clock::time_point
+					_last_availability;
 };

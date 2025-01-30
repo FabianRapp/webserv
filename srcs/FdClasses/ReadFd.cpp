@@ -1,13 +1,18 @@
 #include "../../includes/FdClasses/ReadFd.hpp"
 #include "../../includes/Manager.hpp"
 
-ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd,
+ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd, bool close_fd,
 		ssize_t byte_count, std::function<void()> completion_callback):
 	BaseFd(data, POLLIN, "ReadFd"),
 	target_buf(target_buffer),
 	completion_callback(std::move(completion_callback))
 {
-	this->fd = fd;
+	if (close_fd) {
+		this->fd = fd;
+	} else {
+		this->fd = dup(fd);
+		// todo: verify fd > 0
+	}
 	_set_non_blocking();
 	left_over_bytes = byte_count;
 }
