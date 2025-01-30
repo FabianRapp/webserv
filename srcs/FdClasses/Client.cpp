@@ -211,9 +211,9 @@ void	Client::_handle_auto_index(std::string& path,
 	response =
 		std::string("HTTP/1.1 200 OK\r\n")
 		+ "Content-Type: text/html\r\n"
-		+ "Content-Length: " + std::to_string(body.size()) + "\r\n"
-		//"Connection: close\r\n"
-		+ "\r\n"
+		"Content-Length: " + std::to_string(body.size()) + "\r\n"
+		"Connection: close\r\n"
+		"\r\n"
 		+ body
 	;
 	mode = ClientMode::SENDING;
@@ -245,45 +245,48 @@ void	Client::_handle_get_file(const std::string& path, ServerConfigFile& config)
 	mode = ClientMode::SENDING;
 }
 
+//todo: commented lines
 void	Client::_handle_get(std::string& path, ServerConfigFile& config) {
-
-	std::vector<std::string>	files = get_dir(path);
-	_handle_auto_index(path, files, config);
-	/*
-	if (is_dir(path)) {
+	if (std::filesystem::is_directory(path)) {
 		if (_request._uri.back() != '/') {
 			std::string new_location = _request._uri + "/";
-			//todo: send 301
 			std::string redirect_response =
 				"HTTP/1.1 301 Moved Permanently\r\n"
 				"Location: " + new_location + "\r\n"
 				"Connection: close\r\n"
-				//"Content-Length: " + std::to_string(err_html[301]) + "\r\n"
+				//"Content-Length: " + len(301 err html file) + "\r\n"
 				"\r\n";
-				//+ arr_html[301]
-
-			//load 301 html file
+				//+ 301 err html file
+			mode = ClientMode::SENDING;
 			return ;
 		}
 		std::vector<std::string>	files = get_dir(path);
+		/*
 		std::string					index_file;
 		if (has_index(files, config, index_file)) {
 			path = index_file;
 		} else if (enabled_auto_index(path, config)) {
+		*/
 			_handle_auto_index(path, files, config);
 			return ;
+		/*
 		} else {
 			handle invlaid request
 			return ;
 		}
+		*/
 	}
-	FT_ASSERT(is_file(path));
-	if (is_cgi(path, config)) {
-		_handle_cgi(path, config);
-	} else {
-		_handle_get_file(path, config);
+	/*
+	if (does not exist(path)) {
 	}
 	*/
+	FT_ASSERT(!std::filesystem::is_directory(path));
+	/*
+	if (is_cgi(path, config)) {
+		_handle_cgi(path, config);
+	} else */{
+		_handle_get_file(path, config);
+	}
 }
 
 void	Client::_handle_post(std::string& path, ServerConfigFile& config) {
