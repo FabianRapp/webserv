@@ -225,6 +225,7 @@ void	Client::_handle_get_file(const std::string& path, ServerConfigFile& config)
 	std::string&	body = _response_builder.body;
 	if (body.empty()) {
 		struct stat stats;
+
 		FT_ASSERT(stat(path.c_str(), &stats) != -1);
 		int	file_fd = open(path.c_str(), O_RDONLY);
 		FT_ASSERT(file_fd >0);
@@ -237,11 +238,14 @@ void	Client::_handle_get_file(const std::string& path, ServerConfigFile& config)
 	response =
 		std::string("HTTP/1.1 200 OK\r\n")
 		+ "Content-Length: " + std::to_string(body.size()) + "\r\n"
+		+ "Content-Type: text/html\r\n"
 		"Connection: close\r\n"
-		"\r\r"
+
+		"\r\n"
 		+ body
 	;
 	body = "";
+	std::cout << response << "\n";
 	mode = ClientMode::SENDING;
 }
 
@@ -302,6 +306,7 @@ void	Client::_execute_response(void) {
 	ServerConfigFile&	config = select_config(server->configs, _request);
 	std::string	path /*= expand_uri(_request.uri, config)*/;
 	path = getenv("PWD");//placeholder
+	path+= "/hello_world.html";
 
 	switch (_request._type) {
 		case (MethodType::GET): {

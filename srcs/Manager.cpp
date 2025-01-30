@@ -30,7 +30,7 @@ void	DataManager::new_client(Server* server) {
 
 ReadFd*	DataManager::new_read_fd(std::string& target_buffer, int fd,
 			ssize_t byte_count, bool close_fd, std::function<void()> callback) {
-	ReadFd*	reader = new ReadFd(*this, target_buffer, fd, byte_count, close_fd,
+	ReadFd*	reader = new ReadFd(*this, target_buffer, fd, close_fd, byte_count,
 						callback);
 	_add_entry(reinterpret_cast<BaseFd*>(reader), reader->poll_events);
 	return (reader);

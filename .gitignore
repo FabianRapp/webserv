@@ -1,6 +1,7 @@
 test_file.txt
 test_file_cmp.txt
 test.cpp
+tester
 client
 compile_commands.json
 webserv
