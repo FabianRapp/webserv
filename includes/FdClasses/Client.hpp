@@ -15,19 +15,21 @@
 #include <chrono>
 
 #include "../../includes/ConfigParser/ServerConfigFile.hpp"
+#include "../Response.hpp"
 
+class Response;
 
+enum class ClientMode {
+	RECEIVING,
+	BUILD_RESPONSE,
+	SENDING,
+	READING_FD,
+	WRITING_FD,
+	TESTING_MODE,
+};
 
 class Client: public BaseFd {
 public:
-	enum class ClientMode {
-		RECEIVING,
-		BUILD_RESPONSE,
-		SENDING,
-		READING_FD,
-		WRITING_FD,
-		TESTING_MODE,
-	}	mode;
 	Client(DataManager& data, Server* parent_server);
 
 	~Client(void);
@@ -39,43 +41,21 @@ public:
 	std::string	input;
 private:
 
-	void			_execute_response(void);
 	void			_receive_request(void);
-;
 
-	void			_handle_get(std::string& path, ServerConfigFile& config);
-	void			_handle_auto_index(std::string& path,
-						std::vector<std::string>&files, ServerConfigFile& config);
-	void			_handle_get_file(const std::string& path, ServerConfigFile& config);
-
-	void			_handle_post(std::string& path, ServerConfigFile& config);
-
-	void			_handle_delete(std::string& path, ServerConfigFile& config);
-
-
+	ServerConfigFile&	_select_config(
+		std::vector<ServerConfigFile>& server_configs, Request& request);
 	Request			_request;
+	Response*		_response;
+	ClientMode		mode;
 	struct {
 		std::string		body;
 	}				_response_builder;
-
-	/********************** interace for file/pipe IO ************************/
-	//todo: make this a class?
-	void				_write_fd(ClientMode next_mode, int fd, bool close_fd);
-	void				_read_fd(ClientMode next_mode, int fd, ssize_t byte_eount, bool close_fd);
-	std::string_view	_fd_write_data;
-	struct {
-		bool				error;//check this to check if there is any error
-		//todo: add data for error handling
-	}					_fd_error;
-	WriteFd*			_writer;
-	ReadFd*				_reader;
-	/*************************************************************************/
 
 	void			_send_response(void);
 	struct send_data {
 		std::string	response;
 		size_t		pos;
-		bool		close_after_send;
 	}	_send_data;
 	Parser			_parser;
 	void			_test_write_fd();

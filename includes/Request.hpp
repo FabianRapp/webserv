@@ -30,6 +30,7 @@ class Request {
 		std::string					_body;
 		size_t						_startBodyIdx;
 		std::vector<std::string>	_bodyTokens;
+		std::string					_response_str;
 
 		Request();
 		Request(const Request& old);

@@ -96,7 +96,7 @@ void	DataManager::execute_all(void) {
 	for (size_t i = 0; i < _count; i++) {
 		BaseFd* user = _fd_users[i];
 		//if (user->name != "Server") {
-		//	std::cout << "Manger: execec " << user->name << "\n";
+		//	std::cout << "Manager: execec " << user->name << "\n";
 		//}
 		user->execute();
 	}

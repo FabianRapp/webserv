@@ -35,6 +35,7 @@ SRCS := main.cpp \
 		ConfigParser/LocationConfigFile.cpp\
 		ConfigParser/ServerConfigFile.cpp \
 		Request.cpp \
+		Response.cpp \
 		StringArray.cpp \
 
 

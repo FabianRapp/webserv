@@ -1,6 +1,7 @@
 #include "../../includes/FdClasses/Client.hpp"
 #include "../../includes/FdClasses/Server.hpp"
 #include "../../includes/Manager.hpp"
+#include "../../includes/Response.hpp"
 #include "../../includes/macros.h"
 
 //todo: constructor err handling
@@ -8,10 +9,10 @@ Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT, "Client"),
 	mode(ClientMode::RECEIVING),
 	_response_builder({""}),
-	_send_data({"", 0, false}),
+	_send_data({"", 0}),
 	_parser(input),
-	_writer(nullptr),
-	_last_availability(std::chrono::high_resolution_clock::now())
+	_last_availability(std::chrono::high_resolution_clock::now()),
+	_response(nullptr)
 {
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));
@@ -36,6 +37,7 @@ Client::Client(DataManager& data, Server* parent_server):
 }
 
 Client::~Client(void) {
+	delete _response;
 }
 
 void	Client::_receive_request(void) {
@@ -74,63 +76,30 @@ void	Client::_receive_request(void) {
 			mode = ClientMode::BUILD_RESPONSE;
 			_send_data.pos = 0;
 			_send_data.response = "";
-			_send_data.close_after_send = true; /* placeholder */
 		}
 	} catch (const SendClientError& err) {
 		//_default_err_response(connection, err);
 	}
 }
 
-// Use this to read from from a pipe or a file.
-// Appends to the body.
-// Switched int ClientMode::WRITING_FD, thus:
-// After calling this function the caller should return straight to Client::execute
-// without any more actions besides the following:
-// Uses dup() on the given fd, if the fd is not needed anywher else simply close
-// the fd after calling this.
-// Assumes the given fd to be valid.
-void	Client::_read_fd(ClientMode next_mode, int read_fd, ssize_t byte_count, bool close_fd) {
-	_fd_error.error = false;
-	FT_ASSERT(read_fd > 0);
-	mode = ClientMode::READING_FD;
-	_reader = data.new_read_fd(
-		_response_builder.body,
-		read_fd,
-		byte_count,
-		close_fd,
-		[this, next_mode] () {
-			this->mode = next_mode;
-			this->_reader = nullptr;
-		}
-	);
+/*
+// diff test_file.txt test_file_cmp.txt
+// -> should not show any diff
+// can be used as an intermediate mode for this->mode before entering SENDING mode
+void	Client::_test_write_fd() {
+	int fd = open("test_file.txt", O_WRONLY | O_APPEND | O_NONBLOCK | O_CREAT | O_TRUNC, 0666);
+	int fd2 = open("test_file_cmp.txt", O_WRONLY | O_APPEND | O_CREAT | O_TRUNC, 0666);
+	FT_ASSERT(fd > 0);
+	_fd_write_data = std::string_view(_send_data.response.c_str(), _send_data.response.size());
+	write(fd2, _fd_write_data.data(), _fd_write_data.size());
+	close(fd2);
+	_write_fd(ClientMode::SENDING, fd, true);
+	//mode = ClientMode::SENDING;
 }
+*/
 
-// Use this to write to a pipe or a file.
-// The input data has to be in Client::_fd_write_data
-// Switched int ClientMode::WRITING_FD, thus:
-// After calling this function the caller should return straight to Client::execute
-// without any more actions besides the following:
-// Uses dup() on the given fd, if the fd is not needed anywher else simply close
-// the fd after calling this.
-// Assumes the given fd to be valid.
-void	Client::_write_fd(ClientMode next_mode, int write_fd, bool close_fd) {
-	_fd_error.error = false;
-	FT_ASSERT(write_fd > 0);
-	mode = ClientMode::WRITING_FD;
-	_writer = data.new_write_fd(
-		write_fd,
-		_fd_write_data,
-		close_fd,
-		[this, next_mode] () {
-			this->mode = next_mode;
-			this->_writer = nullptr;
-			//todo: maybe clear <this->_fd_write_data> here
-		}
-	);
-}
-
-ServerConfigFile&	select_config(std::vector<ServerConfigFile>& server_configs,
-						Request& request)
+ServerConfigFile&	Client::_select_config(
+	std::vector<ServerConfigFile>& server_configs, Request& request)
 {
 	if (request._headers.find(HeaderType::HOST) == request._headers.end()) {
 		return (server_configs[0]);
@@ -153,194 +122,6 @@ ServerConfigFile&	select_config(std::vector<ServerConfigFile>& server_configs,
 	return (server_configs[0]);
 }
 
-// assumes dir to be a valid directory
-// check errno for potential errors
-std::vector<std::string>	get_dir(std::string dir_path) {
-	DIR*	dir = opendir(dir_path.c_str()); // todo: has to be part of some class for err handling
-	if (!dir) {
-		if (errno == ENOMEM) {
-			throw (std::bad_alloc());
-		}
-		//todo: other errors
-		//500 or 403?
-		std::cerr << "err: opendir: " << strerror(errno) << "\n";
-		errno = 0;
-		return (std::vector<std::string>());
-	}
-	std::vector<std::string>	files;
-	struct dirent	*dir_data = readdir(dir);
-	while (dir_data != NULL) {
-		std::string	name = dir_data->d_name;
-		files.push_back(name);
-		dir_data = readdir(dir);
-	}
-	//todo: check for errrors of readdir
-	//todo: check if auto index is enabled for the given directory
-	closedir(dir);
-	return (files);
-}
-
-std::string	auto_index_body(Request& request, std::vector<std::string>& files) {
-	std::string body =
-		"<!DOCTYPE HTML>"
-		"<html>"
-		" <head>"
-		"  <title>Index of " + request._uri + "</title>"
-		" </head>"
-		" <body>"
-		"  <h1>Index of " + request._uri + "</h1>"
-		"  <hr>";
-	for (auto& file : files) {
-			body += "  <a href=\"" + request._uri + file + "\">" + file + "</a><br>\n";
-	}
-	body +=
-		"  </pre>"
-		"  <hr>"
-		" </body>"
-		"</html>"
-	;
-	return (body);
-}
-
-// called if path is a directory
-void	Client::_handle_auto_index(std::string& path,
-			std::vector<std::string>&files, ServerConfigFile& config) {
-
-	std::string	body = auto_index_body(_request, files);
-	std::string& response = _send_data.response;
-	response =
-		std::string("HTTP/1.1 200 OK\r\n")
-		+ "Content-Type: text/html\r\n"
-		"Content-Length: " + std::to_string(body.size()) + "\r\n"
-		"Connection: close\r\n"
-		"\r\n"
-		+ body
-	;
-	mode = ClientMode::SENDING;
-}
-
-// path is a file that is not CGI
-// todo: err handling
-void	Client::_handle_get_file(const std::string& path, ServerConfigFile& config) {
-	std::string&	body = _response_builder.body;
-	if (body.empty()) {
-		struct stat stats;
-
-		FT_ASSERT(stat(path.c_str(), &stats) != -1);
-		int	file_fd = open(path.c_str(), O_RDONLY);
-		FT_ASSERT(file_fd >0);
-		_read_fd(mode, file_fd, stats.st_size, true);
-		return ;
-	}
-	std::string&	response = _send_data.response;
-	_send_data.pos = 0;
-	_send_data.close_after_send = true;
-	response =
-		std::string("HTTP/1.1 200 OK\r\n")
-		+ "Content-Length: " + std::to_string(body.size()) + "\r\n"
-		+ "Content-Type: text/html\r\n"
-		"Connection: close\r\n"
-
-		"\r\n"
-		+ body
-	;
-	body = "";
-	std::cout << response << "\n";
-	mode = ClientMode::SENDING;
-}
-
-//todo: commented lines
-void	Client::_handle_get(std::string& path, ServerConfigFile& config) {
-	if (std::filesystem::is_directory(path)) {
-		if (_request._uri.back() != '/') {
-			std::string new_location = _request._uri + "/";
-			std::string redirect_response =
-				"HTTP/1.1 301 Moved Permanently\r\n"
-				"Location: " + new_location + "\r\n"
-				"Connection: close\r\n"
-				//"Content-Length: " + len(301 err html file) + "\r\n"
-				"\r\n";
-				//+ 301 err html file
-			mode = ClientMode::SENDING;
-			return ;
-		}
-		std::vector<std::string>	files = get_dir(path);
-		/*
-		std::string					index_file;
-		if (has_index(files, config, index_file)) {
-			path = index_file;
-		} else if (enabled_auto_index(path, config)) {
-		*/
-			_handle_auto_index(path, files, config);
-			return ;
-		/*
-		} else {
-			handle invlaid request
-			return ;
-		}
-		*/
-	}
-	/*
-	if (does not exist(path)) {
-	}
-	*/
-	FT_ASSERT(!std::filesystem::is_directory(path));
-	/*
-	if (is_cgi(path, config)) {
-		_handle_cgi(path, config);
-	} else */{
-		_handle_get_file(path, config);
-	}
-}
-
-void	Client::_handle_post(std::string& path, ServerConfigFile& config) {
-}
-
-void	Client::_handle_delete(std::string& path, ServerConfigFile& config) {
-}
-
-void	Client::_execute_response(void) {
-	_send_data.pos = 0;
-	_send_data.close_after_send = true;
-
-	ServerConfigFile&	config = select_config(server->configs, _request);
-	std::string	path /*= expand_uri(_request.uri, config)*/;
-	path = getenv("PWD");//placeholder
-	path+= "/hello_world.html";
-
-	switch (_request._type) {
-		case (MethodType::GET): {
-			_handle_get(path, config);
-			break ;
-		} case (MethodType::POST): {
-			_handle_post(path, config);
-			break ;
-		} case (MethodType::DELETE): {
-			_handle_delete(path, config);
-			break ;
-		} default: {
-			std::cerr << "Error: Unsupported request type: "
-				<< to_string(_request._type) << "\n";
-			//todo: 405 err
-			FT_ASSERT(0);
-		}
-	}
-}
-
-// diff test_file.txt test_file_cmp.txt
-// -> should not show any diff
-// can be used as an intermediate mode for this->mode before entering SENDING mode
-void	Client::_test_write_fd() {
-	int fd = open("test_file.txt", O_WRONLY | O_APPEND | O_NONBLOCK | O_CREAT | O_TRUNC, 0666);
-	int fd2 = open("test_file_cmp.txt", O_WRONLY | O_APPEND | O_CREAT | O_TRUNC, 0666);
-	FT_ASSERT(fd > 0);
-	_fd_write_data = std::string_view(_send_data.response.c_str(), _send_data.response.size());
-	write(fd2, _fd_write_data.data(), _fd_write_data.size());
-	close(fd2);
-	_write_fd(ClientMode::SENDING, fd, true);
-	//mode = ClientMode::SENDING;
-}
-
 void	Client::execute(void) {
 	std::cout << FT_ANSI_GREEN "Client " << this->data_idx << ": ";
 	std::cout << FT_ANSI_RESET;
@@ -352,7 +133,16 @@ void	Client::execute(void) {
 		}
 		case (ClientMode::BUILD_RESPONSE): {
 			std::cout << "exec\n";
-			_execute_response();
+			if (_response == nullptr) {
+				_response = new Response(_select_config(server->configs, _request), _request, *this, mode);
+			}
+			_response->execute();
+			if (mode == ClientMode::SENDING) {
+				_send_data.response = _response->get_str_response();
+				_send_data.pos = 0;
+				delete _response;
+				_response = nullptr;
+			}
 			break ;
 		}
 		case (ClientMode::SENDING): {
@@ -418,8 +208,6 @@ void	Client::_send_response(void) {
 		mode = ClientMode::RECEIVING;
 		_send_data.response = "";
 		_send_data.pos = 0;
-		if (_send_data.close_after_send) {
-			set_close();
-		}
+		set_close();
 	}
 }
