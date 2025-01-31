@@ -38,16 +38,22 @@ class Response {
 		std::string				_target;
 		Server*					_server;
 		std::string				_path;
+		bool					_is_cgi;
 
 		size_t					_write_pos;
 		WriteFd*				_writer;
 		ReadFd*					_reader;
+		enum class ResponseMode {
+			NORMAL,
+			FINISH_UP
+		}	_mode;
 
 	std::string_view		_fd_write_data;
 
 	void	_read_fd(int read_fd, ssize_t byte_count, bool close_fd);
 	void	_write_fd(int write_fd, bool close_fd);
 
+	void						_handle_get_moved(void);
 	std::vector<std::string>	_get_dir(void);
 	std::string					_auto_index_body(std::vector<std::string>& files);
 	void						_handle_auto_index(std::vector<std::string>& files);
@@ -60,8 +66,10 @@ class Response {
 		Response () = delete;
 		Response(const ServerConfigFile& configFile, const Request& request,Client& client,
 			ClientMode& client_mode);
-		~Response ();
+		~Response();
 		Response operator=(const Response& old);
+
+		std::string&&	get_str_response(void);
 
 		std::string& getBody();
 		std::string& getTarget();
@@ -71,7 +79,6 @@ class Response {
 		void	appendToStatusLine(std::string content);
 		void	appendToBody(std::string content);
 		std::string	getExpandedTarget(void);
-	std::string&&	get_str_response(void);
 };
 
 #endif

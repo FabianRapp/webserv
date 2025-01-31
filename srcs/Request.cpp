@@ -33,7 +33,6 @@ Request::Request(const Request& old)
 }
 
 Request	Request::operator=(const Request& old) {
-
 	if (this == &old) {
 		return (*this);
 	}
@@ -44,5 +43,6 @@ Request	Request::operator=(const Request& old) {
 	_version = old._version;
 	_body = old._body;
 	_startBodyIdx = old._startBodyIdx;
+
 	return (*this);
 }

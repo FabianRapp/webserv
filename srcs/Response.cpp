@@ -19,13 +19,16 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 	_client_mode(client_mode),
 	_request(request),
 	_reader(nullptr),
-	_writer(nullptr)
+	_writer(nullptr),
+	_is_cgi(false),
+	_mode(ResponseMode::NORMAL)
 {
 	//later expansions have to be applied if upload_dir is present
 	_target = request._uri;
 	_body = "";
 	_server = client.server;
 	_path = getExpandedTarget();
+	// todo: _is_cgi = 
 }
 
 Response::~Response(void) {
@@ -86,8 +89,6 @@ void	Response::_write_fd(int write_fd, bool close_fd) {
 		}
 	);
 }
-
-
 
 // assumes dqir to be a valid directory
 // check errno for potential errors
@@ -156,42 +157,44 @@ void	Response::_handle_auto_index(std::vector<std::string>&files) {
 // _path is a file that is not CGI
 // todo: err handling
 void	Response::_handle_get_file(void) {
-	if (_body.empty()) {
-		struct stat stats;
-
-		FT_ASSERT(stat(_path.c_str(), &stats) != -1);
-		int	file_fd = open(_path.c_str(), O_RDONLY);
-		FT_ASSERT(file_fd >0);
-		_read_fd(file_fd, stats.st_size, true);
-		return ;
-	}
+	struct stat stats;
 
 	_response_str =
 		std::string("HTTP/1.1 200 OK\r\n")
-		+ "Content-Length: " + std::to_string(_body.size()) + "\r\n"
 		+ "Content-Type: text/html\r\n"
-		"Connection: close\r\n"
-		"\r\n"
-		+ _body
 	;
-	_body = "";
-	std::cout << _response_str << "\n";
-	_client_mode = ClientMode::SENDING;
+	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
+	int	file_fd = open(_path.c_str(), O_RDONLY);
+	FT_ASSERT(file_fd >0);
+	_read_fd(file_fd, stats.st_size, true);
+
+	_mode = ResponseMode::FINISH_UP;
+}
+
+void	Response::_handle_get_moved(void) {
+	std::string new_location = _request._uri + "/";
+
+	_response_str =
+		"HTTP/1.1 301 Moved Permanently\r\n"
+		"Location: " + new_location + "\r\n"
+	;
+
+	std::string	err_file_placeholder = "default/error_pages/301.html"; //todo
+
+	struct stat stats;
+	FT_ASSERT(stat(err_file_placeholder.c_str(), &stats) != -1);
+	int	file_fd = open(err_file_placeholder.c_str(), O_RDONLY);
+	FT_ASSERT(file_fd >0);
+	_read_fd(file_fd, stats.st_size, true);
+
+	_mode = ResponseMode::FINISH_UP;
 }
 
 //todo: commented lines
 void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
 		if (_request._uri.back() != '/') {
-			std::string new_location = _request._uri + "/";
-			std::string redirect_response =
-				"HTTP/1.1 301 Moved Permanently\r\n"
-				"Location: " + new_location + "\r\n"
-				"Connection: close\r\n"
-				//"Content-Length: " + len(301 err html file) + "\r\n"
-				"\r\n";
-				//+ 301 err html file
-			_client_mode = ClientMode::SENDING;
+			_handle_get_moved();
 			return ;
 		}
 		std::vector<std::string>	files = _get_dir();
@@ -199,6 +202,7 @@ void	Response::_handle_get(void) {
 		std::string					index_file;
 		if (has_index(files, config, index_file)) {
 			_path = index_file;
+			_is_cgi = is_cgi(index_file);
 		} else if (enabled_auto_index(_path, config)) {
 		*/
 			_handle_auto_index(files);
@@ -226,30 +230,40 @@ void	Response::_handle_get(void) {
 void	Response::_handle_post(void) {
 }
 
-
 void	Response::_handle_delete(void) {
 }
 
 void	Response::execute(void) {
-
-	/* __path = expand_uri(_request.uri, config)*/;
-
-	switch (_request._type) {
-		case (MethodType::GET): {
-			_handle_get();
-			break ;
-		} case (MethodType::POST): {
-			_handle_post();
-			break ;
-		} case (MethodType::DELETE): {
-			_handle_delete();
-			break ;
-		} default: {
-			std::cerr << "Error: Unsupported request type: "
-				<< to_string(_request._type) << "\n";
-			//todo: 405 err
-			FT_ASSERT(0);
+	if (_mode == ResponseMode::NORMAL) {
+		switch (_request._type) {
+			case (MethodType::GET): {
+				_handle_get();
+				break ;
+			} case (MethodType::POST): {
+				_handle_post();
+				break ;
+			} case (MethodType::DELETE): {
+				_handle_delete();
+				break ;
+			} default: {
+				std::cerr << "Error: Unsupported request type: "
+					<< to_string(_request._type) << "\n";
+				//todo: 405 err
+				FT_ASSERT(0);
+			}
 		}
+	} else if (_mode == ResponseMode::FINISH_UP) {
+		if (!_is_cgi) {
+			_response_str += 
+				"Connection: close\r\n"
+				"Content-Length: " + std::to_string(_body.length()) + "\r\n"
+					"\r\n"
+				+ _body
+			;
+		}
+		_client_mode = ClientMode::SENDING;
+	} else {
+		FT_ASSERT(0);
 	}
 }
 
@@ -270,7 +284,7 @@ void	Response::appendToBody(std::string content) {
 }
 
 std::string	Response::getExpandedTarget(void) {
-	return (std::string(getenv("PWD")) + "/" + "hello_world.html");//to test get file
+	//return (std::string(getenv("PWD")) + "/" + "hello_world.html");//to test get file
 	return (std::string(getenv("PWD")) + "/"); // to test auto index
 	/*
 	std::vector<LocationConfigFile> locations = _config.getLocations();
