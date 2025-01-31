@@ -173,21 +173,11 @@ void	Response::_handle_get_file(void) {
 
 void	Response::_handle_get_moved(void) {
 	std::string new_location = _request._uri + "/";
-
 	_response_str =
 		"HTTP/1.1 301 Moved Permanently\r\n"
 		"Location: " + new_location + "\r\n"
 	;
-
-	std::string	err_file_placeholder = "default/error_pages/301.html"; //todo
-
-	struct stat stats;
-	FT_ASSERT(stat(err_file_placeholder.c_str(), &stats) != -1);
-	int	file_fd = open(err_file_placeholder.c_str(), O_RDONLY);
-	FT_ASSERT(file_fd >0);
-	_read_fd(file_fd, stats.st_size, true);
-
-	_mode = ResponseMode::FINISH_UP;
+	_load_status_code(301);
 }
 
 //todo: commented lines
@@ -230,9 +220,44 @@ void	Response::_handle_get(void) {
 void	Response::_handle_post(void) {
 }
 
-void	Response::_handle_delete(void) {
+//todo: needs to work with config not hard coded paths
+void	Response::_load_status_code(int code) {
+	std::string stat_code_path = "default/error_pages/" + std::to_string(code) + ".html"; //todo
+	// if (!is_cgi(stat_code_path) {
+		_response_str += "Content-Type: text/html\r\n";
+		struct stat stats;
+		FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
+		int	file_fd = open(stat_code_path.c_str(), O_RDONLY);
+		FT_ASSERT(file_fd >0);
+		_read_fd(file_fd, stats.st_size, true);
+		_mode = ResponseMode::FINISH_UP;
+	//} else {
+	//idk if this can be cgi
+	//}
 }
 
+void	Response::_handle_delete(void) {
+	std::cout << "Would" FT_ANSI_RED " DELETE " FT_ANSI_RESET << _path << "\n";
+	if (1 /* std::remove(_path.c_str()) == 0 */) {
+		//success
+		_response_str =
+			"HTTP/1.1 204 No Content\r\n";
+		_load_status_code(204);
+	} else {
+		//error
+		switch (errno) {
+			case (ENOMEM):
+				errno = 0;
+				throw(std::bad_alloc()); break ;
+			default:
+			//todo
+			break ;
+		}
+		errno = 0;
+	}
+}
+
+//todo: throw / catch fd errors
 void	Response::execute(void) {
 	if (_mode == ResponseMode::NORMAL) {
 		switch (_request._type) {
@@ -246,15 +271,18 @@ void	Response::execute(void) {
 				_handle_delete();
 				break ;
 			} default: {
-				std::cerr << "Error: Unsupported request type: "
-					<< to_string(_request._type) << "\n";
-				//todo: 405 err
-				FT_ASSERT(0);
+				//todo: not sure if this string is correct:
+				_response_str = "HTTP/1.1 405 Unsupported request type\r\n";
+				_load_status_code(405);
+				break ;
 			}
 		}
 	} else if (_mode == ResponseMode::FINISH_UP) {
+		/* for potential file reads:
+		 * can not be done in same function call as initial if statement!
+		*/
 		if (!_is_cgi) {
-			_response_str += 
+			_response_str +=
 				"Connection: close\r\n"
 				"Content-Length: " + std::to_string(_body.length()) + "\r\n"
 					"\r\n"

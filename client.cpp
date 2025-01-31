@@ -44,7 +44,7 @@ int	main(void) {
 
 
 	std::string	request =
-		std::string("GET hello_world.html HTTP/1.1\r\n")
+		std::string("DELETE hello_world.html HTTP/1.1\r\n")
 		+ "Host: " + hostname + "\r\n"
 		+ "Connection: close\r\n\r\n"
 	;

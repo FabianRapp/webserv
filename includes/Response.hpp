@@ -53,6 +53,7 @@ class Response {
 	void	_read_fd(int read_fd, ssize_t byte_count, bool close_fd);
 	void	_write_fd(int write_fd, bool close_fd);
 
+	void						_load_status_code(int code);
 	void						_handle_get_moved(void);
 	std::vector<std::string>	_get_dir(void);
 	std::string					_auto_index_body(std::vector<std::string>& files);
