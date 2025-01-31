@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/28 13:09:21 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/29 15:41:59 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/01/31 13:41:50 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,13 +64,15 @@ std::string	Response::getExpandedTarget(Request& request) {
 
 	for (auto location: locations)
 	{
+		std::cout << "_target: |" << _target << "|\n" << " Location Path: |" << location.getPath() << "|\n" << " Upload dir: |" << location.getUploadDir() << "|" << std::endl;
+
 		if (_target == location.getPath() && location.getUploadDir() != "")
 		{
 			expandedTarget = _config.getRoot() + location.getUploadDir();
 			std::cout << "NEW TARGET: " << _target << std::endl;
 		}
 	}
-
+	
 	std::cout << "EXITING EXPANDER\n";
 	return expandedTarget;
 }
