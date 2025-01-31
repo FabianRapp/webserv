@@ -10,10 +10,6 @@ void	sig_int(int) {
 	exit_ = 1;
 }
 
-int	sort_ports(ServerConfigFile a, ServerConfigFile b) {
-	return (a.getPort() - b.getPort());
-}
-
 void	webserv(int ac, char **av) {
 	DataManager		manager;
 
@@ -29,7 +25,11 @@ void	webserv(int ac, char **av) {
 		std::cerr << "Config parse error: " << err.what() << "\n";
 		return ;
 	}
-	sort(all_configs.begin(), all_configs.end(), sort_ports);
+	sort(all_configs.begin(), all_configs.end(),
+		[](ServerConfigFile&a, ServerConfigFile&b) {
+			return (a.getPort() - b.getPort());
+		}
+	);
 	
 	std::vector<ServerConfigFile>	matching_ports;
 	for (auto & config : all_configs) {
