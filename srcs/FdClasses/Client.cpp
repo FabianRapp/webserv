@@ -122,6 +122,19 @@ ServerConfigFile&	Client::_select_config(
 }
 
 void	Client::execute(void) {
+	if (is_ready(POLLHUP)) {
+		std::cout << FT_ANSI_YELLOW << name << "(idx " << data_idx
+			 << ") has disconnected by itself\n" FT_ANSI_RESET;
+		set_close();
+		return ;
+	}
+	if (is_ready(POLLERR)) {
+		//todo: handle err
+		std::cout << FT_ANSI_RED << name << "(idx " << data_idx
+			 << ") had a poll exception, idk what that means..\n" FT_ANSI_RESET;
+		set_close();
+		return ;
+	}
 	std::cout << FT_ANSI_GREEN "Client " << this->data_idx << ": ";
 	std::cout << FT_ANSI_RESET;
 	switch (this->mode) {
