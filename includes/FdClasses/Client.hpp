@@ -3,7 +3,6 @@
 #include "../general_includes.hpp"
 #include "BaseFd.hpp"
 #include "WriteFd.hpp"
-#include "../msg.hpp"
 #include "../parser/Parser.hpp"
 #include <algorithm>
 #include <sys/socket.h>
@@ -48,9 +47,6 @@ private:
 	Request			_request;
 	Response*		_response;
 	ClientMode		mode;
-	struct {
-		std::string		body;
-	}				_response_builder;
 
 	void			_send_response(void);
 	struct send_data {

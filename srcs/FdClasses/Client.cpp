@@ -8,7 +8,6 @@
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT, "Client"),
 	mode(ClientMode::RECEIVING),
-	_response_builder({""}),
 	_send_data({"", 0}),
 	_parser(input),
 	_last_availability(std::chrono::high_resolution_clock::now()),

@@ -18,11 +18,8 @@ CXXFLAGS :=  $(WWW) -std=c++17 -g -fsanitize=$(FSAN) -O0 \
 SRCS_DIR := srcs/
 SRCS := main.cpp \
 		Parser.cpp \
-		Lexer.cpp \
-		Token.cpp \
 		utils.cpp \
 		to_string.cpp \
-		config_parser.cpp \
 		Exceptions.cpp \
 		Manager.cpp \
 		FdClasses/BaseFd.cpp \
