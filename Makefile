@@ -34,6 +34,7 @@ SRCS := main.cpp \
 		Request.cpp \
 		Response.cpp \
 		StringArray.cpp \
+		CGIManager.cpp \
 
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)

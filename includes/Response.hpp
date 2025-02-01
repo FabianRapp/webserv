@@ -24,6 +24,7 @@
 #include "ConfigParser/ConfigParser.hpp"
 #include "ConfigParser/LocationConfigFile.hpp"
 #include "Request.hpp"
+#include "CGIManager.hpp"
 
 class Client;
 enum class ClientMode;
@@ -47,6 +48,7 @@ class Response {
 			NORMAL,
 			FINISH_UP
 		}	_mode;
+		CGIManager*				_cgi_manager;
 
 	std::string_view		_fd_write_data;
 

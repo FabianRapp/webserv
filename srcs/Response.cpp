@@ -12,6 +12,7 @@
 
 #include "../includes/Response.hpp"
 #include "../includes/FdClasses/Client.hpp"
+#include "../includes/CGIManager.hpp"
 
 Response::Response(const ServerConfigFile& configFile, const Request& request, Client& client,
 		ClientMode& client_mode):
@@ -28,7 +29,7 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 	_body = "";
 	_server = client.server;
 	_path = getExpandedTarget();
-	// todo: _is_cgi = 
+	_is_cgi = CGIManager::isCGI(_path);
 }
 
 Response::~Response(void) {
@@ -192,7 +193,7 @@ void	Response::_handle_get(void) {
 		std::string					index_file;
 		if (has_index(files, config, index_file)) {
 			_path = index_file;
-			_is_cgi = is_cgi(index_file);
+			_is_cgi = CGIManager::isCGI(_path);
 		} else if (enabled_auto_index(_path, config)) {
 		*/
 			_handle_auto_index(files);
@@ -209,31 +210,42 @@ void	Response::_handle_get(void) {
 	}
 	*/
 	FT_ASSERT(!std::filesystem::is_directory(_path));
-	/*
-	if (is_cgi(_path, config)) {
-		_handle_cgi(_path, config);
-	} else */{
+	if (_is_cgi) {
+		_cgi_manager = new CGIManager(_path, _request);
+		_response_str = _cgi_manager->execute();
+		_client_mode = ClientMode::SENDING;
+		delete _cgi_manager;
+	} else {
 		_handle_get_file();
 	}
 }
 
 void	Response::_handle_post(void) {
+	/*
+	if (!is_dir(_path)) {
+		err;
+	}
+	if(_is_cgi) {
+		_cgi_manager = new CGIManager(_path, _request);
+		_response_str = _cgi_manager->execute();
+		_client_mode = ClientMode::SENDING;
+		delete _cgi_manager;
+	} else {
+		_handle_post_file();
+	}
+	*/
 }
 
 //todo: needs to work with config not hard coded paths
 void	Response::_load_status_code(int code) {
 	std::string stat_code_path = "default/error_pages/" + std::to_string(code) + ".html"; //todo
-	// if (!is_cgi(stat_code_path) {
-		_response_str += "Content-Type: text/html\r\n";
-		struct stat stats;
-		FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
-		int	file_fd = open(stat_code_path.c_str(), O_RDONLY);
-		FT_ASSERT(file_fd >0);
-		_read_fd(file_fd, stats.st_size, true);
-		_mode = ResponseMode::FINISH_UP;
-	//} else {
-	//idk if this can be cgi
-	//}
+	_response_str += "Content-Type: text/html\r\n";
+	struct stat stats;
+	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
+	int	file_fd = open(stat_code_path.c_str(), O_RDONLY);
+	FT_ASSERT(file_fd >0);
+	_read_fd(file_fd, stats.st_size, true);
+	_mode = ResponseMode::FINISH_UP;
 }
 
 void	Response::_handle_delete(void) {
@@ -313,6 +325,8 @@ void	Response::appendToBody(std::string content) {
 
 std::string	Response::getExpandedTarget(void) {
 	//return (std::string(getenv("PWD")) + "/" + "hello_world.html");//to test get file
+	//return (std::string(getenv("PWD")) + "/" + "hello.php");//to test get file
+	return (std::string(getenv("PWD")) + "/" + "hello.py");//to test get file
 	return (std::string(getenv("PWD")) + "/"); // to test auto index
 	/*
 	std::vector<LocationConfigFile> locations = _config.getLocations();

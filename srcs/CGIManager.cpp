@@ -4,29 +4,41 @@
 #include <iostream>
 #include <vector>
 #include <unistd.h>
+#include <Request.hpp>
 
-CGIManager::CGIManager(const std::string& uri, const std::string& body,
-	const std::vector<char*>& envCGI)
-	: uri(uri), body(body), envCGI(envCGI) {}
+CGIManager::CGIManager(std::string path, const Request& request):
+	path(path),
+	request_body(request._body)
+{
+	envCGI = {
+		static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),
+		static_cast<const char*>(("CONTENT_LENGTH=" + std::to_string(request._body.size())).c_str()),
+		static_cast<const char*>("CONTENT_TYPE=application/x-www-form-urlencoded"),
+		static_cast<const char*>((("SCRIPT_NAME=" + path).c_str())),
+		nullptr // Null-terminate the array
+	};
+
+}
 
 std::string CGIManager::execute() {
-	if (!isCGI(uri)) {
+	if (!isCGI(path)) {
 		throw std::runtime_error("Not CGI");
 	}
 
 	// File existence checks moved HERE (before execution)
-	if (access(uri.c_str(), F_OK) == -1) {
-		throw std::runtime_error("Script file not found: " + uri);
+	if (access(path.c_str(), F_OK) == -1) {
+		throw std::runtime_error("Script file not found: " + path);
 	}
-	if (access(uri.c_str(), R_OK) == -1) {
-		throw std::runtime_error("Script file not readable: " + uri);
+	if (access(path.c_str(), R_OK) == -1) {
+		throw std::runtime_error("Script file not readable: " + path);
 	}
 
-	std::string interpreter = getInterpreter(uri);
+	std::string interpreter = getInterpreter(path);
 	if (interpreter.empty()) {
 		throw std::runtime_error("Unsupported CGI type");
 	}
 
+	//todo: later: think of which fds for destructor
 	int inputPipe[2];
 	int outputPipe[2];
 	if (pipe(inputPipe) == -1 || pipe(outputPipe) == -1) {
@@ -49,19 +61,19 @@ std::string CGIManager::execute() {
 
 		char *args[] = {
 			const_cast<char *>(interpreter.c_str()),
-			const_cast<char *>(uri.c_str()),
+			const_cast<char *>(path.c_str()),
 			nullptr
 		};
 
-		execve(args[0], args, envCGI.data());
+		execve(args[0], args, (char**)(envCGI.data()));
 
 		exit(1);
 	} else { // Parent process
 		close(inputPipe[0]);
 		close(outputPipe[1]);
 
-		if (!body.empty()) {
-			write(inputPipe[1], body.c_str(), body.size());
+		if (!request_body.empty()) {
+			write(inputPipe[1], request_body.c_str(), request_body.size());
 		}
 		close(inputPipe[1]);
 
@@ -81,18 +93,18 @@ std::string CGIManager::execute() {
 	}
 }
 
-bool CGIManager::isCGI(const std::string& uri) {
-	size_t last_dot = uri.find_last_of('.');
+bool CGIManager::isCGI(const std::string& path) {
+	size_t last_dot = path.find_last_of('.');
 	if (last_dot == std::string::npos)
 		return false;
-	std::string extension = uri.substr(last_dot);
+	std::string extension = path.substr(last_dot);
 	return (extension == ".py" || extension == ".php");
 }
 
-std::string CGIManager::getInterpreter(const std::string& uri) {
-	size_t last_dot = uri.find_last_of('.');
+std::string CGIManager::getInterpreter(const std::string& path) {
+	size_t last_dot = path.find_last_of('.');
 	if (last_dot != std::string::npos) {
-		std::string extension = uri.substr(last_dot);
+		std::string extension = path.substr(last_dot);
 		std::string interpreter;
 
 		if (extension == ".py") {
@@ -111,6 +123,6 @@ std::string CGIManager::getInterpreter(const std::string& uri) {
 	}
 
 	// This ensures that all paths return a value or throw an exception
-	throw std::runtime_error("Internal error: No file extension found in URI");
+	throw std::runtime_error("Internal error: No file extension found in path");
 }
 
