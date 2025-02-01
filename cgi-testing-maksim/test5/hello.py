@@ -9,3 +9,4 @@ print("Content-Type: text/plain\n")
 body = sys.stdin.read()
 
 print(f"Hello, {body}!")
+print("Yes, this is Python running!")
