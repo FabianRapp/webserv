@@ -2,23 +2,22 @@
 #define CGI_MANAGER_HPP
 
 #include <string>
-#include <unordered_map>
+#include <vector>
 #include <stdexcept>
 
 class CGIManager {
 private:
 	std::string uri;
 	std::string body;
-	std::unordered_map<std::string, std::string> envVars;
+	std::vector<char*> envCGI; // Use vector of char* for environment variables
 
 	bool isCGI(const std::string& uri);
 	std::string getInterpreter(const std::string& uri);
-	
+
 public:
-	CGIManager(const std::string& uri, const std::string& body, const std::unordered_map<std::string, std::string>& envVars);
+	CGIManager(const std::string& uri, const std::string& body,
+		const std::vector<char*>& envCGI);
 	std::string execute();
-
-
 };
 
 #endif // CGI_MANAGER_HPP

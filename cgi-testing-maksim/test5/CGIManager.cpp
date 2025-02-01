@@ -3,13 +3,23 @@
 #include <sys/wait.h>
 #include <iostream>
 #include <vector>
+#include <unistd.h>
 
-CGIManager::CGIManager(const std::string& uri, const std::string& body, const std::unordered_map<std::string, std::string>& envVars)
-	: uri(uri), body(body), envVars(envVars) {}
+CGIManager::CGIManager(const std::string& uri, const std::string& body,
+	const std::vector<char*>& envCGI)
+	: uri(uri), body(body), envCGI(envCGI) {}
 
 std::string CGIManager::execute() {
 	if (!isCGI(uri)) {
 		throw std::runtime_error("Not CGI");
+	}
+
+	// File existence checks moved HERE (before execution)
+	if (access(uri.c_str(), F_OK) == -1) {
+		throw std::runtime_error("Script file not found: " + uri);
+	}
+	if (access(uri.c_str(), R_OK) == -1) {
+		throw std::runtime_error("Script file not readable: " + uri);
 	}
 
 	std::string interpreter = getInterpreter(uri);
@@ -20,27 +30,13 @@ std::string CGIManager::execute() {
 	int inputPipe[2];
 	int outputPipe[2];
 	if (pipe(inputPipe) == -1 || pipe(outputPipe) == -1) {
+		//todo: how are we handeling errors?
 		throw std::runtime_error("Failed to create pipes");
 	}
 
-	// Dynamically construct environment variables
-	std::vector<std::string> envStrings;
-	for (const auto& [key, value] : envVars) {
-		envStrings.push_back(key + "=" + value);
-	}
-
-	// Add SCRIPT_NAME to the environment
-	envStrings.push_back("SCRIPT_NAME=" + uri);
-
-	// Convert envStrings to a char* array for execve
-	std::vector<char*> env;
-	for (auto& str : envStrings) {
-		env.push_back(const_cast<char*>(str.c_str()));
-	}
-	env.push_back(nullptr); // Null-terminate the array
-
 	pid_t pid = fork();
 	if (pid == -1) {
+		//todo: how are we handeling errors?
 		throw std::runtime_error("Failed to fork");
 	}
 
@@ -57,7 +53,8 @@ std::string CGIManager::execute() {
 			nullptr
 		};
 
-		execve(args[0], args, env.data());
+		execve(args[0], args, envCGI.data());
+
 		exit(1);
 	} else { // Parent process
 		close(inputPipe[0]);
@@ -86,7 +83,8 @@ std::string CGIManager::execute() {
 
 bool CGIManager::isCGI(const std::string& uri) {
 	size_t last_dot = uri.find_last_of('.');
-	if (last_dot == std::string::npos) return false;
+	if (last_dot == std::string::npos)
+		return false;
 	std::string extension = uri.substr(last_dot);
 	return (extension == ".py" || extension == ".php");
 }
@@ -95,8 +93,24 @@ std::string CGIManager::getInterpreter(const std::string& uri) {
 	size_t last_dot = uri.find_last_of('.');
 	if (last_dot != std::string::npos) {
 		std::string extension = uri.substr(last_dot);
-		if (extension == ".py") return "/usr/bin/python3";
-		if (extension == ".php") return "/usr/local/bin/php";
+		std::string interpreter;
+
+		if (extension == ".py") {
+			interpreter = "/usr/bin/python3";
+		} else if (extension == ".php") {
+			interpreter = "/usr/bin/php";
+		} else {
+			throw std::runtime_error("Unsupported CGI type: " + extension);
+		}
+
+		if (access(interpreter.c_str(), X_OK) == -1) {
+			throw std::runtime_error("Interpreter not found or not executable: " + interpreter);
+		}
+
+		return interpreter;
 	}
-	return "";
+
+	// This ensures that all paths return a value or throw an exception
+	throw std::runtime_error("Internal error: No file extension found in URI");
 }
+

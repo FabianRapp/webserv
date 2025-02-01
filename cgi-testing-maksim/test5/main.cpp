@@ -1,6 +1,7 @@
 #include "CGIManager.hpp"
 #include <iostream>
 #include <unordered_map>
+#include <vector>
 
 using HeadersMap = std::unordered_map<std::string, std::string>;
 
@@ -34,30 +35,32 @@ MethodType parseMethod(const std::string& method) {
 int main() {
 	Request req;
 
-
 	req._type = parseMethod("POST");
-	req._uri = "./hello.py";
-	// req._uri = "./hello.php";
+	// req._uri = "./hello.php"; // test with php
+	req._uri = "./hello1.py"; // test with py
 	req._version = "HTTP/1.1";
 	req._headers["Host"] = "localhost";
 	req._headers["Content-Length"] = "13";
 	req._headers["Content-Type"] = "application/x-www-form-urlencoded";
 	req._body = "username=John";
 
-	// Prepare environment variables
-	std::unordered_map<std::string, std::string> envVars = {
-		{"REQUEST_METHOD", "POST"},
-		{"CONTENT_LENGTH", std::to_string(req._body.size())},
-		{"CONTENT_TYPE", "application/x-www-form-urlencoded"}
+	// todo: here we should use get methods to get all the data from Request class.
+	std::vector<char*> envCGI = {
+		const_cast<char*>("REQUEST_METHOD=POST"),
+		const_cast<char*>(("CONTENT_LENGTH=" + std::to_string(req._body.size())).c_str()),
+		const_cast<char*>("CONTENT_TYPE=application/x-www-form-urlencoded"),
+		const_cast<char*>(("SCRIPT_NAME=" + req._uri).c_str()),
+		nullptr // Null-terminate the array
 	};
 
 	try {
 		// Pass the necessary data to CGIManager
-		CGIManager cgiManager(req._uri, req._body, envVars);
+		CGIManager cgiManager(req._uri, req._body, envCGI);
 		std::string cgiOutput = cgiManager.execute();
 
 		// Construct and display the HTTP response
 		std::string httpResponse = "HTTP/1.1 200 OK\r\n" + cgiOutput;
+		// print response
 		std::cout << "\nFull HTTP Response:\n" << httpResponse << std::endl;
 	} catch (const std::exception& e) {
 		std::cerr << "Error: " << e.what() << std::endl;
