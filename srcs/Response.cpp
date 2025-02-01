@@ -271,8 +271,8 @@ void	Response::execute(void) {
 				_handle_delete();
 				break ;
 			} default: {
-				//todo: not sure if this string is correct:
-				_response_str = "HTTP/1.1 405 Unsupported request type\r\n";
+				//todo: not sure if this code/string is correct:
+				_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
 				_load_status_code(405);
 				break ;
 			}
