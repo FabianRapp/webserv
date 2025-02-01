@@ -1,4 +1,5 @@
 #include "CGIManager.hpp"
+#include "StringArray.hpp"
 #include <unistd.h>
 #include <sys/wait.h>
 #include <iostream>
@@ -10,14 +11,27 @@ CGIManager::CGIManager(std::string path, const Request& request):
 	path(path),
 	request_body(request._body)
 {
+
 	envCGI = {
 		static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),
 		static_cast<const char*>(("CONTENT_LENGTH=" + std::to_string(request._body.size())).c_str()),
 		static_cast<const char*>("CONTENT_TYPE=application/x-www-form-urlencoded"),
 		static_cast<const char*>((("SCRIPT_NAME=" + path).c_str())),
-		nullptr // Null-terminate the array
 	};
+	if (request._headers.find(HeaderType::COOKIE) != request._headers.end()) {
 
+		//std::cout << std::string(request._headers[HeaderType::HOST]);
+		std::string	request_cookies_val = "name=value; name2=value2; name3=value3";
+		Line	key_vals(request_cookies_val, "; ");
+		for (auto var : key_vals) {
+			/*todo: verification
+			if (cookie_data_structure.find(var)) {
+			*/
+				envCGI.push_back(var.c_str());
+			//}
+		}
+	}
+	envCGI.push_back(nullptr);
 }
 
 std::string CGIManager::execute() {
@@ -85,6 +99,12 @@ std::string CGIManager::execute() {
 			buffer[bytesRead] = '\0';
 			cgiOutput += buffer;
 		}
+		
+		"SET-COOK: "
+
+		"\r\n"
+		"\r\n\r\n";
+
 
 		close(outputPipe[0]);
 		waitpid(pid, NULL, 0);
