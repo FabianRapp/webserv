@@ -79,7 +79,6 @@ void	Response::_write_fd(int write_fd, bool close_fd) {
 	FT_ASSERT(write_fd > 0);
 	ClientMode	next_mode = _client_mode;
 	_client_mode = ClientMode::WRITING_FD;
-	
 	_writer = _server->data.new_write_fd(
 		write_fd,
 		_fd_write_data,
@@ -160,10 +159,7 @@ void	Response::_handle_auto_index(std::vector<std::string>&files) {
 void	Response::_handle_get_file(void) {
 	struct stat stats;
 
-	_response_str =
-		std::string("HTTP/1.1 200 OK\r\n")
-		+ "Content-Type: text/html\r\n"
-	;
+
 	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
 	int	file_fd = open(_path.c_str(), O_RDONLY);
 	FT_ASSERT(file_fd >0);
@@ -210,9 +206,19 @@ void	Response::_handle_get(void) {
 	}
 	*/
 	FT_ASSERT(!std::filesystem::is_directory(_path));
+	_response_str =
+		std::string("HTTP/1.1 200 OK\r\n")
+		+ "Content-Type: text/html\r\n"
+	;
 	if (_is_cgi) {
 		_cgi_manager = new CGIManager(_path, _request);
-		_response_str = _cgi_manager->execute();
+		_body = _cgi_manager->execute();
+		_response_str +=
+			"Connection: close\r\n"
+			"Content-Length: " + std::to_string(_body.length()) + "\r\n"
+			"\r\n"
+			+ _body
+		;
 		_client_mode = ClientMode::SENDING;
 		delete _cgi_manager;
 	} else {
@@ -349,7 +355,7 @@ std::string	Response::getExpandedTarget(void) {
 			std::cout << "NEW TARGET: " << _target << std::endl;
 		}
 	}
-	
+
 	std::cout << "EXITING EXPANDER\n";
 	return expandedTarget;
 

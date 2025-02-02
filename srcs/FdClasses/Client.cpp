@@ -208,6 +208,13 @@ void	Client::_send_response(void) {
 		_send_data.response.size() - _send_data.pos,
 		send_flags
 	);
+			int dbg_fd= open("response.txt", O_WRONLY | O_TRUNC | O_CREAT, 0777);
+			std::cout << getenv("PWD");
+			write(dbg_fd, _send_data.response.c_str(), _send_data.response.size());
+			close(dbg_fd);
+			if (errno) {
+				std::cout << strerror(errno);
+			}
 	if (send_bytes <= 0) {
 		std::cerr << "Error: send: closing connection now\n";
 		//todo: the line below has to removed before submission according to subject

@@ -6,6 +6,7 @@
 #include <vector>
 #include <unistd.h>
 #include <Request.hpp>
+#include <colors.h>
 
 CGIManager::CGIManager(std::string path, const Request& request):
 	path(path),
@@ -33,7 +34,7 @@ CGIManager::CGIManager(std::string path, const Request& request):
 	}
 	envCGI.push_back(nullptr);
 }
-
+#include <fcntl.h>
 std::string CGIManager::execute() {
 	if (!isCGI(path)) {
 		throw std::runtime_error("Not CGI");
