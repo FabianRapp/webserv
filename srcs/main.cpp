@@ -58,6 +58,7 @@ void	webserv(int ac, char **av) {
 
 int	main(int ac, char *av[]) {
 	signal(SIGINT, sig_int);
+	signal(SIGTSTP, sig_int);
 
 start:
 	try {
