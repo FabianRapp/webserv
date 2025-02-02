@@ -3,6 +3,10 @@
 #include <csignal>
 #include "../includes/Exceptions.hpp"
 
+//remove this, just for testing
+#include "../includes/ConfigParser/LocationConfigFile.hpp"
+#include "../includes/ConfigParser/ConfigParser.hpp"
+
 volatile
 sig_atomic_t	exit_ = 0;
 
@@ -30,7 +34,7 @@ void	webserv(int ac, char **av) {
 			return (a.getPort() - b.getPort());
 		}
 	);
-	
+
 	std::vector<ServerConfigFile>	matching_ports;
 	for (auto & config : all_configs) {
 		//config.printServer();
@@ -58,12 +62,26 @@ void	webserv(int ac, char **av) {
 int	main(int ac, char *av[]) {
 	signal(SIGINT, sig_int);
 
-start:
-	try {
-		webserv(ac, av);
-	} catch (std::bad_alloc) {
-		std::cerr << "Bad alloc!\nRestarting servers..\n";
-		goto start;
-	}
-	return (0);
+	//testing START
+
+	LocationConfigFile loc;
+
+	loc.setPath("....");
+	std::cout << "Path: " << loc.getPath() << std::endl;
+
+	ConfigParser parser("config/default.conf");
+
+	const std::vector<ServerConfigFile>& servers = parser.getServers();
+
+	//testing END
+
+// start:
+	// try {
+	// 	webserv(ac, av);
+	// } catch (std::bad_alloc) {
+	// 	std::cerr << "Bad alloc!\nRestarting servers..\n";
+	// 	goto start;
+	// }
+	// return (0);
 }
+

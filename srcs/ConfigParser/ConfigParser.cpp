@@ -17,6 +17,7 @@ std::string ConfigParser::trimWhiteSpace(const std::string& str) const {
 	return (start == std::string::npos) ? "" : str.substr(start, end - start + 1);
 }
 
+// todo: delete old shit if we dont need it anymore
 // void ConfigParser::parseFile(const std::string& config_file) {
 // 	std::ifstream file(config_file);
 // 	if (!file.is_open()) {
@@ -146,7 +147,7 @@ void ConfigParser::parseFile(const std::string& config_file) {
 	}
 }
 
-
+// todo: delete old shit if we dont need it anymore
 // void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count) {
 // 	std::string line;
 
@@ -214,9 +215,13 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 
 		// Handle location block start
 		if (line.find("location") == 0 && line.back() == '{') {
+			//todo: delete, just for testing
+			std::cout << "line here: " << "|" << line << "|" << std::endl;
 			bracket_count++; // Increment for location block start
 			LocationConfigFile current_location;
 			current_location.setPath(line.substr(9, line.size() - 10)); // Extract path from "location /path {"
+			//todo: delete this, just for testing
+			std::cout << "Parsed path: " << current_location.getPath() << std::endl;
 			parseLocationBlock(file, current_location, bracket_count);
 			current_server.addLocation(current_location);
 			continue;
