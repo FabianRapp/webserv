@@ -30,6 +30,7 @@ public:
 	bool isCGI(const std::string& path);
 
 	CGIManager(Client* client, Response* response, std::string path, const Request& request);
+	~CGIManager(void);
 
 	std::string execute();
 };

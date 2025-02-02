@@ -67,44 +67,40 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 	}
 
 	if (pid == 0) { // Child process
+		close(inputPipe[1]);
+		inputPipe[1] = -1;
+	
+		close(outputPipe[0]);
+		outputPipe[0] = -1;
+
 		dup2(inputPipe[0], STDIN_FILENO);
 		close(inputPipe[0]);
-		close(inputPipe[1]);
+		inputPipe[0] = -1;
 
 		dup2(outputPipe[1], STDOUT_FILENO);
 		close(outputPipe[1]);
-		close(outputPipe[0]);
+		outputPipe[1] = -1;
 
 		char *args[] = {
 			const_cast<char *>(interpreter.c_str()),
 			const_cast<char *>(path.c_str()),
 			nullptr
 		};
-
 		execve(args[0], args, (char**)(envCGI.data()));
 		//todo: err
 		exit(1);
 	} else { // Parent process
 		close(inputPipe[0]);
 		inputPipe[0] = -1;
+
 		close(outputPipe[1]);
 		outputPipe[1] = -1;
 
-		if (!request_body.empty()) {
-			//_response->set_fd_write_data(request_body);
-			//_response->write_fd(inputPipe[1], true);
-			write(inputPipe[1], request_body.c_str(), request_body.size());
-		}
-		close(inputPipe[1]);
-		inputPipe[1] = -1;
 
-		//char buffer[1024];
-		ssize_t bytesRead;
-		_response->read_fd(outputPipe[0], -1, true);
-		//while ((bytesRead = read(outputPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
-		//	buffer[bytesRead] = '\0';
-		//	cgiOutput += buffer;
-		//}
+	
+		int	fd_to_read = outputPipe[0];
+		outputPipe[0] = -1;
+		_response->read_fd(fd_to_read, -1, true);
 
 		/*
 		"SET-COOK: "
@@ -112,38 +108,36 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 		"\r\n\r\n";
 		*/
 
-		//close(outputPipe[0]);
-		outputPipe[0] = -1;
-		waitpid(pid, NULL, 0);
 
+		if (!request_body.empty()) {
+			//int	fd_to_write = inputPipe[1];
+			//inputPipe[1] = -1;
+			//_response->set_fd_write_data(request_body);
+			//_response->write_fd(fd_to_write, true);
+			write(inputPipe[1], request_body.c_str(), request_body.size());
+		}
+		close(inputPipe[1]);
+		inputPipe[1] = -1;
+	
+		waitpid(pid, NULL, 0);
 		_response->set_mode(Response::ResponseMode::FINISH_UP);
 	}
 }
-/*
-// Use this to write to a pipe or a file.
-// The input data has to be in Client::_fd_write_data
-// Switched int ClientMode::WRITING_FD, thus:
-// After calling this function the caller should return straight to Client::execute
-// without any more actions besides the following:
-// Uses dup() on the given fd, if the fd is not needed anywher else simply close
-// the fd after calling this.
-// Assumes the given fd to be valid.
-void	CGIManger::_write_input(int write_fd, bool close_fd) {
-	//_fd_error.error = false;
-	FT_ASSERT(write_fd > 0);
-	ClientMode	next_mode = _client->get_mode();
-	_client->get_mode() = ClientMode::WRITING_FD;
-	_response->get_writer() = _main_manager.new_write_fd(
-		write_fd,
-		_input,
-		close_fd,
-		[this, next_mode] () {
-			this->_client->get_mode() = next_mode;
-			this->_writer = nullptr;
-		}
-	);
+
+CGIManager::~CGIManager(void) {
+	if (outputPipe[0] != -1) {
+		close(outputPipe[0]);
+	}
+	if (outputPipe[0] != -1) {
+		close(outputPipe[0]);
+	}
+	if (inputPipe[0] != -1) {
+		close(inputPipe[0]);
+	}
+	if (inputPipe[1] != -1) {
+		close(inputPipe[1]);
+	}
 }
-*/
 
 std::string CGIManager::execute() {
 

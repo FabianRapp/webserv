@@ -13,6 +13,16 @@
 #include <netdb.h>
 #include <fcntl.h>
 
+#include <sstream>
+#include <iomanip>
+#include <unistd.h>
+std::string toHex(int decimal) {
+    std::stringstream stream;
+    stream << std::hex << decimal;  // Convert the decimal number to hexadecimal
+    return stream.str();
+
+}
+
 int	main(void) {
 	const char				*hostname = "localhost";
 	const int16_t			port = 9090;
@@ -42,11 +52,11 @@ int	main(void) {
 		return (1);
 	}
 
-
 	std::string	request =
-		std::string("DELETE hello_world.html HTTP/1.1\r\n")
+		std::string("GET hello.py HTTP/1.1\r\n")
 		+ "Host: " + hostname + "\r\n"
 		+ "Connection: close\r\n\r\n"
+
 	;
 	if (send(fd, request.c_str(), request.length(), 0) < 0) {
 		std::cerr << "Error: send error: " << strerror(errno) << '\n';
@@ -76,16 +86,9 @@ int	main(void) {
 	return (0);
 }
 
-/*
-#include <sstream>
-#include <iomanip>
-#include <unistd.h>
-std::string toHex(int decimal) {
-    std::stringstream stream;
-    stream << std::hex << decimal;  // Convert the decimal number to hexadecimal
-    return stream.str();
 
-}
+
+/*
 
 //Unchunked main
 int main() {
@@ -189,8 +192,9 @@ int main() {
     return 0;
 }
 */
-// Chunked main
+
 /*
+// Chunked main
 int main() {
     const char *hostname = "localhost"; // Change to "google.com" for external requests
     const int16_t port = 8080;          // Change to 80 for standard HTTP
