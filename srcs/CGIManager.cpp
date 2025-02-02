@@ -9,13 +9,16 @@
 #include <Request.hpp>
 #include <Manager.hpp>
 #include <colors.h>
+#include <WriteFd.hpp>
+#include <ReadFd.hpp>
 
 CGIManager::CGIManager(Client* client, Response* response, std::string path, const Request& request):
 	path(path),
 	request_body(request._body),
 	_client(client),
 	_response(response),
-	_main_manager(client->data)
+	_main_manager(client->data),
+	_mode(CGI_MODE::INIT_WRITING)
 {
 	envCGI = {
 		static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),
@@ -60,13 +63,14 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 		throw std::runtime_error("Failed to create pipes");
 	}
 
-	pid_t pid = fork();
-	if (pid == -1) {
+	_pid = fork();
+	if (_pid == -1) {
 		//todo: how are we handeling errors?
 		throw std::runtime_error("Failed to fork");
 	}
 
-	if (pid == 0) { // Child process
+	if (_pid == 0) { // Child process
+		//sleep(10);
 		close(inputPipe[1]);
 		inputPipe[1] = -1;
 	
@@ -90,41 +94,45 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 		//todo: err
 		exit(1);
 	} else { // Parent process
+		_main_manager.cgi_lifetimes.add(_pid);
 		close(inputPipe[0]);
 		inputPipe[0] = -1;
 
 		close(outputPipe[1]);
 		outputPipe[1] = -1;
 
-
-	
-		int	fd_to_read = outputPipe[0];
-		outputPipe[0] = -1;
-		_response->read_fd(fd_to_read, -1, true);
-
-		/*
-		"SET-COOK: "
-		"\r\n"
-		"\r\n\r\n";
-		*/
-
-
-		if (!request_body.empty()) {
-			//int	fd_to_write = inputPipe[1];
-			//inputPipe[1] = -1;
-			//_response->set_fd_write_data(request_body);
-			//_response->write_fd(fd_to_write, true);
-			write(inputPipe[1], request_body.c_str(), request_body.size());
-		}
-		close(inputPipe[1]);
-		inputPipe[1] = -1;
-	
-		waitpid(pid, NULL, 0);
-		_response->set_mode(Response::ResponseMode::FINISH_UP);
+		//_response->set_mode(Response::ResponseMode::FINISH_UP);
 	}
 }
 
+void	CGIManager::_init_reading(void) {
+	int	fd_to_read = outputPipe[0];
+	outputPipe[0] = -1;
+	//read_fd will make sure the cgi->execute does not get called unitil the data is read
+	_response->read_fd(fd_to_read, -1, true);
+	_mode = CGI_MODE::FINISHED;
+}
+
+//todo: this is a place holder body since I'm too lazy to make a client that sends a request with body
+const std::string test_body = "\ntest body, raplace this later(" __FILE__ " line " + std::to_string(__LINE__) + ")\n";
+void	CGIManager::_init_writing(void) {
+	//request_body <--
+	if (test_body.empty()) {
+		
+		return ;
+	}
+	int	fd_to_write = inputPipe[1];
+	inputPipe[1] = -1;
+
+	_response->set_fd_write_data(test_body);
+	//write_fd will make sure the cgi->execute does not get called unitil the data is written
+	_response->write_fd(fd_to_write, true);
+	_mode = CGI_MODE::INIT_READING;
+}
+
 CGIManager::~CGIManager(void) {
+	std::cout << "cgi manager destructor\n";
+
 	if (outputPipe[0] != -1) {
 		close(outputPipe[0]);
 	}
@@ -139,9 +147,26 @@ CGIManager::~CGIManager(void) {
 	}
 }
 
-std::string CGIManager::execute() {
-
-		return cgiOutput;
+// returns true when done
+bool	CGIManager::execute() {
+	bool	debug = true;
+	if (debug) std::cout << "cgi::execute: ";
+	switch (_mode) {
+		case (CGI_MODE::PASS):
+			break ;
+		case (CGI_MODE::INIT_WRITING):
+			if (debug) std::cout << "init_writing\n";
+			_init_writing();
+			break ;
+		case (CGI_MODE::INIT_READING):
+			if (debug) std::cout << "init_reading\n";
+			_init_reading();
+			break ;
+		case (CGI_MODE::FINISHED):
+			if (debug) std::cout << "finished\n";
+			return (true);
+	}
+	return (false);
 }
 
 bool CGIManager::isCGI(const std::string& path) {

@@ -35,6 +35,7 @@ SRCS := main.cpp \
 		Response.cpp \
 		StringArray.cpp \
 		CGIManager.cpp \
+		CgiTimeouts.cpp \
 
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)

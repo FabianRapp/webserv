@@ -56,10 +56,10 @@ int main() {
 	try {
 		// Pass the necessary data to CGIManager
 		CGIManager cgiManager(req._uri, req._body, envCGI);
-		std::string cgiOutput = cgiManager.execute();
+		std::string _cgiOutput = cgiManager.execute();
 
 		// Construct and display the HTTP response
-		std::string httpResponse = "HTTP/1.1 200 OK\r\n" + cgiOutput;
+		std::string httpResponse = "HTTP/1.1 200 OK\r\n" + _cgiOutput;
 		// print response
 		std::cout << "\nFull HTTP Response:\n" << httpResponse << std::endl;
 	} catch (const std::exception& e) {

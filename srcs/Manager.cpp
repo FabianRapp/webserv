@@ -2,6 +2,7 @@
 #include "../includes/ConfigParser/ServerConfigFile.hpp"
 
 DataManager::DataManager(void): config_parser(nullptr), _total_entrys(0), _count(0),
+	cgi_lifetimes(std::chrono::seconds(3)),
 	_consecutive_poll_fails(0)
 {}
 
@@ -36,7 +37,7 @@ ReadFd*	DataManager::new_read_fd(std::string& target_buffer, int fd,
 	return (reader);
 }
 
-WriteFd*	DataManager::new_write_fd(int fd, std::string_view& input_data,
+WriteFd*	DataManager::new_write_fd(int fd, const std::string_view& input_data,
 				bool close_fd, std::function<void()> callback) {
 	WriteFd*	writer = new WriteFd(*this, input_data, fd, close_fd, callback);
 	_add_entry(reinterpret_cast<WriteFd*>(writer), writer->poll_events);

@@ -22,6 +22,7 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 	_request(request),
 	_reader(nullptr),
 	_writer(nullptr),
+	_cgi_manager(nullptr),
 	_is_cgi(false),
 	_mode(ResponseMode::NORMAL)
 {
@@ -34,12 +35,12 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 }
 
 Response::~Response(void) {
-	if (this->_reader) {
-		this->_reader->set_close();
-	}
-	if (this->_writer) {
-		this->_writer->set_close();
-	}
+	//if (this->_reader) {
+	//	this->_reader->set_close();
+	//}
+	//if (this->_writer) {
+	//	this->_writer->set_close();
+	//}
 }
 
 void	Response::set_mode(ResponseMode mode) {
@@ -164,13 +165,16 @@ void	Response::_handle_auto_index(std::vector<std::string>&files) {
 void	Response::_handle_get_file(void) {
 	struct stat stats;
 
-
 	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
 	int	file_fd = open(_path.c_str(), O_RDONLY);
 	FT_ASSERT(file_fd >0);
 	read_fd(file_fd, stats.st_size, true);
 
 	_mode = ResponseMode::FINISH_UP;
+	_response_str =
+		std::string("HTTP/1.1 200 OK\r\n")
+		+ "Content-Type: text/html\r\n"
+	;
 }
 
 void	Response::_handle_get_moved(void) {
@@ -211,22 +215,20 @@ void	Response::_handle_get(void) {
 	}
 	*/
 	FT_ASSERT(!std::filesystem::is_directory(_path));
-	_response_str =
-		std::string("HTTP/1.1 200 OK\r\n")
-		+ "Content-Type: text/html\r\n"
-	;
+
 	if (_is_cgi) {
-		_cgi_manager = new CGIManager(_client, this, _path, _request);
-		//_body = _cgi_manager->execute();
-		//
-		//_response_str +=
-		//	"Connection: close\r\n"
-		//	"Content-Length: " + std::to_string(_body.length()) + "\r\n"
-		//	"\r\n"
-		//	+ _body
-		//;
-		//_client_mode = ClientMode::SENDING;
-		delete _cgi_manager;
+		if (!_cgi_manager) {
+			_cgi_manager = new CGIManager(_client, this, _path, _request);
+		}
+		if (_cgi_manager->execute()) {
+			_response_str =
+				std::string("HTTP/1.1 200 OK\r\n")
+				+ "Content-Type: text/html\r\n"
+			;
+			delete _cgi_manager;
+			_cgi_manager = nullptr;
+			_mode = ResponseMode::FINISH_UP;
+		}
 	} else {
 		_handle_get_file();
 	}
@@ -321,7 +323,7 @@ void	Response::reset_body(void) {
 	_body = "";
 }
 
-void	Response::set_fd_write_data(std::string_view data) {
+void	Response::set_fd_write_data(const std::string_view data) {
 	_fd_write_data = data;
 }
 
@@ -344,7 +346,7 @@ void	Response::appendToBody(std::string content) {
 std::string	Response::getExpandedTarget(void) {
 	//return (std::string(getenv("PWD")) + "/" + "hello_world.html");//to test get file
 	return (std::string(getenv("PWD")) + "/" + "hello.php");//to test get file
-	return (std::string(getenv("PWD")) + "/" + "hello.py");//to test get file
+	//return (std::string(getenv("PWD")) + "/" + "hello.py");//to test get file
 	return (std::string(getenv("PWD")) + "/"); // to test auto index
 	/*
 	std::vector<LocationConfigFile> locations = _config.getLocations();
@@ -376,6 +378,10 @@ std::string	Response::getExpandedTarget(void) {
 
 std::string&&	Response::get_str_response(void) {
 	return (std::move(_response_str));
+}
+
+CGIManager*&	Response::get_cgi_manger(void) {
+	return (_cgi_manager);
 }
 
 WriteFd*&	Response::get_writer(void) {

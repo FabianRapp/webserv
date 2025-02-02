@@ -11,8 +11,8 @@ public:
 	~BaseFd(void);
 
 	bool	is_ready(short event) const;
-	void	set_close(void);
 
+	//only call this from the manager
 	virtual
 	void	execute(void) = 0;
 
@@ -22,6 +22,7 @@ public:
 	size_t				data_idx;
 	const std::string	name;//for debugging
 protected:
+	void	set_close(void);
 	void	_set_non_blocking(void);
 private:
 };

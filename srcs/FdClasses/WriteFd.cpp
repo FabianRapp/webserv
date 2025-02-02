@@ -1,7 +1,7 @@
 #include "../../includes/FdClasses/WriteFd.hpp"
 #include "../../includes/Manager.hpp"
 
-WriteFd::WriteFd(DataManager& data, std::string_view& src, int fd, bool close_fd,
+WriteFd::WriteFd(DataManager& data, const std::string_view& src, int fd, bool close_fd,
 		std::function<void()> completion_callback):
 	BaseFd(data, POLLOUT, "Writer"),
 	src(src),

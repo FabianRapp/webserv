@@ -27,10 +27,11 @@
 #include <cerrno>
 #include <iostream>
 #include "../includes/ConfigParser/ConfigParser.hpp"
-
+#include "CgiTimeouts.hpp"
 
 #include "FdClasses/BaseFd.hpp"
 // #include <types.hpp>
+
 
 
 class DataManager {
@@ -42,8 +43,9 @@ public:
 	void		new_client(Server* server);
 	ReadFd*		new_read_fd(std::string& target_buffer, int fd,
 					ssize_t byte_count, bool close_fd, std::function<void()> callback);
-	WriteFd*	new_write_fd(int fd, std::string_view& input_data, 
+	WriteFd*	new_write_fd(int fd, const std::string_view& input_data, 
 					   bool close_fd, std::function<void()> callback);
+	CgiTimeouts	cgi_lifetimes;
 
 
 	void	set_close(size_t idx);

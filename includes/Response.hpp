@@ -53,7 +53,7 @@ class Response {
 		ResponseMode			_mode;
 		CGIManager*				_cgi_manager;
 
-	std::string_view		_fd_write_data;
+		std::string_view		_fd_write_data;
 
 
 	void						_load_status_code(int code);
@@ -75,13 +75,14 @@ class Response {
 		
 		std::string&&	get_str_response(void);
 		WriteFd*&		get_writer(void);
+		CGIManager*&	get_cgi_manger(void);
 
 		void			set_mode(ResponseMode mode);
 		void			read_fd(int read_fd, ssize_t byte_count, bool close_fd);
 		void			write_fd(int write_fd, bool close_fd);
 		void			reset_body(void);
 		std::string&&	get_read_fd_data(void);
-		void			set_fd_write_data(std::string_view data);
+		void			set_fd_write_data(const std::string_view data);
 		std::string& getBody();
 		std::string& getTarget();
 		const ServerConfigFile& getConfig() const;

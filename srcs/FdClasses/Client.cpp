@@ -163,8 +163,11 @@ void	Client::execute(void) {
 			break ;
 		}
 		case (ClientMode::READING_FD):
+			std::cout << "read fd\n";
+			// do nothing
+			break ;
 		case (ClientMode::WRITING_FD): {
-			std::cout << "read/write fd\n";
+			std::cout << "write fd\n";
 			// do nothing
 			break ;
 		}

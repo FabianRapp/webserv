@@ -148,19 +148,19 @@ int main()
 
 		char buffer[1024];
 		ssize_t bytesRead;
-		std::string cgiOutput;
+		std::string _cgiOutput;
 
 		while ((bytesRead = read(outputPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
 			buffer[bytesRead] = '\0';
-			cgiOutput += buffer;
+			_cgiOutput += buffer;
 		}
 
 		close(outputPipe[0]);
 		waitpid(pid, NULL, 0);
 
-		// std::cout << "\nCaptured CGI Output:\n" << cgiOutput << std::endl;
+		// std::cout << "\nCaptured CGI Output:\n" << _cgiOutput << std::endl;
 
-		std::string httpResponse = "HTTP/1.1 200 OK\r\n" + cgiOutput;
+		std::string httpResponse = "HTTP/1.1 200 OK\r\n" + _cgiOutput;
 		std::cout << "\nFull HTTP Response:\n" << httpResponse << std::endl;
 
 		return 0;

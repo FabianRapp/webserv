@@ -52,6 +52,7 @@ void	webserv(int ac, char **av) {
 		manager.run_poll();
 		manager.execute_all();
 		manager.process_closures();
+		manager.cgi_lifetimes.handle_timeouts();
 	}
 }
 
