@@ -6,6 +6,7 @@
 #include <filesystem>
 #include "LocationConfigFile.hpp"
 #include "DefaultErrorPages.hpp"
+#include <cstdlib>
 
 class ServerConfigFile {
 private:

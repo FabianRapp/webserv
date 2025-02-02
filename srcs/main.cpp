@@ -61,27 +61,28 @@ void	webserv(int ac, char **av) {
 
 int	main(int ac, char *av[]) {
 	signal(SIGINT, sig_int);
+	signal(SIGTSTP, sig_int);
 
 	//testing START
 
-	LocationConfigFile loc;
+	// LocationConfigFile loc;
 
-	loc.setPath("....");
-	std::cout << "Path: " << loc.getPath() << std::endl;
+	// loc.setPath("....");
+	// std::cout << "Path: " << loc.getPath() << std::endl;
 
-	ConfigParser parser("config/default.conf");
+	// ConfigParser parser("config/default.conf");
 
-	const std::vector<ServerConfigFile>& servers = parser.getServers();
+	// const std::vector<ServerConfigFile>& servers = parser.getServers();
 
 	//testing END
 
-// start:
-	// try {
-	// 	webserv(ac, av);
-	// } catch (std::bad_alloc) {
-	// 	std::cerr << "Bad alloc!\nRestarting servers..\n";
-	// 	goto start;
-	// }
-	// return (0);
+start:
+	try {
+		webserv(ac, av);
+	} catch (std::bad_alloc) {
+		std::cerr << "Bad alloc!\nRestarting servers..\n";
+		goto start;
+	}
+	return (0);
 }
 

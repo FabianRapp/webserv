@@ -74,6 +74,7 @@
 		"clocale": "cpp",
 		"thread": "cpp",
 		"compare": "cpp",
-		"concepts": "cpp"
+		"concepts": "cpp",
+		"csignal": "cpp"
 	}
 }

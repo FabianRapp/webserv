@@ -3,6 +3,16 @@
 
 ServerConfigFile::ServerConfigFile() {}
 
+std::string	toggle_path(std::string path) {
+	bool	pwd_on = true;
+
+	if (pwd_on) {
+		return (std::string(std::getenv("PWD")) + path);
+	} else {
+		return (path);
+	}
+}
+
 void ServerConfigFile::setPort(int port) {
 	_port = port;
 }
@@ -21,7 +31,7 @@ void ServerConfigFile::setServerNames(const std::string& server_names) {
 }
 
 void ServerConfigFile::setRoot(const std::string& root) {
-	_root = root;
+	_root = toggle_path(root);
 }
 
 // void ServerConfigFile::addErrorPage(int error_code, const std::string& path) {

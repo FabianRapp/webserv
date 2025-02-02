@@ -2,6 +2,8 @@
 
 LocationConfigFile::LocationConfigFile() {}
 
+
+
 // Setters
 void LocationConfigFile::setPath(const std::string& path) {
 	_path = path;
@@ -12,6 +14,8 @@ void LocationConfigFile::setMethods(bool get, bool post, bool del) {
 	_post_header = post;
 	_delete_header = del;
 }
+
+
 
 void LocationConfigFile::setAutoIndex(bool autoindex) {
 	_autoindex = autoindex;

@@ -221,7 +221,7 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			LocationConfigFile current_location;
 			current_location.setPath(line.substr(9, line.size() - 10)); // Extract path from "location /path {"
 			//todo: delete this, just for testing
-			std::cout << "Parsed path: " << current_location.getPath() << std::endl;
+			std::cout << "Parsed path: " << "|" << current_location.getPath() << "|" << std::endl;
 			parseLocationBlock(file, current_location, bracket_count);
 			current_server.addLocation(current_location);
 			continue;
