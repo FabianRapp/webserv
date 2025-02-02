@@ -33,11 +33,13 @@ public:
 
 	~Client(void);
 
-	void	execute(void);
+	void	execute(void) override;
 
 	void	parse(void);
 	ClientMode&	get_mode(void);
-	
+
+	void	set_close(void) override;
+
 	Server*	server;
 	std::string	input;
 private:

@@ -23,6 +23,7 @@ public:
 	const std::string	name;//for debugging
 
 	//be very carefull with calling this outside of the object itself
+	virtual
 	void	set_close(void);
 protected:
 	void	_set_non_blocking(void);

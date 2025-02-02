@@ -20,7 +20,7 @@ public:
 	Server(DataManager& data, std::vector<ServerConfigFile>& configs);
 	~Server(void);
 
-	void	execute(void);
+	void	execute(void) override;
 	size_t	total_unique_clients;
 	std::vector<ServerConfigFile>	configs;
 	class ServerError: public std::runtime_error {

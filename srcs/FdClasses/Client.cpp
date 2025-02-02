@@ -36,8 +36,6 @@ Client::Client(DataManager& data, Server* parent_server):
 }
 
 Client::~Client(void) {
-	//todo:
-	// this delets the response which then leads to sefaults with Read/WriteFd that are still running
 	delete _response;
 }
 
@@ -239,3 +237,10 @@ void	Client::_send_response(void) {
 ClientMode&	Client::get_mode(void) {
 	return (mode);
  }
+
+void	Client::set_close(void) {
+	if (_response) {
+		_response->close_io_fds();
+	}
+	Client::BaseFd::set_close();
+}
