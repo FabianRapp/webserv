@@ -30,6 +30,11 @@ class Client;
 enum class ClientMode;
 
 class Response {
+	public:
+		enum class ResponseMode {
+			NORMAL,
+			FINISH_UP
+		};
 	private:
 		std::string				_response_str;
 		const Request&			_request;
@@ -38,22 +43,18 @@ class Response {
 		const ServerConfigFile&	_config;
 		std::string				_target;
 		Server*					_server;
+		Client*					_client;
 		std::string				_path;
 		bool					_is_cgi;
 
 		size_t					_write_pos;
 		WriteFd*				_writer;
 		ReadFd*					_reader;
-		enum class ResponseMode {
-			NORMAL,
-			FINISH_UP
-		}	_mode;
+		ResponseMode			_mode;
 		CGIManager*				_cgi_manager;
 
 	std::string_view		_fd_write_data;
 
-	void	_read_fd(int read_fd, ssize_t byte_count, bool close_fd);
-	void	_write_fd(int write_fd, bool close_fd);
 
 	void						_load_status_code(int code);
 	void						_handle_get_moved(void);
@@ -71,13 +72,21 @@ class Response {
 			ClientMode& client_mode);
 		~Response();
 		Response operator=(const Response& old);
-
+		
 		std::string&&	get_str_response(void);
+		WriteFd*&		get_writer(void);
 
+		void			set_mode(ResponseMode mode);
+		void			read_fd(int read_fd, ssize_t byte_count, bool close_fd);
+		void			write_fd(int write_fd, bool close_fd);
+		void			reset_body(void);
+		std::string&&	get_read_fd_data(void);
+		void			set_fd_write_data(std::string_view data);
 		std::string& getBody();
 		std::string& getTarget();
 		const ServerConfigFile& getConfig() const;
 		void	execute(void);
+		
 
 		void	appendToStatusLine(std::string content);
 		void	appendToBody(std::string content);

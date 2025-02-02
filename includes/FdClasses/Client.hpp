@@ -36,6 +36,8 @@ public:
 	void	execute(void);
 
 	void	parse(void);
+	ClientMode&	get_mode(void);
+	
 	Server*	server;
 	std::string	input;
 private:

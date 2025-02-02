@@ -1,18 +1,22 @@
 #include "CGIManager.hpp"
 #include "StringArray.hpp"
+#include "Client.hpp"
 #include <unistd.h>
 #include <sys/wait.h>
 #include <iostream>
 #include <vector>
 #include <unistd.h>
 #include <Request.hpp>
+#include <Manager.hpp>
 #include <colors.h>
 
-CGIManager::CGIManager(std::string path, const Request& request):
+CGIManager::CGIManager(Client* client, Response* response, std::string path, const Request& request):
 	path(path),
-	request_body(request._body)
+	request_body(request._body),
+	_client(client),
+	_response(response),
+	_main_manager(client->data)
 {
-
 	envCGI = {
 		static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),
 		static_cast<const char*>(("CONTENT_LENGTH=" + std::to_string(request._body.size())).c_str()),
@@ -33,9 +37,7 @@ CGIManager::CGIManager(std::string path, const Request& request):
 		}
 	}
 	envCGI.push_back(nullptr);
-}
-#include <fcntl.h>
-std::string CGIManager::execute() {
+
 	if (!isCGI(path)) {
 		throw std::runtime_error("Not CGI");
 	}
@@ -53,9 +55,6 @@ std::string CGIManager::execute() {
 		throw std::runtime_error("Unsupported CGI type");
 	}
 
-	//todo: later: think of which fds for destructor
-	int inputPipe[2];
-	int outputPipe[2];
 	if (pipe(inputPipe) == -1 || pipe(outputPipe) == -1) {
 		//todo: how are we handeling errors?
 		throw std::runtime_error("Failed to create pipes");
@@ -69,9 +68,11 @@ std::string CGIManager::execute() {
 
 	if (pid == 0) { // Child process
 		dup2(inputPipe[0], STDIN_FILENO);
+		close(inputPipe[0]);
 		close(inputPipe[1]);
 
 		dup2(outputPipe[1], STDOUT_FILENO);
+		close(outputPipe[1]);
 		close(outputPipe[0]);
 
 		char *args[] = {
@@ -81,37 +82,72 @@ std::string CGIManager::execute() {
 		};
 
 		execve(args[0], args, (char**)(envCGI.data()));
-
+		//todo: err
 		exit(1);
 	} else { // Parent process
 		close(inputPipe[0]);
+		inputPipe[0] = -1;
 		close(outputPipe[1]);
+		outputPipe[1] = -1;
 
 		if (!request_body.empty()) {
+			//_response->set_fd_write_data(request_body);
+			//_response->write_fd(inputPipe[1], true);
 			write(inputPipe[1], request_body.c_str(), request_body.size());
 		}
 		close(inputPipe[1]);
+		inputPipe[1] = -1;
 
-		char buffer[1024];
+		//char buffer[1024];
 		ssize_t bytesRead;
-		std::string cgiOutput;
+		_response->read_fd(outputPipe[0], -1, true);
+		//while ((bytesRead = read(outputPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
+		//	buffer[bytesRead] = '\0';
+		//	cgiOutput += buffer;
+		//}
 
-		while ((bytesRead = read(outputPipe[0], buffer, sizeof(buffer) - 1)) > 0) {
-			buffer[bytesRead] = '\0';
-			cgiOutput += buffer;
-		}
-		
+		/*
 		"SET-COOK: "
-
 		"\r\n"
 		"\r\n\r\n";
+		*/
 
-
-		close(outputPipe[0]);
+		//close(outputPipe[0]);
+		outputPipe[0] = -1;
 		waitpid(pid, NULL, 0);
 
-		return cgiOutput;
+		_response->set_mode(Response::ResponseMode::FINISH_UP);
 	}
+}
+/*
+// Use this to write to a pipe or a file.
+// The input data has to be in Client::_fd_write_data
+// Switched int ClientMode::WRITING_FD, thus:
+// After calling this function the caller should return straight to Client::execute
+// without any more actions besides the following:
+// Uses dup() on the given fd, if the fd is not needed anywher else simply close
+// the fd after calling this.
+// Assumes the given fd to be valid.
+void	CGIManger::_write_input(int write_fd, bool close_fd) {
+	//_fd_error.error = false;
+	FT_ASSERT(write_fd > 0);
+	ClientMode	next_mode = _client->get_mode();
+	_client->get_mode() = ClientMode::WRITING_FD;
+	_response->get_writer() = _main_manager.new_write_fd(
+		write_fd,
+		_input,
+		close_fd,
+		[this, next_mode] () {
+			this->_client->get_mode() = next_mode;
+			this->_writer = nullptr;
+		}
+	);
+}
+*/
+
+std::string CGIManager::execute() {
+
+		return cgiOutput;
 }
 
 bool CGIManager::isCGI(const std::string& path) {

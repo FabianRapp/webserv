@@ -18,6 +18,7 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 		ClientMode& client_mode):
 	_config(configFile),
 	_client_mode(client_mode),
+	_client(&client),
 	_request(request),
 	_reader(nullptr),
 	_writer(nullptr),
@@ -41,7 +42,11 @@ Response::~Response(void) {
 	}
 }
 
-// Use this to read from from a pipe or a file.
+void	Response::set_mode(ResponseMode mode) {
+	_mode = mode;
+}
+
+// Use this to read froserverm from a pipe or a file.
 // Appends to the body.
 // Switched int ClientMode::WRITING_FD, thus:
 // After calling this function the caller should return straight to Client::execute
@@ -49,7 +54,7 @@ Response::~Response(void) {
 // Uses dup() on the given fd, if the fd is not needed anywher else simply close
 // the fd after calling this.
 // Assumes the given fd to be valid.
-void	Response::_read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
+void	Response::read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
 	//_fd_error.error = false;
 	FT_ASSERT(read_fd > 0);
 	ClientMode	next_mode = _client_mode;
@@ -74,7 +79,7 @@ void	Response::_read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
 // Uses dup() on the given fd, if the fd is not needed anywher else simply close
 // the fd after calling this.
 // Assumes the given fd to be valid.
-void	Response::_write_fd(int write_fd, bool close_fd) {
+void	Response::write_fd(int write_fd, bool close_fd) {
 	//_fd_error.error = false;
 	FT_ASSERT(write_fd > 0);
 	ClientMode	next_mode = _client_mode;
@@ -163,7 +168,7 @@ void	Response::_handle_get_file(void) {
 	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
 	int	file_fd = open(_path.c_str(), O_RDONLY);
 	FT_ASSERT(file_fd >0);
-	_read_fd(file_fd, stats.st_size, true);
+	read_fd(file_fd, stats.st_size, true);
 
 	_mode = ResponseMode::FINISH_UP;
 }
@@ -211,15 +216,16 @@ void	Response::_handle_get(void) {
 		+ "Content-Type: text/html\r\n"
 	;
 	if (_is_cgi) {
-		_cgi_manager = new CGIManager(_path, _request);
-		_body = _cgi_manager->execute();
-		_response_str +=
-			"Connection: close\r\n"
-			"Content-Length: " + std::to_string(_body.length()) + "\r\n"
-			"\r\n"
-			+ _body
-		;
-		_client_mode = ClientMode::SENDING;
+		_cgi_manager = new CGIManager(_client, this, _path, _request);
+		//_body = _cgi_manager->execute();
+		//
+		//_response_str +=
+		//	"Connection: close\r\n"
+		//	"Content-Length: " + std::to_string(_body.length()) + "\r\n"
+		//	"\r\n"
+		//	+ _body
+		//;
+		//_client_mode = ClientMode::SENDING;
 		delete _cgi_manager;
 	} else {
 		_handle_get_file();
@@ -250,7 +256,7 @@ void	Response::_load_status_code(int code) {
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
 	int	file_fd = open(stat_code_path.c_str(), O_RDONLY);
 	FT_ASSERT(file_fd >0);
-	_read_fd(file_fd, stats.st_size, true);
+	read_fd(file_fd, stats.st_size, true);
 	_mode = ResponseMode::FINISH_UP;
 }
 
@@ -299,18 +305,24 @@ void	Response::execute(void) {
 		/* for potential file reads:
 		 * can not be done in same function call as initial if statement!
 		*/
-		if (!_is_cgi) {
-			_response_str +=
-				"Connection: close\r\n"
-				"Content-Length: " + std::to_string(_body.length()) + "\r\n"
-					"\r\n"
-				+ _body
-			;
-		}
+		_response_str +=
+			"Connection: close\r\n"
+			"Content-Length: " + std::to_string(_body.length()) + "\r\n"
+				"\r\n"
+			+ _body
+		;
 		_client_mode = ClientMode::SENDING;
 	} else {
 		FT_ASSERT(0);
 	}
+}
+
+void	Response::reset_body(void) {
+	_body = "";
+}
+
+void	Response::set_fd_write_data(std::string_view data) {
+	_fd_write_data = data;
 }
 
 std::string& Response::getBody() {
@@ -331,7 +343,7 @@ void	Response::appendToBody(std::string content) {
 
 std::string	Response::getExpandedTarget(void) {
 	//return (std::string(getenv("PWD")) + "/" + "hello_world.html");//to test get file
-	//return (std::string(getenv("PWD")) + "/" + "hello.php");//to test get file
+	return (std::string(getenv("PWD")) + "/" + "hello.php");//to test get file
 	return (std::string(getenv("PWD")) + "/" + "hello.py");//to test get file
 	return (std::string(getenv("PWD")) + "/"); // to test auto index
 	/*
@@ -366,3 +378,6 @@ std::string&&	Response::get_str_response(void) {
 	return (std::move(_response_str));
 }
 
+WriteFd*&	Response::get_writer(void) {
+	return (_writer);
+}

@@ -230,3 +230,7 @@ void	Client::_send_response(void) {
 		set_close();
 	}
 }
+
+ClientMode&	Client::get_mode(void) {
+	return (mode);
+ }
