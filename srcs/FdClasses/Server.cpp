@@ -4,7 +4,9 @@
 Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 	BaseFd(data, POLLIN, "Server"),
 	total_unique_clients(0),
-	configs(configs)
+	configs(configs),
+	start_panic(false),
+	panic(false)
 {
 	struct sockaddr_in		server_addr;
 	const socklen_t			server_addr_len = static_cast<socklen_t>(sizeof server_addr);
@@ -59,5 +61,9 @@ void	Server::execute(void) {
 	}
 	data.new_client(this);
 	this->total_unique_clients++;
+	//todo: panic test:
+	//if (this->total_unique_clients > 10) {
+	//	set_close();
+	//}
 	std::cout << "Added client numner " << this->total_unique_clients << "`\n";
 }

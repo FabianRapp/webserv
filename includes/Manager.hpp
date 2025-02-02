@@ -33,7 +33,6 @@
 // #include <types.hpp>
 
 
-
 class DataManager {
 public:
 	DataManager(void);
@@ -41,9 +40,9 @@ public:
 
 	void		new_server(std::vector<ServerConfigFile>& configs);
 	void		new_client(Server* server);
-	ReadFd*		new_read_fd(std::string& target_buffer, int fd,
+	ReadFd*		new_read_fd(std::string& target_buffer, int fd, Client& client,
 					ssize_t byte_count, bool close_fd, std::function<void()> callback);
-	WriteFd*	new_write_fd(int fd, const std::string_view& input_data, 
+	WriteFd*	new_write_fd(int fd, const std::string_view& input_data, Client& client,
 					   bool close_fd, std::function<void()> callback);
 	CgiTimeouts	cgi_lifetimes;
 
@@ -67,6 +66,8 @@ private:
 	void	_add_entry(BaseFd *entry, short poll_events);
 
 	void	_fd_close(size_t idx);
+
+	void	_handle_server_panic(Server* server);
 
 	size_t							_count;
 	std::vector<struct pollfd>		_pollfds;

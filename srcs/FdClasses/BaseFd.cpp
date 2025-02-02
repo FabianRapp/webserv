@@ -14,6 +14,7 @@ BaseFd::~BaseFd(void) {
 	//data.set_close(data_idx);
 }
 
+//be very carefull with calling this outside of the object itself
 void	BaseFd::set_close(void) {
 	data.set_close(data_idx);
 }

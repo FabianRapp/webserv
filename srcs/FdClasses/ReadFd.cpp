@@ -1,11 +1,13 @@
 #include "../../includes/FdClasses/ReadFd.hpp"
 #include "../../includes/Manager.hpp"
 
-ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd, bool close_fd,
+ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd, bool close_fd, Client& client,
 		ssize_t byte_count, std::function<void()> completion_callback):
 	BaseFd(data, POLLIN, "ReadFd"),
 	target_buf(target_buffer),
-	completion_callback(std::move(completion_callback))
+	completion_callback(std::move(completion_callback)),
+	client(&client),
+	server(client.server)
 {
 	if (close_fd) {
 		this->fd = fd;
@@ -34,7 +36,10 @@ void	ReadFd::execute(void) {
 		read_size = sizeof buffer;
 	}
 	ssize_t read_ret = read(fd, buffer, read_size);
-	FT_ASSERT(read_ret >= 0);
+	if (read_ret < 0) {
+		//todo: err
+		FT_ASSERT(0);
+	}
 	buffer[read_ret] = 0;
 
 	left_over_bytes -= read_ret;
@@ -48,4 +53,12 @@ void	ReadFd::execute(void) {
 		completion_callback();
 		return ;
 	}
+}
+
+Client*	ReadFd::get_client(void) {
+	return (client);
+}
+
+Server*	ReadFd::get_server(void) {
+	return (server);
 }

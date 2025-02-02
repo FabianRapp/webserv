@@ -15,7 +15,6 @@
 # define REQUEST_QUE_SIZE 10
 #endif
 
-
 class Server: public BaseFd {
 public:
 	Server(DataManager& data, std::vector<ServerConfigFile>& configs);
@@ -28,6 +27,10 @@ public:
 	public:
 		 ServerError(const std::string& str): std::runtime_error(str) {}
 	};
+	bool	start_panic;
+	//only set panic from manger(when detecting a server closing it sets it to panic)
+	//use start_panic instead
+	bool	panic;
 private:
 	std::unordered_map<unsigned long, std::string>	_codes;
 };

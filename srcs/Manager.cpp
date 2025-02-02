@@ -29,17 +29,17 @@ void	DataManager::new_client(Server* server) {
 	_add_entry(reinterpret_cast<BaseFd*>(client), client->poll_events);
 }
 
-ReadFd*	DataManager::new_read_fd(std::string& target_buffer, int fd,
+ReadFd*	DataManager::new_read_fd(std::string& target_buffer, int fd, Client& client,
 			ssize_t byte_count, bool close_fd, std::function<void()> callback) {
-	ReadFd*	reader = new ReadFd(*this, target_buffer, fd, close_fd, byte_count,
+	ReadFd*	reader = new ReadFd(*this, target_buffer, fd, close_fd, client, byte_count,
 						callback);
 	_add_entry(reinterpret_cast<BaseFd*>(reader), reader->poll_events);
 	return (reader);
 }
 
-WriteFd*	DataManager::new_write_fd(int fd, const std::string_view& input_data,
+WriteFd*	DataManager::new_write_fd(int fd, const std::string_view& input_data, Client& client,
 				bool close_fd, std::function<void()> callback) {
-	WriteFd*	writer = new WriteFd(*this, input_data, fd, close_fd, callback);
+	WriteFd*	writer = new WriteFd(*this, input_data, fd, close_fd, client, callback);
 	_add_entry(reinterpret_cast<WriteFd*>(writer), writer->poll_events);
 	return (writer);
 }
@@ -53,11 +53,42 @@ bool	DataManager::closing(size_t idx) const {
 	return (_close_later[idx]);
 }
 
+// marks everything of that server for cleanup
+void	DataManager::_handle_server_panic(Server* serv) {
+	serv->panic = true;
+	std::cerr << FT_ANSI_RED << "Error: server panic!"
+		<< "Restarting server with configs:\n";
+	for (const auto& conf : serv->configs) {
+		conf.printServer();
+	}
+	std::cerr << FT_ANSI_RESET;
+	for (size_t idx = 0; idx < _count; idx++) {
+		Client*		client = dynamic_cast<Client*>(_fd_users[idx]);
+		ReadFd*		read_fd = dynamic_cast<ReadFd*>(_fd_users[idx]);
+		WriteFd*	write_fd = dynamic_cast<WriteFd*>(_fd_users[idx]);
+		if (client && client->server == serv) {
+			set_close(idx);
+		} else if (read_fd && read_fd->get_server() == serv) {
+			set_close(idx);
+		} else if (write_fd && write_fd->get_server() == serv) {
+			set_close(idx);
+		}
+	}
+
+}
+
 void	DataManager::process_closures() {
 	size_t idx = 0;
 	
 	while (idx < _count) {
 		if (_close_later[idx]) {
+			Server*	serv = dynamic_cast<Server*>(_fd_users[idx]);
+			if (serv && !serv->panic) {
+				serv->panic = true;
+				_handle_server_panic(serv);
+				idx = 0;
+				continue ;
+			}
 			_fd_close(idx);
 		} else {
 			idx++;

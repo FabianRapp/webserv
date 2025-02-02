@@ -36,6 +36,8 @@ Client::Client(DataManager& data, Server* parent_server):
 }
 
 Client::~Client(void) {
+	//todo:
+	// this delets the response which then leads to sefaults with Read/WriteFd that are still running
 	delete _response;
 }
 

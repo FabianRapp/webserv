@@ -43,6 +43,16 @@ Response::~Response(void) {
 	//}
 }
 
+// call this from client in case of early destruction
+void	Response::close_io_fds(void) {
+	if (this->_reader) {
+		this->_reader->set_close();
+	}
+	if (this->_writer) {
+		this->_writer->set_close();
+	}
+}
+
 void	Response::set_mode(ResponseMode mode) {
 	_mode = mode;
 }
@@ -63,6 +73,7 @@ void	Response::read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
 	_reader = _server->data.new_read_fd(
 		_body,
 		read_fd,
+		*_client,
 		byte_count,
 		close_fd,
 		[this, next_mode] () {
@@ -88,6 +99,7 @@ void	Response::write_fd(int write_fd, bool close_fd) {
 	_writer = _server->data.new_write_fd(
 		write_fd,
 		_fd_write_data,
+		*_client,
 		close_fd,
 		[this, next_mode] () {
 			this->_client_mode = next_mode;

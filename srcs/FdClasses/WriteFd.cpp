@@ -1,12 +1,14 @@
 #include "../../includes/FdClasses/WriteFd.hpp"
 #include "../../includes/Manager.hpp"
 
-WriteFd::WriteFd(DataManager& data, const std::string_view& src, int fd, bool close_fd,
+WriteFd::WriteFd(DataManager& data, const std::string_view& src, int fd, bool close_fd, Client& client,
 		std::function<void()> completion_callback):
 	BaseFd(data, POLLOUT, "Writer"),
 	src(src),
 	completion_callback(std::move(completion_callback)),
-	pos(0)
+	pos(0),
+	client(&client),
+	server(client.server)
 {
 	if (close_fd) {
 		this->fd = fd;
@@ -26,12 +28,23 @@ void	WriteFd::execute(void) {
 	}
 	std::cout << "exec write fd\n";
 	ssize_t write_ret = write(fd, src.data() + pos, src.size() - pos);
-	assert(write_ret >= 0);
+	if (write_ret < 0) {
+		//todo: err
+		FT_ASSERT(0);
+	}
 	pos += static_cast<size_t>(write_ret);
-	if (pos == src.size()) {
+	if (pos == src.size() || write_ret == 0) {
 		data.set_close(data_idx);
 		completion_callback();
 		//std::cout << "writer finished\n";
 		return ;
 	}
+}
+
+Client*	WriteFd::get_client(void) {
+	return (client);
+}
+
+Server*	WriteFd::get_server(void) {
+	return (server);
 }

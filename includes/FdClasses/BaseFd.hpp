@@ -21,8 +21,10 @@ public:
 	int					fd;
 	size_t				data_idx;
 	const std::string	name;//for debugging
-protected:
+
+	//be very carefull with calling this outside of the object itself
 	void	set_close(void);
+protected:
 	void	_set_non_blocking(void);
 private:
 };

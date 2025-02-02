@@ -92,6 +92,9 @@ class Response {
 		void	appendToStatusLine(std::string content);
 		void	appendToBody(std::string content);
 		std::string	getExpandedTarget(void);
+
+	// call this from client in case of early destruction
+	void	close_io_fds(void);
 };
 
 #endif
