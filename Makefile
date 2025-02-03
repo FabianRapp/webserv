@@ -9,7 +9,8 @@ INCLUDES := -I./includes \
 
 FSAN := address
 
-WWW :=
+#-Werror
+WWW := -Wall -Wextra
 CXXFLAGS :=  $(WWW) -std=c++17 -g -fsanitize=$(FSAN) -O0 \
 			-Wconversion -Wsign-conversion $(INCLUDES) \
 

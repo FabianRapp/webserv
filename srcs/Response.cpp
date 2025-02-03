@@ -16,22 +16,21 @@
 
 Response::Response(const ServerConfigFile& configFile, const Request& request, Client& client,
 		ClientMode& client_mode):
-	_config(configFile),
-	_client_mode(client_mode),
-	_client(&client),
+	_response_str(),
 	_request(request),
-	_reader(nullptr),
+	_client_mode(client_mode),
+	_body(""),
+	_config(configFile),
+	_target(request._uri),
+	_server(client.server),
+	_client(&client),
 	_writer(nullptr),
-	_cgi_manager(nullptr),
-	_is_cgi(false),
-	_mode(ResponseMode::NORMAL)
+	_reader(nullptr),
+	_mode(ResponseMode::NORMAL),
+	_cgi_manager(nullptr)
 {
 	//later expansions have to be applied if upload_dir is present
-	_target = request._uri;
-	_body = "";
-	_server = client.server;
 	_path = getExpandedTarget();
-	_is_cgi = CGIManager::isCGI(_path);
 }
 
 Response::~Response(void) {
@@ -223,7 +222,6 @@ void	Response::_handle_get(void) {
 		std::string					index_file;
 		if (has_index(files, config, index_file)) {
 			_path = index_file;
-			_is_cgi = CGIManager::isCGI(_path);
 		} else if (enabled_auto_index(_path, config)) {
 		*/
 			_handle_auto_index(files);
@@ -241,7 +239,7 @@ void	Response::_handle_get(void) {
 	*/
 	FT_ASSERT(!std::filesystem::is_directory(_path));
 
-	if (_is_cgi) {
+	if (CGIManager::isCGI(_path)) {
 		if (!_cgi_manager) {
 			_cgi_manager = new CGIManager(_client, this, _path, _request);
 		}
@@ -264,7 +262,7 @@ void	Response::_handle_post(void) {
 	if (!is_dir(_path)) {
 		err;
 	}
-	if(_is_cgi) {
+	if(CGIManager::isCGI(_path)) {
 		_cgi_manager = new CGIManager(_path, _request);
 		_response_str = _cgi_manager->execute();
 		_client_mode = ClientMode::SENDING;

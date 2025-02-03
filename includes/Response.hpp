@@ -45,9 +45,7 @@ class Response {
 		Server*					_server;
 		Client*					_client;
 		std::string				_path;
-		bool					_is_cgi;
 
-		size_t					_write_pos;
 		WriteFd*				_writer;
 		ReadFd*					_reader;
 		ResponseMode			_mode;
