@@ -7,6 +7,8 @@
 #include "ServerConfigFile.hpp"
 #include "LocationConfigFile.hpp"
 
+#include <regex>
+
 class ConfigParseError: public std::runtime_error{
 public:
 	ConfigParseError(const std::string& msg): std::runtime_error(msg){}
@@ -18,9 +20,24 @@ private:
 
 	// Helper methods
 	std::string trimWhiteSpace(const std::string& str) const;
+	bool isValidLocationPath(const std::string& path) const;
 	void parseFile(const std::string& config_file);
 	void parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count);
 	void parseLocationBlock(std::ifstream& file, LocationConfigFile& current_location, int& bracket_count);
+	void validateMethods(const std::string& methods_str, LocationConfigFile& current_location);
+	void validateAutoIndex(const std::string& value, LocationConfigFile& current_location);
+
+	//testing templates for validation. Need to recheck todo
+	template <typename T>
+	void validateIndex(const std::string& value, T& config_object);
+
+	void validatePort(const std::string& line, ServerConfigFile& current_server);
+
+	// void validateRoot(const std::string& value, const std::string& directive_name);
+	void validateRoot(const std::string& value, const std::string& directive_name, bool is_server_block);
+
+	void validateClientBodySize(const std::string& value);
+
 public:
 	ConfigParser();
 	explicit ConfigParser(const std::string& config_file);

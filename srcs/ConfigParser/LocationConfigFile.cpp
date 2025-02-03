@@ -2,6 +2,8 @@
 
 LocationConfigFile::LocationConfigFile() {}
 
+
+
 // Setters
 void LocationConfigFile::setPath(const std::string& path) {
 	_path = path;
@@ -11,14 +13,16 @@ void LocationConfigFile::setMethods(bool get, bool post, bool del) {
 	_get_header = get;
 	_post_header = post;
 	_delete_header = del;
+
+	// validateMethods();
 }
 
 void LocationConfigFile::setAutoIndex(bool autoindex) {
 	_autoindex = autoindex;
 }
 
-void LocationConfigFile::setUploadDir(const std::string upload_dir) {
-	_upload_dir = upload_dir;
+void LocationConfigFile::setRoot(const std::string root) {
+	_root = root;
 }
 
 void LocationConfigFile::setIndexFile(const std::string index_file) {
@@ -43,15 +47,22 @@ bool LocationConfigFile::isDeleteAllowed() const {
 	return _delete_header;
 }
 
-const std::string& LocationConfigFile::getUploadDir() const{
-	return _upload_dir;
+const std::string& LocationConfigFile::getRoot() const{
+	return _root;
 }
 
 const std::string& LocationConfigFile::getIndexFile() const {
 	return _index_file;
 }
 
-// Debugging utility
+// void LocationConfigFile::validateMethods() const {
+// 	if (!_get_header && !_post_header && !_delete_header) {
+// 		throw std::runtime_error("Invalid or no methods provided.");
+// 	}
+// }
+
+
+//todo: delete this later. Debugging utility
 void LocationConfigFile::printLocation() const {
 	std::cout << "Location Path: " << _path << "\n";
 	std::cout << "Allowed Methods: "
@@ -59,8 +70,8 @@ void LocationConfigFile::printLocation() const {
 				<< (_post_header ? "POST " : "")
 				<< (_delete_header ? "DELETE" : "") << "\n";
 	std::cout << "Autoindex: " << (_autoindex ? "on" : "off") << "\n";
-	if (!_upload_dir.empty()) {
-		std::cout << "Upload Directory: " << _upload_dir << "\n";
+	if (!_root.empty()) {
+		std::cout << "Upload Directory: " << _root << "\n";
 	}
 	std::cout << "Index File: " << _index_file << "\n";
 }

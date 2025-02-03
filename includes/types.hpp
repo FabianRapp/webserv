@@ -26,7 +26,7 @@ struct location_config {
 	bool	delete_header;
 	// std::vector<std::string> methods;		// Allowed HTTP methods (e.g., GET, POST)
 	bool	autoindex = false;					// Enable/disable directory listing (default: off)
-	std::string upload_dir = "";			// Directory for uploads (optional)
+	std::string root = "";			// Directory for uploads (optional)
 	std::string index_file = "index.html"; // Default index file
 };
 

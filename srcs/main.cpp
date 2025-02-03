@@ -3,6 +3,10 @@
 #include <csignal>
 #include "../includes/Exceptions.hpp"
 
+//remove this, just for testing
+#include "../includes/ConfigParser/LocationConfigFile.hpp"
+#include "../includes/ConfigParser/ConfigParser.hpp"
+
 volatile
 sig_atomic_t	exit_ = 0;
 
@@ -15,7 +19,7 @@ void	webserv(int ac, char **av) {
 
 	std::vector<ServerConfigFile>	all_configs;
 	if (ac == 1) {
-		manager.config_parser = new ConfigParser("config/default.conf");
+		manager.config_parser = new ConfigParser("config/default1.conf");
 	} else {
 		manager.config_parser = new ConfigParser(av[1]);
 	}
@@ -25,7 +29,7 @@ void	webserv(int ac, char **av) {
 			return (a.getPort() - b.getPort());
 		}
 	);
-	
+
 	std::vector<ServerConfigFile>	matching_ports;
 	for (auto & config : all_configs) {
 		//config.printServer();

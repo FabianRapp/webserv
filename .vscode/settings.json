@@ -74,6 +74,10 @@
 		"clocale": "cpp",
 		"thread": "cpp",
 		"compare": "cpp",
-		"concepts": "cpp"
+		"concepts": "cpp",
+		"csignal": "cpp",
+		"__memory": "cpp",
+		"filesystem": "cpp",
+		"set": "cpp"
 	}
 }
