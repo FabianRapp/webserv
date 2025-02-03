@@ -11,8 +11,12 @@ FSAN := address
 
 #-Werror
 WWW := -Wall -Wextra
-CXXFLAGS :=  $(WWW) -std=c++17 -g -fsanitize=$(FSAN) -O0 \
+
+CXXFLAGS :=  $(WWW) -std=c++17 -g -fsanitize=$(FSAN) -O3 \
 			-Wconversion -Wsign-conversion $(INCLUDES) \
+
+#CXXFLAGS :=  $(WWW) -std=c++17 -g -pg -O3 -no-pie \
+#			-Wconversion -Wsign-conversion $(INCLUDES) \
 
 #-Wno-shadow -Wshadow
 
@@ -54,7 +58,7 @@ CLEAR	=	\033[0m
 all: $(NAME) client
 
 $(NAME): $(OBJS)
-	$(CPP) $(CXXFLAGS) $(OBJS) -o $(NAME)
+	$(CPP) $(CXXFLAGS) $(OBJS) -o $(NAME) $(CXXFLAGS)
 	cp -f $(NAME) ./docker_testing/server
 
 normal: $(NAME)
@@ -69,7 +73,7 @@ leaks: clean
 
 $(OBJS_DIR)%.o: $(SRCS_DIR)%.cpp
 	@mkdir -p $(@D)
-	@$(CC) -c $< -o $@ $(CXXFLAGS)
+	@$(CC) $(CXXFLAGS) -c $< -o $@ $(CXXFLAGS)
 
 clean:
 	@rm -f $(OBJS)

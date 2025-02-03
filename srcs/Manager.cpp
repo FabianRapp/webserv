@@ -104,8 +104,13 @@ int	DataManager::get_fd(size_t idx) {
 	return (_pollfds[idx].fd);
 }
 
+
+size_t	DataManager::get_count(void) const {
+	return (_count);
+}
+
 void	DataManager::run_poll() {
-	std::cout << "polling " << static_cast<nfds_t>(_count) << "\n";
+	//std::cout << "polling " << static_cast<nfds_t>(_count) << "\n";
 	if (poll(&_pollfds[0], static_cast<nfds_t>(_count), 0) < 0) {
 		std::cerr << "Error: poll: " << strerror(errno) << "\n";
 		_consecutive_poll_fails++;
@@ -125,6 +130,7 @@ void	DataManager::run_poll() {
 void	DataManager::execute_all(void) {
 	size_t	count = _count;
 	std::cout << count << "=count\n";
+
 	for (size_t i = 0; i < _count; i++) {
 		BaseFd* user = _fd_users[i];
 		//if (user->name != "Server") {

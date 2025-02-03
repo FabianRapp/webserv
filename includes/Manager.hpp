@@ -57,6 +57,7 @@ public:
 	int		get_fd(size_t idx);
 
 	void	run_poll();
+	size_t	get_count(void) const;
 
 	void	execute_all(void);
 

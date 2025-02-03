@@ -56,7 +56,8 @@ Server::~Server(void) {
 }
 
 void	Server::execute(void) {
-	if (!is_ready(POLLIN)) {
+	//todo: implement a very basic rejection response if there are too many clients
+	if (!is_ready(POLLIN) || data.get_count() > 500) {
 		return ;
 	}
 	data.new_client(this);

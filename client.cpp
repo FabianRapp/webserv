@@ -22,8 +22,16 @@ std::string toHex(int decimal) {
     return stream.str();
 
 }
-
+#include <sys/wait.h>
 int	main(void) {
+	//while (1) {
+	//	if (fork() == 0) {
+	//		break ;
+	//	}
+	//	int stat;
+	//	while (waitpid(-1, &stat, WNOHANG) > 0);
+	//	usleep(1000);
+	//}
 	const char				*hostname = "localhost";
 	const int16_t			port = 9090;
 	//const char				*hostname = "google.com";
@@ -64,10 +72,10 @@ int	main(void) {
 		std::cerr << "Error: send error: " << strerror(errno) << '\n';
 		return (1);
 	}
-	if (send(fd, request.c_str(), request.length(), 0) < 0) {
-		std::cerr << "Error: send error: " << strerror(errno) << '\n';
-		return (1);
-	}
+	//if (send(fd, request.c_str(), request.length(), 0) < 0) {
+	//	std::cerr << "Error: send error: " << strerror(errno) << '\n';
+	//	return (1);
+	//}
 	std::cout << "requst send..\n";
 	int received;
 
