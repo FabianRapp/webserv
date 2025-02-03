@@ -54,7 +54,6 @@ class Response {
 		std::string_view		_fd_write_data;
 
 
-	void						_load_status_code(int code);
 	void						_handle_get_moved(void);
 	std::vector<std::string>	_get_dir(void);
 	std::string					_auto_index_body(std::vector<std::string>& files);
@@ -74,6 +73,8 @@ class Response {
 		std::string&&	get_str_response(void);
 		WriteFd*&		get_writer(void);
 		CGIManager*&	get_cgi_manger(void);
+
+		void			load_status_code(int code);
 
 		void			set_mode(ResponseMode mode);
 		void			read_fd(int read_fd, ssize_t byte_count, bool close_fd);

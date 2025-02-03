@@ -35,6 +35,9 @@ private:
 	std::string getInterpreter(const std::string& path);
 	void		_init_reading(void);
 	void		_init_writing(void);
+	void		_child_dup_fail(void);
+	void		_child_exec_fail(void);
+	
 	//void	_write_fd(int write_fd, bool close_fd);
 	std::string	_cgiOutput;
 	int inputPipe[2];

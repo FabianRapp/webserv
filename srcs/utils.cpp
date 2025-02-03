@@ -49,3 +49,20 @@ void	init_status_codes(std::unordered_map<unsigned long, std::string> & codes) {
 		codes[(status.first)] = status.second;
 	}
 }
+
+void	ft_close(int fd) {
+	if (close(fd) == 0) {
+		return ;
+	}
+	if (errno == EBADF) {
+		errno = 0;
+		return ;
+	} else if (errno == EIO) {
+		errno = 0;
+		close(fd);
+	} else /* (errno == EINTR) */ {
+		errno = 0;
+		ft_close(fd);
+	}
+}
+

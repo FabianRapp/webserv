@@ -84,29 +84,32 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 			std::cout << "cgi_args[" << i << "] == " << arg << "\n";
 		}
 
-		close(inputPipe[1]);
+		ft_close(inputPipe[1]);
 		inputPipe[1] = -1;
 	
-		close(outputPipe[0]);
+		ft_close(outputPipe[0]);
 		outputPipe[0] = -1;
 
-		dup2(inputPipe[0], STDIN_FILENO);
-		close(inputPipe[0]);
+		if (dup2(inputPipe[0], STDIN_FILENO) < 0) {
+			_child_dup_fail();
+		}
+		ft_close(inputPipe[0]);
 		inputPipe[0] = -1;
 
-		dup2(outputPipe[1], STDOUT_FILENO);
-		close(outputPipe[1]);
+		if (dup2(outputPipe[1], STDOUT_FILENO) < 0) {
+			_child_dup_fail();
+		}
+		ft_close(outputPipe[1]);
 		outputPipe[1] = -1;
 
 		execve(args[0], args, (char**)(envCGI.data()));
-		//todo: err
-		exit(1);
+		_child_exec_fail();
 	} else { // Parent process
 		_main_manager.cgi_lifetimes.add(_pid);
-		close(inputPipe[0]);
+		ft_close(inputPipe[0]);
 		inputPipe[0] = -1;
 
-		close(outputPipe[1]);
+		ft_close(outputPipe[1]);
 		outputPipe[1] = -1;
 
 		//_response->set_mode(Response::ResponseMode::FINISH_UP);
@@ -117,6 +120,15 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 		exit(1);
 	}
 	errno = old_errno;
+}
+
+void	CGIManager::_child_dup_fail(void) {
+	exit(1);
+}
+
+void	CGIManager::_child_exec_fail(void) {
+	//todo: execve(cgi to read 500 code);
+	exit(1);
 }
 
 void	CGIManager::_init_reading(void) {
@@ -147,16 +159,16 @@ CGIManager::~CGIManager(void) {
 	std::cout << "cgi manager destructor\n";
 
 	if (outputPipe[0] != -1) {
-		close(outputPipe[0]);
+		ft_close(outputPipe[0]);
 	}
 	if (outputPipe[0] != -1) {
-		close(outputPipe[0]);
+		ft_close(outputPipe[0]);
 	}
 	if (inputPipe[0] != -1) {
-		close(inputPipe[0]);
+		ft_close(inputPipe[0]);
 	}
 	if (inputPipe[1] != -1) {
-		close(inputPipe[1]);
+		ft_close(inputPipe[1]);
 	}
 }
 

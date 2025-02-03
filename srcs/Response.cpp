@@ -207,7 +207,7 @@ void	Response::_handle_get_moved(void) {
 		"HTTP/1.1 301 Moved Permanently\r\n"
 		"Location: " + new_location + "\r\n"
 	;
-	_load_status_code(301);
+	load_status_code(301);
 }
 
 //todo: commented lines
@@ -274,7 +274,7 @@ void	Response::_handle_post(void) {
 }
 
 //todo: needs to work with config not hard coded paths
-void	Response::_load_status_code(int code) {
+void	Response::load_status_code(int code) {
 	std::string stat_code_path = "default/error_pages/" + std::to_string(code) + ".html"; //todo
 	_response_str += "Content-Type: text/html\r\n";
 	struct stat stats;
@@ -291,7 +291,7 @@ void	Response::_handle_delete(void) {
 		//success
 		_response_str =
 			"HTTP/1.1 204 No Content\r\n";
-		_load_status_code(204);
+		load_status_code(204);
 	} else {
 		//error
 		switch (errno) {
@@ -322,7 +322,7 @@ void	Response::execute(void) {
 			} default: {
 				//todo: not sure if this code/string is correct:
 				_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
-				_load_status_code(405);
+				load_status_code(405);
 				break ;
 			}
 		}
