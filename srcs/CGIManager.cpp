@@ -143,11 +143,14 @@ void	CGIManager::_init_reading(void) {
 const std::string test_body = "\ntest body, raplace this later(" __FILE__ " line " + std::to_string(__LINE__) + ")\n";
 void	CGIManager::_init_writing(void) {
 	//request_body <--
-	if (test_body.empty()) {
-		return ;
-	}
+
 	int	fd_to_write = inputPipe[1];
 	inputPipe[1] = -1;
+
+	if (test_body.empty()) {
+		ft_close(fd_to_write);
+		return ;
+	}
 
 	_response->set_fd_write_data(test_body);
 	//write_fd will make sure the cgi->execute does not get called unitil the data is written

@@ -23,21 +23,19 @@ WriteFd::~WriteFd(void) {
 }
 
 void	WriteFd::execute(void) {
+	//todo: check if there is a poll value for closed pipes
 	if (!is_ready(POLLOUT)) {
 		return ;
 	}
 	std::cout << "exec write fd\n";
 	ssize_t write_ret = write(fd, src.data() + pos, src.size() - pos);
 	if (write_ret < 0) {
-		//todo: err
+		//todo: internal server error: 500
 		FT_ASSERT(0);
 	}
 	//std::cout << "written: |" << src.substr(0, static_cast<size_t>(write_ret)) << "|\n";
 	pos += static_cast<size_t>(write_ret);
 	if (pos == src.size() || write_ret == 0) {
-		//todo: is this needed? if so needs to be refactoered to non blocking
-		while (write(fd, "\0", 1) != 1) {
-		}
 		data.set_close(data_idx);
 		completion_callback();
 		//std::cout << "writer finished\n";

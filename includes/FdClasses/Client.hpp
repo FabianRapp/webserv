@@ -24,7 +24,6 @@ enum class ClientMode {
 	SENDING,
 	READING_FD,
 	WRITING_FD,
-	TESTING_MODE,
 };
 
 class Client: public BaseFd {
@@ -58,7 +57,6 @@ private:
 		size_t		pos;
 	}	_send_data;
 	Parser			_parser;
-	void			_test_write_fd();
 
 	std::chrono::steady_clock::time_point
 					_last_availability;

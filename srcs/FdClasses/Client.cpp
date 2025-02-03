@@ -9,8 +9,8 @@ Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT, "Client"),
 	mode(ClientMode::RECEIVING),
 	_send_data({"", 0}),
-	_parser(input),
 	_last_availability(std::chrono::steady_clock::now()),
+	_parser(input),
 	_response(nullptr)
 {
 	this->server = parent_server;
@@ -22,13 +22,9 @@ Client::Client(DataManager& data, Server* parent_server):
 		reinterpret_cast<struct sockaddr *>(&addr);
 	memset(&addr, 0, sizeof addr);// might not be needed
 	fd = accept(server->fd, addr_ptr, &addr_len);
-
-	// todo: this if statement is only for debugging and should not stay for
-	// submission
-	if (errno == EAGAIN || errno == EWOULDBLOCK) {
-		FT_ASSERT(0 && "Should have been handled by poll");
+	if (fd < 0) {
+		//todo: out of fds: manager panic
 	}
-
 	_set_non_blocking();
 	std::cout << "Connection accepted from address("
 		<< inet_ntoa(addr.sin_addr) << "): PORT("
@@ -52,7 +48,7 @@ void	Client::_receive_request(void) {
 	}
 	_last_availability = std::chrono::steady_clock::now();
 	char		buffer[4096];
-	int			recv_flags = 0;//MSG_ERRQUEUE <- has smth to do with error checks
+	int			recv_flags = MSG_DONTWAIT;
 	long int	bytes_read = recv(this->fd, buffer, sizeof buffer - 1, recv_flags);
 	if (bytes_read < 0) {
 		std::cerr << "Error: read failed\n";
@@ -63,39 +59,15 @@ void	Client::_receive_request(void) {
 	std::cout << "Read:\n" << buffer << '\n';
 	this->input += buffer;
 
-	/* todo: check for earlyer chunks of the msg etc.. */
-	try {
-		/* todo: this throw is just for testing */
-		//throw (SendClientError(404, _codes[404], "testing", true));
-
-		this->parse();
-		//std::cout << "Request STATUS = " << _parser.is_finished() << std::endl;
-		if (_parser.is_finished() == true) {
-			_request = _parser.get_request();
-			mode = ClientMode::BUILD_RESPONSE;
-			_send_data.pos = 0;
-			_send_data.response = "";
-		}
-	} catch (const SendClientError& err) {
-		//_default_err_response(connection, err);
+	this->parse();
+	//std::cout << "Request STATUS = " << _parser.is_finished() << std::endl;
+	if (_parser.is_finished() == true) {
+		_request = _parser.get_request();
+		mode = ClientMode::BUILD_RESPONSE;
+		_send_data.pos = 0;
+		_send_data.response = "";
 	}
 }
-
-/*
-// diff test_file.txt test_file_cmp.txt
-// -> should not show any diff
-// can be used as an intermediate mode for this->mode before entering SENDING mode
-void	Client::_test_write_fd() {
-	int fd = open("test_file.txt", O_WRONLY | O_APPEND | O_NONBLOCK | O_CREAT | O_TRUNC, 0666);
-	int fd2 = open("test_file_cmp.txt", O_WRONLY | O_APPEND | O_CREAT | O_TRUNC, 0666);
-	FT_ASSERT(fd > 0);
-	_fd_write_data = std::string_view(_send_data.response.c_str(), _send_data.response.size());
-	write(fd2, _fd_write_data.data(), _fd_write_data.size());
-	ft_close(fd2);
-	_write_fd(ClientMode::SENDING, fd, true);
-	//mode = ClientMode::SENDING;
-}
-*/
 
 ServerConfigFile&	Client::_select_config(
 	std::vector<ServerConfigFile>& server_configs, Request& request)
@@ -104,8 +76,6 @@ ServerConfigFile&	Client::_select_config(
 		return (server_configs[0]);
 	}
 	std::string	to_match = request._headers[HeaderType::HOST];
-	//not sure which one
-	//std::string	to_match = request._headers[HeaderType::AUTHORIZATION];
 
 	std::transform(to_match.begin(), to_match.end(), to_match.begin(),
 		[](unsigned char c) { return (std::tolower(c));});
@@ -131,7 +101,7 @@ void	Client::execute(void) {
 	if (is_ready(POLLERR)) {
 		//todo: handle err
 		std::cout << FT_ANSI_RED << name << "(idx " << data_idx
-			 << ") had a poll exception, idk what that means..\n" FT_ANSI_RESET;
+			 << ") had a poll exception..\n" FT_ANSI_RESET;
 		set_close();
 		return ;
 	}
@@ -171,11 +141,6 @@ void	Client::execute(void) {
 			// do nothing
 			break ;
 		}
-		case (ClientMode::TESTING_MODE): {
-			std::cout << "testing mode\n";
-			//_test_write_fd();
-			break ;
-		}
 	}
 }
 
@@ -211,7 +176,7 @@ void	Client::_send_response(void) {
 		_send_data.response.size() - _send_data.pos,
 		send_flags
 	);
-			int dbg_fd= open("response.txt", O_WRONLY | O_TRUNC | O_CREAT, 0777);
+			int dbg_fd= open("response.txt", O_WRONLY |O_CLOEXEC| O_TRUNC | O_CREAT, 0777);
 			std::cout << getenv("PWD");
 			write(dbg_fd, _send_data.response.c_str(), _send_data.response.size());
 			ft_close(dbg_fd);

@@ -63,9 +63,5 @@ void	Server::execute(void) {
 	}
 	data.new_client(this);
 	this->total_unique_clients++;
-	//todo: panic test:
-	//if (this->total_unique_clients > 10) {
-	//	set_close();
-	//}
 	std::cout << "Added client numner " << this->total_unique_clients << "`\n";
 }

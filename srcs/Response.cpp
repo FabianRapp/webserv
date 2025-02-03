@@ -190,7 +190,7 @@ void	Response::_handle_get_file(void) {
 	struct stat stats;
 
 	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
-	int	file_fd = open(_path.c_str(), O_RDONLY);
+	int	file_fd = open(_path.c_str(), O_CLOEXEC | O_RDONLY);
 	FT_ASSERT(file_fd >0);
 	read_fd(file_fd, stats.st_size, true);
 
@@ -279,7 +279,7 @@ void	Response::load_status_code(int code) {
 	_response_str += "Content-Type: text/html\r\n";
 	struct stat stats;
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
-	int	file_fd = open(stat_code_path.c_str(), O_RDONLY);
+	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
 	FT_ASSERT(file_fd >0);
 	read_fd(file_fd, stats.st_size, true);
 	_mode = ResponseMode::FINISH_UP;
