@@ -3,7 +3,8 @@
 
 DataManager::DataManager(void): config_parser(nullptr), _total_entrys(0), _count(0),
 	cgi_lifetimes(std::chrono::seconds(3)),
-	_consecutive_poll_fails(0)
+	_consecutive_poll_fails(0),
+	_panic(false)
 {}
 
 DataManager::~DataManager(void) {
@@ -19,6 +20,7 @@ void	DataManager::new_server(std::vector<ServerConfigFile>& configs) {
 		server = new Server(*this, configs);
 	} catch (const Server::ServerError& err) {
 		std::cerr << "Error creating server: " << err.what() << "\n";
+
 		return ;
 	}
 	_add_entry(reinterpret_cast<BaseFd*>(server), server->poll_events);
@@ -114,11 +116,11 @@ void	DataManager::run_poll() {
 	if (poll(&_pollfds[0], static_cast<nfds_t>(_count), 0) < 0) {
 		std::cerr << "Error: poll: " << strerror(errno) << "\n";
 		_consecutive_poll_fails++;
-		/*todo:
-		if (_consecutive_poll_fails > some value) {
-			throw ( error to indicate exit);
-		} 
-		*/
+		if (_consecutive_poll_fails > 1000) {
+			_panic = true;
+			std::cerr << "Critical error: poll keeps failing.. full exit..\n";
+			std::cerr << "poll: " << strerror(errno) << "\n";
+		}
 		for (auto& pollfd : _pollfds) {
 			pollfd.revents = 0;
 		}
@@ -174,3 +176,6 @@ void	DataManager::_fd_close(size_t idx) {
 	std::cout << _count << "--count\n";
 }
 
+bool	DataManager::in_panic(void) const {
+	return (_panic);
+}

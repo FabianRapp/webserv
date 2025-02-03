@@ -23,6 +23,7 @@ Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 
 	int	option_val = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option_val, sizeof option_val) < 0) {
+		ft_close(fd);
 		throw(ServerError("server: setsockopt: " + std::string(strerror(errno))));
 	}
 	_set_non_blocking();
@@ -38,12 +39,12 @@ Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 	server_addr.sin_port = htons(static_cast<uint16_t>(configs[0].getPort()));
 
 	if (bind(fd, server_addr_ptr, server_addr_len) < 0) {
-		close(fd);
+		ft_close(fd);
 		throw(ServerError("server: bind: " + std::string(strerror(errno))));
 		return ;
 	}
 	if (listen(fd, REQUEST_QUE_SIZE) < 0) {
-		close(fd);
+		ft_close(fd);
 		throw(ServerError("server: listen: " + std::string(strerror(errno))));
 		return ;
 	}

@@ -14,17 +14,12 @@ void	webserv(int ac, char **av) {
 	DataManager		manager;
 
 	std::vector<ServerConfigFile>	all_configs;
-	try {
-		if (ac == 1) {
-			manager.config_parser = new ConfigParser("config/default.conf");
-		} else {
-			manager.config_parser = new ConfigParser(av[1]);
-		}
-		all_configs = manager.config_parser->getServers();
-	} catch (const ConfigParseError& err) {
-		std::cerr << "Config parse error: " << err.what() << "\n";
-		return ;
+	if (ac == 1) {
+		manager.config_parser = new ConfigParser("config/default.conf");
+	} else {
+		manager.config_parser = new ConfigParser(av[1]);
 	}
+	all_configs = manager.config_parser->getServers();
 	sort(all_configs.begin(), all_configs.end(),
 		[](ServerConfigFile&a, ServerConfigFile&b) {
 			return (a.getPort() - b.getPort());
@@ -47,9 +42,12 @@ void	webserv(int ac, char **av) {
 	delete manager.config_parser;
 	manager.config_parser = nullptr;
 
-	while (!exit_) {
+	while (!exit_ && !manager.in_panic()) {
 		usleep(100000);
 		manager.run_poll();
+		if (manager.in_panic()) {
+			return ;
+		}
 		manager.execute_all();
 		manager.process_closures();
 		manager.cgi_lifetimes.handle_timeouts();
@@ -67,6 +65,8 @@ start:
 	} catch (const std::bad_alloc&) {
 		std::cerr << "Bad alloc!\nRestarting servers..\n";
 		goto start;
+	} catch (const ConfigParseError& err) {
+		std::cerr << err.what() << "\n";
 	}
 	return (0);
 }

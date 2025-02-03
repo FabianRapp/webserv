@@ -91,7 +91,7 @@ void	Client::_test_write_fd() {
 	FT_ASSERT(fd > 0);
 	_fd_write_data = std::string_view(_send_data.response.c_str(), _send_data.response.size());
 	write(fd2, _fd_write_data.data(), _fd_write_data.size());
-	close(fd2);
+	ft_close(fd2);
 	_write_fd(ClientMode::SENDING, fd, true);
 	//mode = ClientMode::SENDING;
 }
@@ -214,7 +214,7 @@ void	Client::_send_response(void) {
 			int dbg_fd= open("response.txt", O_WRONLY | O_TRUNC | O_CREAT, 0777);
 			std::cout << getenv("PWD");
 			write(dbg_fd, _send_data.response.c_str(), _send_data.response.size());
-			close(dbg_fd);
+			ft_close(dbg_fd);
 			if (errno) {
 				std::cout << strerror(errno);
 			}

@@ -120,10 +120,10 @@ int main()
 
 	if (pid == 0) { //if child process
 		dup2(inputPipe[0], STDIN_FILENO); // stdin to inputPipe[0]
-		close(inputPipe[1]); // closing write end, cuz we gonna write inside the parent
+		ft_close(inputPipe[1]); // closing write end, cuz we gonna write inside the parent
 
 		dup2(outputPipe[1], STDOUT_FILENO); //stdout to outputPipe[0]
-		close(outputPipe[0]); // close read end of the pipe, cuz we gonna read inside the parent
+		ft_close(outputPipe[0]); // close read end of the pipe, cuz we gonna read inside the parent
 
 		char *args[] = {
 			const_cast<char *>(interpreter.c_str()),
@@ -138,13 +138,13 @@ int main()
 
 	//parent
 	else if (pid > 0)  {
-		close(inputPipe[0]);
-		close(outputPipe[1]);
+		ft_close(inputPipe[0]);
+		ft_close(outputPipe[1]);
 
 		if(!req._body.empty()) {
 			write(inputPipe[1], req._body.c_str(), req._body.size());
 		}
-		close(inputPipe[1]);
+		ft_close(inputPipe[1]);
 
 		char buffer[1024];
 		ssize_t bytesRead;
@@ -155,7 +155,7 @@ int main()
 			_cgiOutput += buffer;
 		}
 
-		close(outputPipe[0]);
+		ft_close(outputPipe[0]);
 		waitpid(pid, NULL, 0);
 
 		// std::cout << "\nCaptured CGI Output:\n" << _cgiOutput << std::endl;
