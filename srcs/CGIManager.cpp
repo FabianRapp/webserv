@@ -20,6 +20,8 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 	_main_manager(client->data),
 	_mode(CGI_MODE::INIT_WRITING)
 {
+	int	 old_errno = errno;
+	errno = 0;
 	envCGI = {
 		static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),
 		static_cast<const char*>(("CONTENT_LENGTH=" + std::to_string(request._body.size())).c_str()),
@@ -62,7 +64,6 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 		//todo: how are we handeling errors?
 		throw std::runtime_error("Failed to create pipes");
 	}
-
 	_pid = fork();
 	if (_pid == -1) {
 		//todo: how are we handeling errors?
@@ -112,9 +113,10 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 	}
 	if (errno) {
 		//for debugging
-		std::cerr << "end of cgi constructor: errno :" << strerror(errno) << "\n";
+		std::cerr << __LINE__ << ": end of cgi constructor: errno :" << strerror(errno) << "\n";
 		exit(1);
 	}
+	errno = old_errno;
 }
 
 void	CGIManager::_init_reading(void) {

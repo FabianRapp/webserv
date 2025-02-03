@@ -1,9 +1,12 @@
 HTTP/1.1 200 OK
 Content-Type: text/html
 Connection: close
-Content-Length: 94
+Content-Length: 128
 
-Content-Type: text/plain
-
-Hello, 
-test body, raplace this later(srcs/CGIManager.cpp line 129)
+<html>
+<head><title>PHP Test</title></head>
+<body>
+<h1>Hello from PHP!</h1>
+<p>Received username: Anonymous</p>
+</body>
+</html>

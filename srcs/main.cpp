@@ -62,6 +62,7 @@ int	main(int ac, char *av[]) {
 
 start:
 	try {
+		errno = 0;
 		webserv(ac, av);
 	} catch (const std::bad_alloc&) {
 		std::cerr << "Bad alloc!\nRestarting servers..\n";
