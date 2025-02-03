@@ -69,7 +69,7 @@ void ConfigParser::parseFile(const std::string& config_file) {
 	}
 
 	// Debug: Final bracket count
-	std::cout << "Final Bracket Count: " << bracket_count << "\n";
+	// std::cout << "Final Bracket Count: " << bracket_count << "\n";
 
 	if (bracket_count != 0) {
 		throw std::runtime_error("Mismatched brackets in configuration file.");
@@ -183,7 +183,7 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			}
 
 			// Debug: Print the parsed path
-			std::cout << "Parsed path: " << "|" << path << "|" << std::endl;
+			// std::cout << "Parsed path: " << "|" << path << "|" << std::endl;
 
 			bracket_count++; // Increment for location block start
 			LocationConfigFile current_location;
@@ -204,20 +204,62 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			line.pop_back(); // Remove trailing semicolon
 		}
 		if (line.find("listen ") == 0) {
-			current_server.setPort(std::stoi(line.substr(7)));
+			std::string port_value = trimWhiteSpace(line.substr(7)); // Extract the value after "listen "
+
+			// Remove trailing semicolon if present
+			if (!port_value.empty() && port_value.back() == ';') {
+				port_value.pop_back();
+			}
+
+			// Validate and set the port
+			validatePort(port_value, current_server);
 		} else if (line.find("server_name ") == 0) {
 			current_server.setServerNames(line.substr(12));
+		} else if (line.find("allowed_methods ") == 0) {
+			//todo: fix this shit later
 		} else if (line.find("root ") == 0) {
-			current_server.setRoot(line.substr(5));
+			std::string root_value = trimWhiteSpace(line.substr(5)); // Extract the value after "root "
+
+
+			// Remove trailing semicolon if present
+			if (!root_value.empty() && root_value.back() == ';') {
+				root_value.pop_back();
+			}
+
+			//testing:
+			// std::cout << "Parsed server root: " << "|" << root_value << "|" << std::endl;
+
+			// Validate and set the root path
+			validateRoot(root_value, "root", true); // true indicates this is a server block
+			current_server.setRoot(root_value);
+
 		} else if (line.find("error_page ") == 0) {
 			int code = std::stoi(line.substr(11, 3)); // Extract error code
 			std::string path = trimWhiteSpace(line.substr(15)); // Extract path
 			current_server.addErrorPage(code, path);
-		} else if (line.find("index ") == 0) {
-			std::string index_file = trimWhiteSpace(line.substr(6)); // Extract index file
-			if (!index_file.empty() && index_file.back() == ';') {
-				index_file.pop_back(); // Remove trailing semicolon
+		} else if (line.find("client_body_size ") == 0) {
+			std::string size_value = trimWhiteSpace(line.substr(17)); // Extract the value after "client_body_size "
+			// std::cout << "REAL SIZE HERE: " << size_value << std::endl;
+			// Remove trailing semicolon if present
+			if (!size_value.empty() && size_value.back() == ';') {
+				size_value.pop_back();
 			}
+
+
+			// Validate and set client body size
+			validateClientBodySize(size_value);
+			current_server.setClientBodySize(std::stoi(size_value));
+
+		} else if (line.find("index ") == 0) {
+			std::string index_value = trimWhiteSpace(line.substr(6)); // Extract index file name
+
+			// Remove trailing semicolon if present
+			if (!index_value.empty() && index_value.back() == ';') {
+				index_value.pop_back();
+			}
+
+			// Call the shared validation method
+			validateIndex(index_value, current_server);
 		} else {
 			throw std::runtime_error("Invalid directive inside server block: " + line);
 		}
@@ -233,7 +275,6 @@ void ConfigParser::validateAutoIndex(const std::string& value, LocationConfigFil
 		throw std::runtime_error("Invalid value for autoindex: " + value + ". Only 'on' or 'off'.");
 	}
 }
-
 
 void ConfigParser::validateMethods(const std::string& methods_str, LocationConfigFile& current_location) {
 	// Define the valid methods
@@ -264,6 +305,87 @@ void ConfigParser::validateMethods(const std::string& methods_str, LocationConfi
 	current_location.setMethods(get, post, del);
 }
 
+template <typename T>
+void ConfigParser::validateIndex(const std::string& value, T& config_object) {
+	// Define a regex pattern for valid filenames (with or without an extension)
+	std::regex index_regex(R"(^[a-zA-Z0-9_\-]+(\.[a-zA-Z0-9_\-]+)?$)");
+
+	// Check for spaces or empty values
+	if (value.empty() || value.find(' ') != std::string::npos) {
+		throw std::runtime_error("Invalid index file name: " + value + ". File name must not contain spaces.");
+	}
+
+	// Validate the file name against the regex
+	if (!std::regex_match(value, index_regex)) {
+		throw std::runtime_error("Invalid index file name: " + value + ". File name must contain only letters, numbers, '_', '-', and optionally a single '.'");
+	}
+
+	// Set the validated index file in the appropriate config object
+	config_object.setIndexFile(value);
+}
+
+void ConfigParser::validatePort(const std::string& line, ServerConfigFile& current_server) {
+	// Ensure no spaces or second words
+	size_t space_pos = line.find(' ');
+	if (space_pos != std::string::npos) {
+		throw std::runtime_error("Invalid listen directive: '" + line + "'. Port must not contain spaces or additional words.");
+	}
+
+	// Convert to integer and validate range
+	int port = std::stoi(line);
+	if (port < 1 || port > 65535) {
+		throw std::runtime_error("Invalid port number: " + std::to_string(port) + ". Port must be between 1 and 65535.");
+	}
+
+	// Set the validated port in the server configuration
+	current_server.setPort(port);
+}
+
+void ConfigParser::validateRoot(const std::string& value, const std::string& directive_name, bool is_server_block) {
+	// Check if root is empty in server block
+	if (is_server_block && value.empty()) {
+		throw std::runtime_error("Invalid " + directive_name + " directive: Root cannot be empty in server block.");
+	}
+
+	// For server block, ensure it starts with "/www/"
+	if (is_server_block && value.substr(0, 5) != "/www/") {
+		throw std::runtime_error("Invalid " + directive_name + " directive: '" + value +
+			"'. Root in server block must start with '/www/'.");
+	}
+
+	// Check if the path starts with '/'
+	if (!value.empty() && value[0] != '/') {
+		throw std::runtime_error("Invalid " + directive_name + " directive: '" + value +
+			"'. Path must start with '/'.");
+	}
+
+	// Check if the path ends with '/' (but allow just "/")
+	if (value.size() > 1 && value.back() == '/') {
+		throw std::runtime_error("Invalid " + directive_name + " directive: '" + value +
+			"'. Path must not end with '/'.");
+	}
+
+	// Check for invalid characters and ensure no dots
+	for (char ch : value) {
+		if (!std::isalnum(ch) && ch != '/' && ch != '_' && ch != '-') {
+			throw std::runtime_error("Invalid " + directive_name + " directive: '" + value +
+				"'. Path contains invalid characters.");
+		}
+		if (ch == '.') {
+			throw std::runtime_error("Invalid " + directive_name + " directive: '" + value +
+				"'. Path must not contain dots.");
+		}
+	}
+
+	// Check for spaces or multiple words
+	if (value.find(' ') != std::string::npos) {
+		throw std::runtime_error("Invalid " + directive_name + " directive: '" + value +
+			"'. Path must not contain spaces or multiple words.");
+	}
+}
+
+
+
 void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& current_location, int& bracket_count) {
 	std::string line;
 
@@ -274,12 +396,15 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			continue; // Skip empty lines or comments
 		}
 
-		// Debugging output for tracking brackets
-		// std::cout << "Parsing location block line: " << line << " | Bracket count: " << bracket_count << "\n";
-
 		// Handle end of location block
 		if (line == "}") {
 			bracket_count--; // Decrement for closing bracket of location block
+
+			// If no root is set, default it to the location's path
+			if (current_location.getRoot().empty()) { // Assuming getUploadDir() is equivalent to root
+				current_location.setRoot(current_location.getPath());
+			}
+			// std::cout << "Location root: " << "|" << current_location.getRoot() << "|" << std::endl;
 			return; // End parsing this location block
 		}
 
@@ -290,27 +415,71 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 
 			validateMethods(methods_str, current_location);
 
-		// std::cout << "Parsed path: " << "|" << path << "|" << std::endl;
 		} else if (line.find("autoindex ") == 0) {
-			// Extract and clean the value after "autoindex "
-			std::string value = trimWhiteSpace(line.substr(10));
-			
+			std::string value = trimWhiteSpace(line.substr(10)); // Extract value after "autoindex "
+
 			// Remove trailing semicolon if present
 			if (!value.empty() && value.back() == ';') {
 				value.pop_back();
 			}
 
-			// Validate and set autoindex using the existing function
 			validateAutoIndex(value, current_location);
-		} else if (line.find("upload_dir ") == 0) {
-			current_location.setUploadDir(line.substr(11));
+
+		} else if (line.find("root ") == 0) {
+			std::string root_value = trimWhiteSpace(line.substr(5)); // Extract value after "root "
+
+			// Remove trailing semicolon if present
+			if (!root_value.empty() && root_value.back() == ';') {
+				root_value.pop_back();
+			}
+
+			validateRoot(root_value, "root", false); // false indicates this is a location block
+			current_location.setRoot(root_value);
+
 		} else if (line.find("index ") == 0) {
-			current_location.setIndexFile(line.substr(6));
+			std::string index_value = trimWhiteSpace(line.substr(6)); // Extract index file name
+
+			// Remove trailing semicolon if present
+			if (!index_value.empty() && index_value.back() == ';') {
+				index_value.pop_back();
+			}
+
+			validateIndex(index_value, current_location);
+
 		} else {
 			throw std::runtime_error("Invalid directive inside location block: " + line);
 		}
 	}
 }
+
+void ConfigParser::validateClientBodySize(const std::string& value) {
+	// Debug: Print the raw value
+	// std::cout << "Raw client_body_size value: " << value << std::endl;
+
+	// Check if the value starts with a '-' (negative number)
+	if (!value.empty() && value[0] == '-') {
+		throw std::runtime_error("Invalid client_body_size value: " + value + ". Negative values are not allowed.");
+	}
+
+	// Ensure the value is numeric
+	for (char ch : value) {
+		if (!std::isdigit(ch)) {
+			throw std::runtime_error("Invalid client_body_size value: " + value + ". Must be a non-negative integer.");
+		}
+	}
+
+	// Convert to integer and check range
+	int size = std::stoi(value);
+
+	// Check for maximum allowed size (e.g., 1 GB = 1073741824 bytes)
+	const int MAX_SIZE = 1073741824; // 1 GB
+	if (size > MAX_SIZE) {
+		throw std::runtime_error("Invalid client_body_size value: " + value + ". Maximum allowed is " +
+			std::to_string(MAX_SIZE) + " bytes.");
+	}
+}
+
+
 
 
 const std::vector<ServerConfigFile> ConfigParser::getServers() const {

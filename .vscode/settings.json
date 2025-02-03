@@ -77,6 +77,7 @@
 		"concepts": "cpp",
 		"csignal": "cpp",
 		"__memory": "cpp",
-		"filesystem": "cpp"
+		"filesystem": "cpp",
+		"set": "cpp"
 	}
 }

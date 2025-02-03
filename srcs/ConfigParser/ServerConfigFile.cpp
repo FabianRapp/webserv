@@ -34,6 +34,10 @@ void ServerConfigFile::setRoot(const std::string& root) {
 	_root = toggle_path(root);
 }
 
+void ServerConfigFile::setIndexFile(const std::string index_file) {
+	_index_file = index_file;
+}
+
 // void ServerConfigFile::addErrorPage(int error_code, const std::string& path) {
 // 	_error_pages[error_code] = path;
 // }
@@ -51,6 +55,10 @@ void ServerConfigFile::addErrorPage(int err_code, const std::string& path) {
 
 void ServerConfigFile::addLocation(const LocationConfigFile& location) {
 	_locations.push_back(location);
+}
+
+void ServerConfigFile::setClientBodySize(int size) {
+	_client_body_size = size;
 }
 
 // Getters
@@ -76,6 +84,11 @@ const DefaultErrorPages& ServerConfigFile::getErrorPages() const {
 
 const std::vector<LocationConfigFile>& ServerConfigFile::getLocations() const {
 	return _locations;
+}
+
+int ServerConfigFile::getClientBodySize() const {
+	// std::cout << "ServerConfigFile::getClientBodySize(): " <<  _client_body_size << std::endl;
+	return _client_body_size;
 }
 
 // Debug

@@ -21,8 +21,8 @@ void LocationConfigFile::setAutoIndex(bool autoindex) {
 	_autoindex = autoindex;
 }
 
-void LocationConfigFile::setUploadDir(const std::string upload_dir) {
-	_upload_dir = upload_dir;
+void LocationConfigFile::setRoot(const std::string root) {
+	_root = root;
 }
 
 void LocationConfigFile::setIndexFile(const std::string index_file) {
@@ -47,8 +47,8 @@ bool LocationConfigFile::isDeleteAllowed() const {
 	return _delete_header;
 }
 
-const std::string& LocationConfigFile::getUploadDir() const{
-	return _upload_dir;
+const std::string& LocationConfigFile::getRoot() const{
+	return _root;
 }
 
 const std::string& LocationConfigFile::getIndexFile() const {
@@ -70,8 +70,8 @@ void LocationConfigFile::printLocation() const {
 				<< (_post_header ? "POST " : "")
 				<< (_delete_header ? "DELETE" : "") << "\n";
 	std::cout << "Autoindex: " << (_autoindex ? "on" : "off") << "\n";
-	if (!_upload_dir.empty()) {
-		std::cout << "Upload Directory: " << _upload_dir << "\n";
+	if (!_root.empty()) {
+		std::cout << "Upload Directory: " << _root << "\n";
 	}
 	std::cout << "Index File: " << _index_file << "\n";
 }

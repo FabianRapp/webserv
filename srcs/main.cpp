@@ -83,6 +83,6 @@ int	main(int ac, char *av[]) {
 // 		std::cerr << "Bad alloc!\nRestarting servers..\n";
 // 		goto start;
 // 	}
-	return (0);
+// 	return (0);
 }
 
