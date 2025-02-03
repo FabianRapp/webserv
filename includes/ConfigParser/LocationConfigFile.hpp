@@ -31,7 +31,9 @@ public:
 	const std::string& getUploadDir() const;
 	const std::string& getIndexFile() const;
 
-	//debug
+	// void validateMethods() const;
+
+	//todo: might need to delete this before eval.
 	void printLocation() const;
 
 };

@@ -70,19 +70,19 @@ int	main(int ac, char *av[]) {
 	// loc.setPath("....");
 	// std::cout << "Path: " << loc.getPath() << std::endl;
 
-	// ConfigParser parser("config/default.conf");
+	ConfigParser parser("config/default1.conf");
 
-	// const std::vector<ServerConfigFile>& servers = parser.getServers();
+	const std::vector<ServerConfigFile>& servers = parser.getServers();
 
 	//testing END
 
-start:
-	try {
-		webserv(ac, av);
-	} catch (std::bad_alloc) {
-		std::cerr << "Bad alloc!\nRestarting servers..\n";
-		goto start;
-	}
+// start:
+// 	try {
+// 		webserv(ac, av);
+// 	} catch (std::bad_alloc) {
+// 		std::cerr << "Bad alloc!\nRestarting servers..\n";
+// 		goto start;
+// 	}
 	return (0);
 }
 

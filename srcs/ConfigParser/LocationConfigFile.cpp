@@ -13,9 +13,9 @@ void LocationConfigFile::setMethods(bool get, bool post, bool del) {
 	_get_header = get;
 	_post_header = post;
 	_delete_header = del;
+
+	// validateMethods();
 }
-
-
 
 void LocationConfigFile::setAutoIndex(bool autoindex) {
 	_autoindex = autoindex;
@@ -55,7 +55,14 @@ const std::string& LocationConfigFile::getIndexFile() const {
 	return _index_file;
 }
 
-// Debugging utility
+// void LocationConfigFile::validateMethods() const {
+// 	if (!_get_header && !_post_header && !_delete_header) {
+// 		throw std::runtime_error("Invalid or no methods provided.");
+// 	}
+// }
+
+
+//todo: delete this later. Debugging utility
 void LocationConfigFile::printLocation() const {
 	std::cout << "Location Path: " << _path << "\n";
 	std::cout << "Allowed Methods: "

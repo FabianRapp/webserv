@@ -75,6 +75,8 @@
 		"thread": "cpp",
 		"compare": "cpp",
 		"concepts": "cpp",
-		"csignal": "cpp"
+		"csignal": "cpp",
+		"__memory": "cpp",
+		"filesystem": "cpp"
 	}
 }
