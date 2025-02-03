@@ -24,10 +24,16 @@ ReadFd::~ReadFd(void) {
 }
 
 void	ReadFd::execute(void) {
+	if (is_ready(POLLHUP) && !is_ready(POLLIN)) {
+		std::cout << FT_ANSI_RED "readfd POLLHUP\n" FT_ANSI_RESET;
+		data.set_close(data_idx);
+		completion_callback();
+		return ;
+	}
 	if (!is_ready(POLLIN)) {
 		return ;
 	}
-	std::cout << "exec read fd\n";
+	//std::cout << "exec read fd\n";
 	size_t	read_size;
 	if (left_over_bytes > 0 ) {
 		read_size = sizeof buffer - 1 < static_cast<size_t>(left_over_bytes)

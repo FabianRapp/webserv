@@ -35,7 +35,7 @@ Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 	memset(&server_addr, 0, sizeof(struct sockaddr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = INADDR_ANY;
-	server_addr.sin_port = htons(configs[0].getPort());
+	server_addr.sin_port = htons(static_cast<uint16_t>(configs[0].getPort()));
 
 	if (bind(fd, server_addr_ptr, server_addr_len) < 0) {
 		close(fd);

@@ -6,6 +6,7 @@
 #include <cerrno>
 #include <iostream>
 #include <cstring>
+#include <csignal>
 
 extern volatile sig_atomic_t	exit_;
 

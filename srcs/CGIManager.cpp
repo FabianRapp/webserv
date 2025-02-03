@@ -70,7 +70,19 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 	}
 
 	if (_pid == 0) { // Child process
+		std::cout << "cgi child\n\n";
 		//sleep(10);
+
+
+		char *args[] = {
+			const_cast<char *>(interpreter.c_str()),
+			const_cast<char *>(path.c_str()),
+			nullptr
+		};
+		for (int i = 0; char *arg = args[i]; i++) {
+			std::cout << "cgi_args[" << i << "] == " << arg << "\n";
+		}
+
 		close(inputPipe[1]);
 		inputPipe[1] = -1;
 	
@@ -85,11 +97,6 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 		close(outputPipe[1]);
 		outputPipe[1] = -1;
 
-		char *args[] = {
-			const_cast<char *>(interpreter.c_str()),
-			const_cast<char *>(path.c_str()),
-			nullptr
-		};
 		execve(args[0], args, (char**)(envCGI.data()));
 		//todo: err
 		exit(1);
@@ -102,6 +109,11 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 		outputPipe[1] = -1;
 
 		//_response->set_mode(Response::ResponseMode::FINISH_UP);
+	}
+	if (errno) {
+		//for debugging
+		std::cerr << "end of cgi constructor: errno :" << strerror(errno) << "\n";
+		exit(1);
 	}
 }
 
@@ -118,7 +130,6 @@ const std::string test_body = "\ntest body, raplace this later(" __FILE__ " line
 void	CGIManager::_init_writing(void) {
 	//request_body <--
 	if (test_body.empty()) {
-		
 		return ;
 	}
 	int	fd_to_write = inputPipe[1];

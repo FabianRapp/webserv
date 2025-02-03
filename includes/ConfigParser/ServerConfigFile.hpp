@@ -3,6 +3,7 @@
 
 #include <map>
 #include <vector>
+#include <algorithm>
 #include <filesystem>
 #include "LocationConfigFile.hpp"
 #include "DefaultErrorPages.hpp"

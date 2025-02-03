@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseFd.hpp"
+#include  <functional>
 
 class WriteFd: public BaseFd {
 public:

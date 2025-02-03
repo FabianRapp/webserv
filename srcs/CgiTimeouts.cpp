@@ -31,6 +31,7 @@ void	CgiTimeouts::handle_timeouts(void) {
 		struct process	cur = _queue.front();
 		int stat;
 		if (waitpid(cur.pid, &stat, WNOHANG) > 0) {
+			std::cout << "CGI finished by itself\n";
 			_queue.pop();
 			continue ;
 		}

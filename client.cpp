@@ -39,7 +39,9 @@ int	main(void) {
 		return (1);
 	}
 	struct sockaddr_in	server_addr = {
+#ifdef __APPLE__
 		.sin_len = 0,
+#endif // __APPLE__
 		.sin_family = AF_INET,
 		.sin_port = htons(port),
 		.sin_addr = {0},

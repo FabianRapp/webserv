@@ -68,6 +68,19 @@ void	Response::set_mode(ResponseMode mode) {
 void	Response::read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
 	//_fd_error.error = false;
 	FT_ASSERT(read_fd > 0);
+	//char buff[1024];
+	//ssize_t val;
+	//std::cout << "read_fd\n";
+	//val = read(read_fd, buff, 1023);
+	//while (val > 0) {
+	//	assert(val > 0);
+	//	buff[val] = 0;
+	//	std::cout << "buff: " << buff << "\n";
+	//	_body += buff;
+	//	val = read(read_fd, buff, 1023);
+	//}
+	//printf("val: %ld\n", val);
+	//return ;
 	ClientMode	next_mode = _client_mode;
 	_client_mode = ClientMode::READING_FD;
 	_reader = _server->data.new_read_fd(
@@ -357,8 +370,8 @@ void	Response::appendToBody(std::string content) {
 
 std::string	Response::getExpandedTarget(void) {
 	//return (std::string(getenv("PWD")) + "/" + "hello_world.html");//to test get file
-	return (std::string(getenv("PWD")) + "/" + "hello.php");//to test get file
-	//return (std::string(getenv("PWD")) + "/" + "hello.py");//to test get file
+	//return (std::string(getenv("PWD")) + "/" + "hello.php");//to test get file
+	return (std::string(getenv("PWD")) + "/" + "hello.py");//to test get file
 	return (std::string(getenv("PWD")) + "/"); // to test auto index
 	/*
 	std::vector<LocationConfigFile> locations = _config.getLocations();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseFd.hpp"
+#include  <functional>
 
 // appends the dat to the given target_buffer
 class ReadFd: public BaseFd {

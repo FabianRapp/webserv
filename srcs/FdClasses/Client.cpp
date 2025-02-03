@@ -10,7 +10,7 @@ Client::Client(DataManager& data, Server* parent_server):
 	mode(ClientMode::RECEIVING),
 	_send_data({"", 0}),
 	_parser(input),
-	_last_availability(std::chrono::high_resolution_clock::now()),
+	_last_availability(std::chrono::steady_clock::now()),
 	_response(nullptr)
 {
 	this->server = parent_server;
@@ -42,7 +42,7 @@ Client::~Client(void) {
 void	Client::_receive_request(void) {
 	if (!is_ready(POLLIN)) {
 		std::cout << "not ready\n";
-		auto now = std::chrono::high_resolution_clock::now();
+		auto now = std::chrono::steady_clock::now();
 		auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_availability).count();
 		if (elapsed_ms > 2000) {
 			std::cerr << "client " << data_idx << " timed out..\n";
@@ -50,7 +50,7 @@ void	Client::_receive_request(void) {
 		}
 		return ;
 	}
-	_last_availability = std::chrono::high_resolution_clock::now();
+	_last_availability = std::chrono::steady_clock::now();
 	char		buffer[4096];
 	int			recv_flags = 0;//MSG_ERRQUEUE <- has smth to do with error checks
 	long int	bytes_read = recv(this->fd, buffer, sizeof buffer - 1, recv_flags);
@@ -187,7 +187,7 @@ void	Client::_send_response(void) {
 	if (!this->is_ready(POLLOUT)) {
 		std::cout << "not rdy\n";
 		FT_ASSERT(this->poll_events & POLLOUT);
-		auto now = std::chrono::high_resolution_clock::now();
+		auto now = std::chrono::steady_clock::now();
 		auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_availability).count();
 		if (elapsed_ms > 2000) {
 			std::cerr << "client " << data_idx << " timed out..\n";
@@ -195,7 +195,7 @@ void	Client::_send_response(void) {
 		}
 		return ;
 	}
-	_last_availability = std::chrono::high_resolution_clock::now();
+	_last_availability = std::chrono::steady_clock::now();
 	{
 		/* todo: poll to catch potential issues: remove later */
 		struct pollfd	test_poll = {fd, POLLOUT, 0};
