@@ -26,8 +26,9 @@ bool	BaseFd::is_ready(short event) const {
 void	BaseFd::_set_non_blocking(void) {
 	int	old_err = errno;
 	errno = 0;
-	int	flags = fcntl(fd, F_GETFL, 0);
-	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+	//int	flags = O_NONBLOCK | FD_CLOEXEC | fcntl(fd, F_GETFL, 0);
+	int	flags = O_NONBLOCK | FD_CLOEXEC;
+	fcntl(fd, F_SETFL, flags);
 	if (errno) {
 		std::cerr << "Error: fcntl: set non blocking: " << strerror(errno) << '\n';
 		set_close();
