@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/28 13:09:21 by adrherna          #+#    #+#             */
-/*   Updated: 2025/02/04 14:06:36 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/04 14:21:00 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -316,42 +316,6 @@ bool	Response::isMethodAllowed(MethodType method) {
 	return std::find(_allowedMethods.begin(), _allowedMethods.end(), method) != _allowedMethods.end();
 }
 
-//todo: throw / catch fd errors
-// void	Response::execute(void) {
-// 	if (_mode == ResponseMode::NORMAL) {
-// 		switch (_request._type) {
-// 			case (MethodType::GET): {
-// 				_handle_get();
-// 				break ;
-// 			} case (MethodType::POST): {
-// 				_handle_post();
-// 				break ;
-// 			} case (MethodType::DELETE): {
-// 				_handle_delete();
-// 				break ;
-// 			} default: {
-// 				//todo: not sure if this code/string is correct:
-// 				_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
-// 				load_status_code(405);
-// 				break ;
-// 			}
-// 		}
-// 	} else if (_mode == ResponseMode::FINISH_UP) {
-// 		/* for potential file reads:
-// 		 * can not be done in same function call as initial if statement!
-// 		*/
-// 		_response_str +=
-// 			"Connection: close\r\n"
-// 			"Content-Length: " + std::to_string(_body.length()) + "\r\n"
-// 				"\r\n"
-// 			+ _body
-// 		;
-// 		_client_mode = ClientMode::SENDING;
-// 	} else {
-// 		FT_ASSERT(0);
-// 	}
-// }
-
 void	Response::execute(void) {
 	if (_mode == ResponseMode::NORMAL) {
 
@@ -442,7 +406,7 @@ void Response::setAllowedMethods() {
 		_allowedMethods.push_back(MethodType::GET);
 		_allowedMethods.push_back(MethodType::POST);
 		_allowedMethods.push_back(MethodType::DELETE);
-		std::cout << "NO LOCATION PRESENT, default all allowed\n";
+		std::cout << "NO LOCATION PRESENT, default all methods allowed\n";
 		return ;
 	}
 	if (_locationConfig->isGetAllowed())
