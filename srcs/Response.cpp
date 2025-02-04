@@ -6,13 +6,15 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/28 13:09:21 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/31 13:41:50 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/04 14:06:36 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/Response.hpp"
 #include "../includes/FdClasses/Client.hpp"
 #include "../includes/CGIManager.hpp"
+#include <stdexcept>
+#include <vector>
 
 Response::Response(const ServerConfigFile& configFile, const Request& request, Client& client,
 		ClientMode& client_mode):
@@ -30,7 +32,11 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 	_cgi_manager(nullptr)
 {
 	//later expansions have to be applied if upload_dir is present
+
+	_locationConfig = getLocationConfig();
+	setAllowedMethods();
 	_path = getExpandedTarget();
+
 }
 
 Response::~Response(void) {
@@ -306,26 +312,74 @@ void	Response::_handle_delete(void) {
 	}
 }
 
+bool	Response::isMethodAllowed(MethodType method) {
+	return std::find(_allowedMethods.begin(), _allowedMethods.end(), method) != _allowedMethods.end();
+}
+
 //todo: throw / catch fd errors
+// void	Response::execute(void) {
+// 	if (_mode == ResponseMode::NORMAL) {
+// 		switch (_request._type) {
+// 			case (MethodType::GET): {
+// 				_handle_get();
+// 				break ;
+// 			} case (MethodType::POST): {
+// 				_handle_post();
+// 				break ;
+// 			} case (MethodType::DELETE): {
+// 				_handle_delete();
+// 				break ;
+// 			} default: {
+// 				//todo: not sure if this code/string is correct:
+// 				_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
+// 				load_status_code(405);
+// 				break ;
+// 			}
+// 		}
+// 	} else if (_mode == ResponseMode::FINISH_UP) {
+// 		/* for potential file reads:
+// 		 * can not be done in same function call as initial if statement!
+// 		*/
+// 		_response_str +=
+// 			"Connection: close\r\n"
+// 			"Content-Length: " + std::to_string(_body.length()) + "\r\n"
+// 				"\r\n"
+// 			+ _body
+// 		;
+// 		_client_mode = ClientMode::SENDING;
+// 	} else {
+// 		FT_ASSERT(0);
+// 	}
+// }
+
 void	Response::execute(void) {
 	if (_mode == ResponseMode::NORMAL) {
-		switch (_request._type) {
-			case (MethodType::GET): {
-				_handle_get();
-				break ;
-			} case (MethodType::POST): {
-				_handle_post();
-				break ;
-			} case (MethodType::DELETE): {
-				_handle_delete();
-				break ;
-			} default: {
-				//todo: not sure if this code/string is correct:
-				_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
-				load_status_code(405);
-				break ;
+
+		if (isMethodAllowed(_request._type))
+		{
+			switch (_request._type)
+			{
+				case (MethodType::GET): {
+					_handle_get();
+					break ;
+				} case (MethodType::POST): {
+					_handle_post();
+					break ;
+				} case (MethodType::DELETE): {
+					_handle_delete();
+					break ;
+				} default: {
+					break ;
+				}
 			}
 		}
+		else
+		{
+			std::cout << "ERROR IN EXECUTE\n";
+			_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
+			load_status_code(405);
+		}
+
 	} else if (_mode == ResponseMode::FINISH_UP) {
 		/* for potential file reads:
 		 * can not be done in same function call as initial if statement!
@@ -366,37 +420,57 @@ void	Response::appendToBody(std::string content) {
 	_body += content;
 }
 
-std::string	Response::getExpandedTarget(void) {
-	//return (std::string(getenv("PWD")) + "/" + "hello_world.html");//to test get file
-	return (std::string(getenv("PWD")) + "/" + "hello.php");//to test get file
-	return (std::string(getenv("PWD")) + "/" + "hello.py");//to test get file
-	return (std::string(getenv("PWD")) + "/"); // to test auto index
-	/*
-	std::vector<LocationConfigFile> locations = _config.getLocations();
-	std::string expandedTarget = _target;
+LocationConfigFile* Response::getLocationConfig() {
 
-	for (auto location: locations)
+	std::vector<LocationConfigFile> locationsFiles;
+
+	for (auto& locationFile : locationsFiles)
 	{
-		location.printLocation();
-	}
-
-	std::cout << "ENTERING EXPANDER\n";
-
-	for (auto location: locations)
-	{
-		std::cout << "_target: |" << _target << "|\n" << " Location _path: |" << location.get_path() << "|\n" << " Upload dir: |" << location.getUploadDir() << "|" << std::endl;
-
-		if (_target == location.get_path() && location.getUploadDir() != "")
+		if (_request._uri == locationFile.getPath())
 		{
-			expandedTarget = _config.getRoot() + location.getUploadDir();
-			std::cout << "NEW TARGET: " << _target << std::endl;
+			std::cout << "URI = |" << _request._uri << " LOC = |" << locationFile.getPath() << "|\n";
+			return &locationFile;
 		}
 	}
+	std::cout << "NO LOCATION CONFIG FOUND\n";
+	return nullptr;
+}
 
-	std::cout << "EXITING EXPANDER\n";
-	return expandedTarget;
+void Response::setAllowedMethods() {
 
-	*/
+	if (_locationConfig == nullptr) {
+		_allowedMethods.push_back(MethodType::GET);
+		_allowedMethods.push_back(MethodType::POST);
+		_allowedMethods.push_back(MethodType::DELETE);
+		std::cout << "NO LOCATION PRESENT, default all allowed\n";
+		return ;
+	}
+	if (_locationConfig->isGetAllowed())
+	{
+		_allowedMethods.push_back(MethodType::GET);
+	}
+	if (_locationConfig->isPostAllowed())
+	{
+		_allowedMethods.push_back(MethodType::POST);
+	}
+	if (_locationConfig->isPostAllowed())
+	{
+		_allowedMethods.push_back(MethodType::DELETE);
+	}
+}
+
+std::string	Response::getExpandedTarget(void) {
+	std::string expandedPath = _config.getRoot() + _request._uri;
+	std::cout << "RESPONSE PATH SETTED TO |" << expandedPath << "|\n";
+
+	if (std::filesystem::exists(expandedPath)) {
+		std::cout << "File exists: " << expandedPath << std::endl;
+	} else {
+		std::cout << "File does not exist: " << expandedPath << std::endl;
+		throw std::runtime_error("File does not exist: " + expandedPath);
+	}
+
+	return (expandedPath);
 }
 
 std::string&&	Response::get_str_response(void) {

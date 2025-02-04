@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/28 13:00:16 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/29 15:38:08 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/04 13:47:25 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,12 @@
 #include "ConfigParser/LocationConfigFile.hpp"
 #include "Request.hpp"
 #include "CGIManager.hpp"
+#include <iostream>
+#include <filesystem>
 
 class Client;
 enum class ClientMode;
+
 
 class Response {
 	public:
@@ -41,10 +44,12 @@ class Response {
 		ClientMode&				_client_mode;
 		std::string				_body;
 		const ServerConfigFile&	_config;
+		LocationConfigFile*	_locationConfig;
 		std::string				_target;
 		Server*					_server;
 		Client*					_client;
 		std::string				_path;
+		std::vector<MethodType> _allowedMethods;
 
 		WriteFd*				_writer;
 		ReadFd*					_reader;
@@ -69,7 +74,7 @@ class Response {
 			ClientMode& client_mode);
 		~Response();
 		Response operator=(const Response& old);
-		
+
 		std::string&&	get_str_response(void);
 		WriteFd*&		get_writer(void);
 		CGIManager*&	get_cgi_manger(void);
@@ -86,11 +91,16 @@ class Response {
 		std::string& getTarget();
 		const ServerConfigFile& getConfig() const;
 		void	execute(void);
-		
+
 
 		void	appendToStatusLine(std::string content);
 		void	appendToBody(std::string content);
 		std::string	getExpandedTarget(void);
+		void setAllowedMethods();
+		LocationConfigFile*	getLocationConfig(void);
+
+		bool isMethodAllowed(MethodType method);
+		// std::string expandPath();
 
 	// call this from client in case of early destruction
 	void	close_io_fds(void);

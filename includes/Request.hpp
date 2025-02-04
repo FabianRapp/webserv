@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/13 16:03:43 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/22 14:39:40 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/04 12:51:15 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,10 @@ class Request {
 		Request(const Request& old);
 		Request	operator=(const Request& old);
 		~Request() = default;
+
+		MethodType getMethod() {
+			return _type;
+		}
 
 		void displayRequest() const {
 			std::cout << "Request state:" << std::endl;
