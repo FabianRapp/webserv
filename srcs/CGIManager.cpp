@@ -224,17 +224,23 @@ std::string CGIManager::getInterpreter(const std::string& path) {
 		} else if (extension == ".php") {
 			interpreter = "/usr/bin/php";
 		} else {
-			throw std::runtime_error("Unsupported CGI type: " + extension);
+			// "Unsupported CGI type: " + extension
+			_client->response->load_status_code_response(500, "Internal Server Error");
+			_mode = CGI_MODE::FINISHED;
+			return "";
 		}
-
 		if (access(interpreter.c_str(), X_OK) == -1) {
-			throw std::runtime_error("Interpreter not found or not executable: " + interpreter);
+			//"Interpreter not found or not executable: " + interpreter
+			_client->response->load_status_code_response(500, "Internal Server Error");
+			_mode = CGI_MODE::FINISHED;
+			return "";
 		}
-
 		return interpreter;
 	}
 
-	// This ensures that all paths return a value or throw an exception
-	throw std::runtime_error("Internal error: No file extension found in path");
+	//"Internal error: No file extension found in path"
+	_client->response->load_status_code_response(500, "Internal Server Error");
+	_mode = CGI_MODE::FINISHED;
+	return "";
 }
 
