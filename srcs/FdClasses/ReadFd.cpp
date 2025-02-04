@@ -1,7 +1,7 @@
 #include "../../includes/FdClasses/ReadFd.hpp"
 #include "../../includes/Manager.hpp"
 
-ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd, bool close_fd, Client& client,
+ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd, Client& client,
 		ssize_t byte_count, std::function<void()> completion_callback):
 	BaseFd(data, POLLIN, "ReadFd"),
 	target_buf(target_buffer),
@@ -9,12 +9,7 @@ ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd, bool close
 	client(&client),
 	server(client.server)
 {
-	if (close_fd) {
-		this->fd = fd;
-	} else {
-		this->fd = dup(fd);
-		// todo: verify fd > 0
-	}
+	this->fd = fd;
 	_set_non_blocking();
 	left_over_bytes = byte_count;
 	std::cout << byte_count << "=byte count\n";

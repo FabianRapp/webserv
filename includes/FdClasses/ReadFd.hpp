@@ -6,7 +6,7 @@
 // appends the dat to the given target_buffer
 class ReadFd: public BaseFd {
 public:
-	ReadFd(DataManager& data, std::string& target_buffer, int fd, bool close_fd, Client& client,
+	ReadFd(DataManager& data, std::string& target_buffer, int fd, Client& client,
 			ssize_t byte_count, std::function<void()> completion_callback);
 
 	~ReadFd(void);

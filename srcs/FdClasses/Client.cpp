@@ -11,7 +11,7 @@ Client::Client(DataManager& data, Server* parent_server):
 	_send_data({"", 0}),
 	_last_availability(std::chrono::steady_clock::now()),
 	_parser(input),
-	_response(nullptr)
+	response(nullptr)
 {
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));
@@ -32,7 +32,7 @@ Client::Client(DataManager& data, Server* parent_server):
 }
 
 Client::~Client(void) {
-	delete _response;
+	delete response;
 }
 
 void	Client::_receive_request(void) {
@@ -115,15 +115,15 @@ void	Client::execute(void) {
 		}
 		case (ClientMode::BUILD_RESPONSE): {
 			std::cout << "exec\n";
-			if (_response == nullptr) {
-				_response = new Response(_select_config(server->configs, _request), _request, *this, mode);
+			if (response == nullptr) {
+				response = new Response(_select_config(server->configs, _request), _request, *this, mode);
 			}
-			_response->execute();
+			response->execute();
 			if (mode == ClientMode::SENDING) {
-				_send_data.response = _response->get_str_response();
+				_send_data.response = response->get_str_response();
 				_send_data.pos = 0;
-				delete _response;
-				_response = nullptr;
+				delete response;
+				response = nullptr;
 			}
 			break ;
 		}
@@ -204,8 +204,8 @@ ClientMode&	Client::get_mode(void) {
  }
 
 void	Client::set_close(void) {
-	if (_response) {
-		_response->close_io_fds();
+	if (response) {
+		response->close_io_fds();
 	}
 	Client::BaseFd::set_close();
 }

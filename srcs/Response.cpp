@@ -56,30 +56,15 @@ void	Response::set_mode(ResponseMode mode) {
 	_mode = mode;
 }
 
-// Use this to read froserverm from a pipe or a file.
+// Use this to read from a pipe or a file.
 // Appends to the body.
-// Switched int ClientMode::WRITING_FD, thus:
+// Switched into ClientMode::WRITING_FD, thus:
+// Don't close the fd after calling this.
 // After calling this function the caller should return straight to Client::execute
 // without any more actions besides the following:
-// Uses dup() on the given fd, if the fd is not needed anywher else simply close
-// the fd after calling this.
 // Assumes the given fd to be valid.
-void	Response::read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
-	//_fd_error.error = false;
+void	Response::read_fd(int read_fd, ssize_t byte_count) {
 	FT_ASSERT(read_fd > 0);
-	//char buff[1024];
-	//ssize_t val;
-	//std::cout << "read_fd\n";
-	//val = read(read_fd, buff, 1023);
-	//while (val > 0) {
-	//	assert(val > 0);
-	//	buff[val] = 0;
-	//	std::cout << "buff: " << buff << "\n";
-	//	_body += buff;
-	//	val = read(read_fd, buff, 1023);
-	//}
-	//printf("val: %ld\n", val);
-	//return ;
 	ClientMode	next_mode = _client_mode;
 	_client_mode = ClientMode::READING_FD;
 	_reader = _server->data.new_read_fd(
@@ -87,7 +72,6 @@ void	Response::read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
 		read_fd,
 		*_client,
 		byte_count,
-		close_fd,
 		[this, next_mode] () {
 			this->_client_mode = next_mode;
 			this->_reader = nullptr;
@@ -97,14 +81,12 @@ void	Response::read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
 
 // Use this to write to a pipe or a file.
 // The input data has to be in Client::_fd_write_data
-// Switched int ClientMode::WRITING_FD, thus:
+// Switched into ClientMode::WRITING_FD, thus:
 // After calling this function the caller should return straight to Client::execute
 // without any more actions besides the following:
-// Uses dup() on the given fd, if the fd is not needed anywher else simply close
-// the fd after calling this.
+// Don't close the fd after calling this.
 // Assumes the given fd to be valid.
-void	Response::write_fd(int write_fd, bool close_fd) {
-	//_fd_error.error = false;
+void	Response::write_fd(int write_fd) {
 	FT_ASSERT(write_fd > 0);
 	ClientMode	next_mode = _client_mode;
 	_client_mode = ClientMode::WRITING_FD;
@@ -112,7 +94,6 @@ void	Response::write_fd(int write_fd, bool close_fd) {
 		write_fd,
 		_fd_write_data,
 		*_client,
-		close_fd,
 		[this, next_mode] () {
 			this->_client_mode = next_mode;
 			this->_writer = nullptr;
@@ -192,7 +173,7 @@ void	Response::_handle_get_file(void) {
 	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
 	int	file_fd = open(_path.c_str(), O_CLOEXEC | O_RDONLY);
 	FT_ASSERT(file_fd >0);
-	read_fd(file_fd, stats.st_size, true);
+	read_fd(file_fd, stats.st_size);
 
 	_mode = ResponseMode::FINISH_UP;
 	_response_str =
@@ -207,7 +188,7 @@ void	Response::_handle_get_moved(void) {
 		"HTTP/1.1 301 Moved Permanently\r\n"
 		"Location: " + new_location + "\r\n"
 	;
-	load_status_code(301);
+	load_status_code_body(301);
 }
 
 //todo: commented lines
@@ -274,14 +255,31 @@ void	Response::_handle_post(void) {
 }
 
 //todo: needs to work with config not hard coded paths
-void	Response::load_status_code(int code) {
+//don't use this if the response needs any custom data besides the status
+//this response the respose
+void	Response::load_status_code_response(int code, const std::string& status) {
+	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back
+	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + status + "\r\n"
+		+ "Content-Type: text/html\r\n";
+	std::string stat_code_path = "default/error_pages/" + std::to_string(code) + ".html"; //todo
+	
+	struct stat stats;
+	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
+	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
+	FT_ASSERT(file_fd >0);
+	read_fd(file_fd, stats.st_size);
+	_mode = ResponseMode::FINISH_UP;
+}
+
+//todo: needs to work with config not hard coded paths
+void	Response::load_status_code_body(int code) {
 	std::string stat_code_path = "default/error_pages/" + std::to_string(code) + ".html"; //todo
 	_response_str += "Content-Type: text/html\r\n";
 	struct stat stats;
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
 	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
 	FT_ASSERT(file_fd >0);
-	read_fd(file_fd, stats.st_size, true);
+	read_fd(file_fd, stats.st_size);
 	_mode = ResponseMode::FINISH_UP;
 }
 
@@ -291,7 +289,7 @@ void	Response::_handle_delete(void) {
 		//success
 		_response_str =
 			"HTTP/1.1 204 No Content\r\n";
-		load_status_code(204);
+		load_status_code_body(204);
 	} else {
 		//error
 		switch (errno) {
@@ -322,7 +320,7 @@ void	Response::execute(void) {
 			} default: {
 				//todo: not sure if this code/string is correct:
 				_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
-				load_status_code(405);
+				load_status_code_body(405);
 				break ;
 			}
 		}
@@ -368,7 +366,7 @@ void	Response::appendToBody(std::string content) {
 
 std::string	Response::getExpandedTarget(void) {
 	//return (std::string(getenv("PWD")) + "/" + "hello_world.html");//to test get file
-	return (std::string(getenv("PWD")) + "/" + "hello.php");//to test get file
+	//return (std::string(getenv("PWD")) + "/" + "hello.php");//to test get file
 	return (std::string(getenv("PWD")) + "/" + "hello.py");//to test get file
 	return (std::string(getenv("PWD")) + "/"); // to test auto index
 	/*

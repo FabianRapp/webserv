@@ -32,16 +32,16 @@ void	DataManager::new_client(Server* server) {
 }
 
 ReadFd*	DataManager::new_read_fd(std::string& target_buffer, int fd, Client& client,
-			ssize_t byte_count, bool close_fd, std::function<void()> callback) {
-	ReadFd*	reader = new ReadFd(*this, target_buffer, fd, close_fd, client, byte_count,
+			ssize_t byte_count, std::function<void()> callback) {
+	ReadFd*	reader = new ReadFd(*this, target_buffer, fd, client, byte_count,
 						callback);
 	_add_entry(reinterpret_cast<BaseFd*>(reader), reader->poll_events);
 	return (reader);
 }
 
 WriteFd*	DataManager::new_write_fd(int fd, const std::string_view& input_data, Client& client,
-				bool close_fd, std::function<void()> callback) {
-	WriteFd*	writer = new WriteFd(*this, input_data, fd, close_fd, client, callback);
+				std::function<void()> callback) {
+	WriteFd*	writer = new WriteFd(*this, input_data, fd, client, callback);
 	_add_entry(reinterpret_cast<WriteFd*>(writer), writer->poll_events);
 	return (writer);
 }

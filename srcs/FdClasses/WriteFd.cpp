@@ -1,7 +1,7 @@
 #include "../../includes/FdClasses/WriteFd.hpp"
 #include "../../includes/Manager.hpp"
 
-WriteFd::WriteFd(DataManager& data, const std::string_view& src, int fd, bool close_fd, Client& client,
+WriteFd::WriteFd(DataManager& data, const std::string_view& src, int fd, Client& client,
 		std::function<void()> completion_callback):
 	BaseFd(data, POLLOUT, "Writer"),
 	src(src),
@@ -10,12 +10,7 @@ WriteFd::WriteFd(DataManager& data, const std::string_view& src, int fd, bool cl
 	client(&client),
 	server(client.server)
 {
-	if (close_fd) {
-		this->fd = fd;
-	} else {
-		this->fd = dup(fd);
-		//todo: verify fd >0
-	}
+	this->fd = fd;
 	_set_non_blocking();
 }
 

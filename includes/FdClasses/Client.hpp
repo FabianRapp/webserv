@@ -41,6 +41,7 @@ public:
 
 	Server*	server;
 	std::string	input;
+	Response*		response;
 private:
 
 	void			_receive_request(void);
@@ -48,7 +49,6 @@ private:
 	ServerConfigFile&	_select_config(
 		std::vector<ServerConfigFile>& server_configs, Request& request);
 	Request			_request;
-	Response*		_response;
 	ClientMode		mode;
 
 	void			_send_response(void);
