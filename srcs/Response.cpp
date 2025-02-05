@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/28 13:09:21 by adrherna          #+#    #+#             */
-/*   Updated: 2025/02/05 12:27:15 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/05 13:20:58 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -424,7 +424,15 @@ void Response::setAllowedMethods() {
 }
 
 std::string	Response::getExpandedTarget(void) {
-	std::string expandedPath = _config.getRoot() + _request._uri;
+	std::string expandedPath;
+
+//
+	if (_locationConfig != nullptr)
+		expandedPath = _config.getRoot() + _locationConfig->getRoot();
+	else {
+		expandedPath = _config.getRoot() + _request._uri;
+	}
+
 	std::cout << "RESPONSE PATH SETTED TO |" << expandedPath << "|\n";
 
 	if (std::filesystem::exists(expandedPath)) {
@@ -434,7 +442,7 @@ std::string	Response::getExpandedTarget(void) {
 		return (_config.getRoot() + "/404.html");
 		// throw std::runtime_error("File does not exist: " + expandedPath);
 	}
-
+\
 	return (expandedPath);
 }
 
