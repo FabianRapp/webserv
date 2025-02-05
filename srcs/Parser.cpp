@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/02/05 09:56:05 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/05 10:05:41 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,7 @@ RequestArray splitIntoArrays(const String& input, const String& lineDl, const St
 //Note, I think 405 not allwed might be easier to implement in Response,
 // a this point we dont have yet parsed the allowed methods
 // either we move all that logic here of throw that specific error later
-int Parser::hadError() {
+int Parser::getErrorCode() {
 
 
 	// if (_request._type == MethodType::INVALID)
