@@ -41,7 +41,9 @@ void	webserv(int ac, char **av) {
 		matching_ports.clear();
 		matching_ports.push_back(config);
 	}
-	manager.new_server(matching_ports);
+	if (matching_ports.size()) {
+		manager.new_server(matching_ports);
+	}
 
 	delete manager.config_parser;
 	manager.config_parser = nullptr;

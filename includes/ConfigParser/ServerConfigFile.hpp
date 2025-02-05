@@ -23,6 +23,8 @@ private:
 	std::string _index_file = "index.html";
 	DefaultErrorPages _error_pages;
 	std::vector<LocationConfigFile> _locations;
+	//todo: fill defaultLocation with values from server block
+	LocationConfigFile				_defaultLocation;
 
 public:
 	ServerConfigFile();
@@ -41,6 +43,7 @@ public:
 	void setClientBodySize(int size);
 
 	int getPort() const;
+	const LocationConfigFile&	getDefaultLocation(void) const;
 	// const std::vector<std::string>& getServerNames() const;
 	const std::vector<std::string>& getServerNames() const;
 	bool isGetAllowed() const;

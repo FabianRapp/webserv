@@ -1,17 +1,19 @@
-HTTP/1.1 200 OK
+HTTP/1.1 405 Method Not Allowed
 Content-Type: text/html
 Connection: close
-Content-Length: 284
+Content-Length: 361
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World</title>
+    <title>405 Method Not Allowed</title>
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-    <h1>Hello, World2222222222!</h1>
-    <p>This is a simple HTML document.</p>
+    <div class="container">
+        <img src="./img/405.jpg" alt="Error 405 Image">
+    </div>
 </body>
 </html>

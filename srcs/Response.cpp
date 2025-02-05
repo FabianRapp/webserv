@@ -198,6 +198,14 @@ void	Response::_handle_get_moved(void) {
 	load_status_code_body(301);
 }
 
+//if index file is found returns true and puts it's path in index_file
+bool	Response::_has_index(std::vector<std::string>& files, std::string& index_file) {
+	_config;//const ServerConfigFile&
+	_locationConfig;//LocationConfigFile*
+	//default return
+	return (false);
+}
+
 //todo: commented lines
 void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
@@ -206,20 +214,18 @@ void	Response::_handle_get(void) {
 			return ;
 		}
 		std::vector<std::string>	files = _get_dir();
-		/*
 		std::string					index_file;
-		if (has_index(files, config, index_file)) {
+		if (_has_index(files, index_file)) {
 			_path = index_file;
-		} else if (enabled_auto_index(_path, config)) {
-		*/
+		} else if (_locationConfig->getAutoIndex()) {
 			_handle_auto_index(files);
 			return ;
 		/*
 		} else {
 			handle invlaid request
 			return ;
-		}
 		*/
+		}
 	}
 	/*
 	if (does not exist(_path)) {
@@ -379,8 +385,8 @@ void	Response::appendToBody(std::string content) {
 	_body += content;
 }
 
-LocationConfigFile* Response::getLocationConfig() {
-	std::vector<LocationConfigFile> locationsFiles;
+const LocationConfigFile* Response::getLocationConfig() {
+	const std::vector<LocationConfigFile>& locationsFiles = _config.getLocations();
 
 	for (auto& locationFile : locationsFiles)
 	{
@@ -390,8 +396,8 @@ LocationConfigFile* Response::getLocationConfig() {
 			return &locationFile;
 		}
 	}
-	std::cout << "NO LOCATION CONFIG FOUND\n";
-	return nullptr;
+	std::cout << "NO LOCATION CONFIG FOUND... using default\n";
+	return &_config.getDefaultLocation();
 }
 
 void Response::setAllowedMethods() {

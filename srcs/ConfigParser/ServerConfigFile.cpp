@@ -86,6 +86,10 @@ int ServerConfigFile::getPort() const {
 // 	return _server_names;
 // }
 
+const LocationConfigFile&	ServerConfigFile::getDefaultLocation(void) const {
+	return _defaultLocation;
+}
+
 const std::vector<std::string>& ServerConfigFile::getServerNames() const {
 	return _server_names;
 }
