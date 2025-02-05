@@ -1,11 +1,38 @@
 HTTP/1.1 200 OK
 Content-Type: text/html
+Content-Length: 1450
 Connection: close
-Content-Length: 125
 
-Content-Type: text/plain
-
-Hello, 
-test body, raplace this later(srcs/CGIManager.cpp line 151)
-!
-Yes, this is Python running!
+<!DOCTYPE HTML><html> <head>  <title>Index of /</title> </head> <body>  <h1>Index of /</h1>  <hr>  <a href="/.">.</a><br>
+  <a href="/..">..</a><br>
+  <a href="/.cache">.cache</a><br>
+  <a href="/.git">.git</a><br>
+  <a href="/.gitignore">.gitignore</a><br>
+  <a href="/.vscode">.vscode</a><br>
+  <a href="/a.out">a.out</a><br>
+  <a href="/cgi-testing-maksim">cgi-testing-maksim</a><br>
+  <a href="/client.cpp">client.cpp</a><br>
+  <a href="/client.dSYM">client.dSYM</a><br>
+  <a href="/compile_commands.json">compile_commands.json</a><br>
+  <a href="/config">config</a><br>
+  <a href="/default">default</a><br>
+  <a href="/docker_testing">docker_testing</a><br>
+  <a href="/empty_input_crash_log.log">empty_input_crash_log.log</a><br>
+  <a href="/hello.php">hello.php</a><br>
+  <a href="/hello.py">hello.py</a><br>
+  <a href="/hello_world.html">hello_world.html</a><br>
+  <a href="/includes">includes</a><br>
+  <a href="/links.md">links.md</a><br>
+  <a href="/Makefile">Makefile</a><br>
+  <a href="/objs">objs</a><br>
+  <a href="/README.md">README.md</a><br>
+  <a href="/response.txt">response.txt</a><br>
+  <a href="/srcs">srcs</a><br>
+  <a href="/test.cpp">test.cpp</a><br>
+  <a href="/test_file.txt">test_file.txt</a><br>
+  <a href="/test_file_cmp.txt">test_file_cmp.txt</a><br>
+  <a href="/tester">tester</a><br>
+  <a href="/todo.md">todo.md</a><br>
+  <a href="/webserv">webserv</a><br>
+  <a href="/www">www</a><br>
+  </pre>  <hr> </body></html>
