@@ -28,6 +28,7 @@ public:
 	bool isGetAllowed() const;
 	bool isPostAllowed() const;
 	bool isDeleteAllowed() const;
+	bool getAutoIndex() const;
 	const std::string& getRoot() const;
 	const std::string& getIndexFile() const;
 

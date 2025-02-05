@@ -47,6 +47,10 @@ bool LocationConfigFile::isDeleteAllowed() const {
 	return _delete_header;
 }
 
+bool LocationConfigFile::getAutoIndex() const {
+	return _autoindex;
+}
+
 const std::string& LocationConfigFile::getRoot() const{
 	return _root;
 }

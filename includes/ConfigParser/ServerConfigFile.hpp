@@ -12,11 +12,12 @@
 class ServerConfigFile {
 private:
 	int _port = 0;
-	std::vector<std::string>	_server_names;
+	std::vector<std::string> _server_names;
 	std::string _root;
-	bool _get_header = true;
-	bool _post_header = true;
-	bool _delete_header = true;
+	bool _get_header = false;
+	bool _post_header = false;
+	bool _delete_header = false;
+	bool _autoindex = false;
 	int _client_body_size = -1;
 	// std::map<int, std::string> _error_pages;
 	std::string _index_file = "index.html";
@@ -28,18 +29,26 @@ public:
 
 	// setters
 	void setPort(int port);
-	void setServerNames(const std::string& server_names);
+	// void setServerNames(const std::string& server_names);
+	void addServerName(const std::string& _server_names);
 	void setRoot(const std::string& root);
 	void setIndexFile(const std::string index_file);
+	void setMethods(bool get, bool post, bool del);
+	void setAutoIndex(bool autoindex);
 	// void addErrorPage(int err_code, const std::string& path);
 	void addErrorPage(int err_code, const std::string& path);
 	void addLocation(const LocationConfigFile& location);
 	void setClientBodySize(int size);
 
 	int getPort() const;
+	// const std::vector<std::string>& getServerNames() const;
 	const std::vector<std::string>& getServerNames() const;
+	bool isGetAllowed() const;
+	bool isPostAllowed() const;
+	bool isDeleteAllowed() const;
 	const std::string& getRoot() const;
 	// const std::map<int, std::string>& getErrorPages() const;
+	bool getAutoIndex() const;
 	const DefaultErrorPages& getErrorPages() const;
 	const std::vector<LocationConfigFile>& getLocations() const;
 	int getClientBodySize() const;

@@ -6,7 +6,8 @@
 #include <set>
 #include <sstream>
 // #include <algorithm>
-
+template void ConfigParser::validateMethods(const std::string&, ServerConfigFile&);
+template void ConfigParser::validateMethods(const std::string&, LocationConfigFile&);
 // Default constructor
 ConfigParser::ConfigParser() {}
 
@@ -20,6 +21,16 @@ std::string ConfigParser::trimWhiteSpace(const std::string& str) const {
 	size_t end = str.find_last_not_of(" \t\n\r");
 
 	return (start == std::string::npos) ? "" : str.substr(start, end - start + 1);
+}
+
+std::vector<std::string> ConfigParser::splitByWhitespace(const std::string& str) const {
+	std::istringstream iss(str);
+	std::vector<std::string> tokens;
+	std::string token;
+	while (iss >> token) { // Automatically handles multiple spaces/tabs
+		tokens.push_back(token);
+	}
+	return tokens;
 }
 
 void ConfigParser::parseFile(const std::string& config_file) {
@@ -75,6 +86,30 @@ void ConfigParser::parseFile(const std::string& config_file) {
 		throw std::runtime_error("Mismatched brackets in configuration file.");
 	}
 }
+
+std::string ConfigParser::sanitizeLine(const std::string& line) const {
+	// Check if the line ends with '{' (indicating a block start)
+	if (!line.empty() && line.back() == '{') {
+		return trimWhiteSpace(line);
+	}
+
+	if (line == "}") {
+		return line;
+	}
+	// Find the position of the semicolon
+	size_t semicolon_pos = line.find(';');
+	if (semicolon_pos == std::string::npos) {
+		throw std::runtime_error("Missing semicolon in the line: " + line);
+	}
+
+	// Remove everything after the semicolon
+	std::string sanitized = line.substr(0, semicolon_pos);
+
+	// Trim whitespace from the sanitized line
+	return trimWhiteSpace(sanitized);
+}
+
+
 
 // void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count) {
 // 	std::string line;
@@ -161,6 +196,31 @@ bool ConfigParser::isValidLocationPath(const std::string& path) const {
 	return true;
 }
 
+template <typename T>
+void ConfigParser::validateMethods(const std::string& methods_str, T& config_object) {
+	const std::set<std::string> valid_methods = {"GET", "POST", "DELETE"};
+
+	std::istringstream iss(methods_str);
+	std::string method;
+	bool get = false, post = false, del = false;
+
+	while (iss >> method) {
+		if (valid_methods.find(method) == valid_methods.end()) {
+			throw std::runtime_error("Invalid method in allowed_methods: " + method);
+		}
+
+		if (method == "GET") get = true;
+		else if (method == "POST") post = true;
+		else if (method == "DELETE") del = true;
+	}
+
+	if (!get && !post && !del) {
+		throw std::runtime_error("allowed_methods must contain at least one valid method");
+	}
+
+	config_object.setMethods(get, post, del);
+}
+
 void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count) {
 	std::string line;
 
@@ -170,6 +230,8 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 		if (line.empty() || line[0] == '#') {
 			continue; // Skip empty lines or comments
 		}
+
+		line = sanitizeLine(line);
 
 		// Handle location block start
 		if (line.find("location") == 0 && line.back() == '{') {
@@ -214,9 +276,33 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			// Validate and set the port
 			validatePort(port_value, current_server);
 		} else if (line.find("server_name ") == 0) {
-			current_server.setServerNames(line.substr(12));
+			// Extract everything after "server_name " and trim it
+			std::string server_names_line = trimWhiteSpace(line.substr(12));
+
+			// Validate that the line is not empty
+			if (server_names_line.empty()) {
+				throw std::runtime_error("Invalid directive: 'server_name' must be followed by one or more names.");
+			}
+
+			// Split the line into individual server names
+			std::vector<std::string> server_names = splitByWhitespace(server_names_line);
+
+			// Add each server name to the ServerConfigFile object
+			for (const auto& name : server_names) {
+				std::cout << "SERVER NAME: " << "|" << name << "|" << std::endl;
+				current_server.addServerName(name); // Use addServerName from ServerConfigFile
+			}
 		} else if (line.find("allowed_methods ") == 0) {
 			//todo: fix this shit later
+			std::string methods_str = trimWhiteSpace(line.substr(15)); // Extract the value after "allowed_methods "
+
+			// Remove trailing semicolon if present
+			if (!methods_str.empty() && methods_str.back() == ';') {
+				methods_str.pop_back();
+			}
+
+			// Validate and set allowed methods for the server block
+			validateMethods(methods_str, current_server);
 		} else if (line.find("root ") == 0) {
 			std::string root_value = trimWhiteSpace(line.substr(5)); // Extract the value after "root "
 
@@ -276,34 +362,38 @@ void ConfigParser::validateAutoIndex(const std::string& value, LocationConfigFil
 	}
 }
 
-void ConfigParser::validateMethods(const std::string& methods_str, LocationConfigFile& current_location) {
-	// Define the valid methods
-	const std::set<std::string> valid_methods = {"GET", "POST", "DELETE"};
+// void ConfigParser::validateMethods(const std::string& methods_str, LocationConfigFile& current_location) {
+// 	// Define the valid methods
+// 	const std::set<std::string> valid_methods = {"GET", "POST", "DELETE"};
 
-	// Tokenize the methods string
-	std::istringstream iss(methods_str);
-	std::string method;
-	bool get = false, post = false, del = false;
+// 	// Tokenize the methods string
+// 	std::istringstream iss(methods_str);
+// 	std::string method;
+// 	bool get = false, post = false, del = false;
 
-	while (iss >> method) {
-		// Check if the method is strictly in the valid set
-		if (valid_methods.find(method) == valid_methods.end()) {
-			throw std::runtime_error("Invalid method in allowed_methods: " + method);
-		}
+// 	while (iss >> method) {
+// 		// Check if the method is strictly in the valid set
+// 		if (valid_methods.find(method) == valid_methods.end()) {
+// 			throw std::runtime_error("Invalid method in allowed_methods: " + method);
+// 		}
 
-		if (method == "GET") get = true;
-		else if (method == "POST") post = true;
-		else if (method == "DELETE") del = true;
-	}
+// 		if (method == "GET") get = true;
+// 		else if (method == "POST") post = true;
+// 		else if (method == "DELETE") del = true;
+// 	}
 
-	// Ensure at least one valid method is set
-	if (!get && !post && !del) {
-		throw std::runtime_error("allowed_methods must contain at least one valid method");
-	}
+// 	// Ensure at least one valid method is set
+// 	if (!get && !post && !del) {
+// 		throw std::runtime_error("allowed_methods must contain at least one valid method");
+// 	}
 
-	// Set the validated methods in the LocationConfigFile object
-	current_location.setMethods(get, post, del);
-}
+// 	// Set the validated methods in the LocationConfigFile object
+// 	current_location.setMethods(get, post, del);
+// }
+
+
+
+
 
 template <typename T>
 void ConfigParser::validateIndex(const std::string& value, T& config_object) {
@@ -396,6 +486,8 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			continue; // Skip empty lines or comments
 		}
 
+		line = sanitizeLine(line);
+
 		// Handle end of location block
 		if (line == "}") {
 			bracket_count--; // Decrement for closing bracket of location block
@@ -410,9 +502,14 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 
 		// Parse key-value pairs inside the location block
 		if (line.find("allowed_methods ") == 0) {
-			std::string methods_str = line.substr(15); // Remove "allowed_methods "
-			methods_str = methods_str.substr(0, methods_str.find(';')); // Remove trailing semicolon
+			std::string methods_str = trimWhiteSpace(line.substr(15)); // Extract the value after "allowed_methods "
 
+			// Remove trailing semicolon if present
+			if (!methods_str.empty() && methods_str.back() == ';') {
+				methods_str.pop_back();
+			}
+
+			// Validate and set allowed methods for the location block
 			validateMethods(methods_str, current_location);
 
 		} else if (line.find("autoindex ") == 0) {
@@ -485,3 +582,5 @@ void ConfigParser::validateClientBodySize(const std::string& value) {
 const std::vector<ServerConfigFile> ConfigParser::getServers() const {
 	return _servers;
 }
+
+

@@ -81,7 +81,7 @@ void	DataManager::_handle_server_panic(Server* serv) {
 
 void	DataManager::process_closures() {
 	size_t idx = 0;
-	
+
 	while (idx < _count) {
 		if (_close_later[idx]) {
 			Server*	serv = dynamic_cast<Server*>(_fd_users[idx]);
@@ -131,7 +131,7 @@ void	DataManager::run_poll() {
 
 void	DataManager::execute_all(void) {
 	size_t	count = _count;
-	std::cout << count << "=count\n";
+	// std::cout << count << "=count\n";
 
 	for (size_t i = 0; i < _count; i++) {
 		BaseFd* user = _fd_users[i];

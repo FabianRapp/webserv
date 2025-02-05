@@ -1,12 +1,14 @@
 HTTP/1.1 200 OK
 Content-Type: text/html
+Content-Length: 456
 Connection: close
-Content-Length: 128
 
-<html>
-<head><title>PHP Test</title></head>
-<body>
-<h1>Hello from PHP!</h1>
-<p>Received username: Anonymous</p>
-</body>
-</html>
+<!DOCTYPE HTML><html> <head>  <title>Index of /</title> </head> <body>  <h1>Index of /</h1>  <hr>  <a href="/.">.</a><br>
+  <a href="/..">..</a><br>
+  <a href="/404.html">404.html</a><br>
+  <a href="/errors">errors</a><br>
+  <a href="/favicon.ico">favicon.ico</a><br>
+  <a href="/hello_world.html">hello_world.html</a><br>
+  <a href="/hello_world2.html">hello_world2.html</a><br>
+  <a href="/testfile.txt">testfile.txt</a><br>
+  </pre>  <hr> </body></html>

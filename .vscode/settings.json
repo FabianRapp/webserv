@@ -78,6 +78,7 @@
 		"csignal": "cpp",
 		"__memory": "cpp",
 		"filesystem": "cpp",
-		"set": "cpp"
+		"set": "cpp",
+		"queue": "cpp"
 	}
 }
