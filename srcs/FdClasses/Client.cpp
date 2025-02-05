@@ -67,7 +67,7 @@ void	Client::_receive_request(void) {
 		if ((errorCode = _parser.getErrorCode()))
 		{
 			std::cout << "Parser had Error but handling is not yet implemented\n";
-			//
+			// build also response based on the error code 
 		}
 		else
 		{

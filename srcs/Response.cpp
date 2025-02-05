@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/28 13:09:21 by adrherna          #+#    #+#             */
-/*   Updated: 2025/02/04 14:21:00 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/05 12:27:15 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -431,7 +431,8 @@ std::string	Response::getExpandedTarget(void) {
 		std::cout << "File exists: " << expandedPath << std::endl;
 	} else {
 		std::cout << "File does not exist: " << expandedPath << std::endl;
-		throw std::runtime_error("File does not exist: " + expandedPath);
+		return (_config.getRoot() + "/404.html");
+		// throw std::runtime_error("File does not exist: " + expandedPath);
 	}
 
 	return (expandedPath);
