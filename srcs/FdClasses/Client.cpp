@@ -99,13 +99,12 @@ void	Client::execute(void) {
 		return ;
 	}
 	if (is_ready(POLLERR)) {
-		//todo: handle err
 		std::cout << FT_ANSI_RED << name << "(idx " << data_idx
-			 << ") had a poll exception..\n" FT_ANSI_RESET;
+			 << ") had a poll exception\n" FT_ANSI_RESET;
 		set_close();
 		return ;
 	}
-	std::cout << FT_ANSI_GREEN "Client " << this->data_idx << ": ";
+	std::cout << FT_ANSI_GREEN << name << " (idx " << this->data_idx << "): ";
 	std::cout << FT_ANSI_RESET;
 	switch (this->mode) {
 		case (ClientMode::RECEIVING): {
@@ -161,14 +160,8 @@ void	Client::_send_response(void) {
 		return ;
 	}
 	_last_availability = std::chrono::steady_clock::now();
-	{
-		/* todo: poll to catch potential issues: remove later */
-		struct pollfd	test_poll = {fd, POLLOUT, 0};
-		poll(&test_poll, 1, 0);
-		FT_ASSERT(test_poll.revents & POLLOUT);
-	}
 
-	const int send_flags = 0;
+	const int send_flags = 0;//todo: research flags
 	//std::cout << "sending:\n" << _send_data.response << "\n";
 	ssize_t send_bytes = send(
 		fd,
@@ -176,6 +169,8 @@ void	Client::_send_response(void) {
 		_send_data.response.size() - _send_data.pos,
 		send_flags
 	);
+		{
+			//remove this later
 			int dbg_fd= open("response.txt", O_WRONLY |O_CLOEXEC| O_TRUNC | O_CREAT, 0777);
 			std::cout << getenv("PWD");
 			write(dbg_fd, _send_data.response.c_str(), _send_data.response.size());
@@ -183,8 +178,10 @@ void	Client::_send_response(void) {
 			if (errno) {
 				std::cout << strerror(errno);
 			}
+		}
+
 	if (send_bytes <= 0) {
-		std::cerr << "Error: send: closing connection now\n";
+		std::cerr << "Error: " << name << ": send: closing connection now\n";
 		//todo: the line below has to removed before submission according to subject
 		std::cerr << "err: " << strerror(errno) << '\n';
 		set_close();

@@ -367,7 +367,7 @@ void	Response::appendToBody(std::string content) {
 std::string	Response::getExpandedTarget(void) {
 	//return (std::string(getenv("PWD")) + "/" + "hello_world.html");//to test get file
 	//return (std::string(getenv("PWD")) + "/" + "hello.php");//to test get file
-	return (std::string(getenv("PWD")) + "/" + "hello.py");//to test get file
+	//return (std::string(getenv("PWD")) + "/" + "hello.py");//to test get file
 	return (std::string(getenv("PWD")) + "/"); // to test auto index
 	/*
 	std::vector<LocationConfigFile> locations = _config.getLocations();
