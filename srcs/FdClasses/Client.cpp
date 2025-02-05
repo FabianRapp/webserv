@@ -61,8 +61,18 @@ void	Client::_receive_request(void) {
 
 	this->parse();
 	//std::cout << "Request STATUS = " << _parser.is_finished() << std::endl;
-	if (_parser.is_finished() == true) {
-		_request = _parser.get_request();
+	if (_parser.is_finished() == true)
+	{
+		int errorCode;
+		if ((errorCode = _parser.getErrorCode()))
+		{
+			std::cout << "Parser had Error but handling is not yet implemented\n";
+			//
+		}
+		else
+		{
+			_request = _parser.get_request();
+		}
 		mode = ClientMode::BUILD_RESPONSE;
 		_send_data.pos = 0;
 		_send_data.response = "";
