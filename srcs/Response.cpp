@@ -195,6 +195,7 @@ void	Response::_handle_auto_index(std::vector<std::string>&files) {
 void	Response::_handle_get_file(void) {
 	struct stat stats;
 
+	std::cout << "B: " << _path << "\n";
 	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
 	int	file_fd = open(_path.c_str(), O_CLOEXEC | O_RDONLY);
 	FT_ASSERT(file_fd >0);
@@ -281,7 +282,10 @@ void	Response::_handle_post(void) {
 
 //todo: needs to work with config not hard coded paths
 void	Response::load_status_code(int code) {
-	std::string stat_code_path = "default/error_pages/" + std::to_string(code) + ".html"; //todo
+
+	// std::string stat_code_path = "default/error_pages/" + std::to_string(code) + ".html"; //todo
+	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
+	std::cout << "A: " << stat_code_path << "\n";
 	_response_str += "Content-Type: text/html\r\n";
 	struct stat stats;
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
