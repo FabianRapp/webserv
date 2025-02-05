@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/01/23 15:57:39 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/05 09:56:05 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 // Connection Closure:
 // If neither Content-Length nor Transfer-Encoding is specified, the end of the body is signaled by the server closing the connection.
 // This is a fallback mechanism in HTTP/1.1 but is considered bad practice and is rarely used.
+
+
 
 int sizeLineToInt(const std::string& hexStr) {
 	int value = 0;
@@ -87,7 +89,7 @@ RequestArray splitIntoArrays(const String& input, const String& lineDl, const St
 	String str;
 	RequestArray result;
 	size_t start = 0, end = 0;
-	
+
 	std::cout << "input: " << input << "\n";
 	end = input.find(stopDl);
 	if (end == std::string::npos) {
@@ -114,6 +116,76 @@ RequestArray splitIntoArrays(const String& input, const String& lineDl, const St
 	return result;
 }
 */
+
+
+//Note, I think 405 not allwed might be easier to implement in Response,
+// a this point we dont have yet parsed the allowed methods
+// either we move all that logic here of throw that specific error later
+int Parser::hadError() {
+
+
+	// if (_request._type == MethodType::INVALID)
+	// {
+		// Either 405 not allowed or 501 not implemented
+		// return 501;
+	// }
+
+
+	// Not Found (404)
+	// The requested resource does not exist on the server
+	// if (isPathExisting(_request._uri))
+	// {
+	// 	// 404 not found
+	// return 404;
+	// }
+
+
+	// Forbidden (403)
+	// The user does not have permission to access the requested resource
+	// if (isPathAllowed(_request._uri))
+	// {
+	// 	// 403 forbidden
+	// 	return 403;
+	// }
+
+
+	// Payload Too Large (413)
+	// The request body exceeds the allowed size limit
+	// if (isRequestTooLarge())
+	// {
+	// 	return 413;
+	// }
+
+
+	// (415) Unsupported Media Type
+	// This happens when the Content-Type of the request is not supported by the server.
+	// if (isMediaTypeAllowed())
+	// {
+		// return 415
+	// }
+
+
+	// Bad Request (400)
+	// Malformed syntax (e.g., missing brackets in JSON payload)
+	// Invalid query parameters (e.g., incorrect data type)
+	// Missing required headers or parameters
+
+	// in the next if block we can make more checks that will also result in a 400
+	// if (isInvalidHeader(_request._headers) || ...)
+	// {
+	// 	// 400 Bad request probably
+	// 	return 400;
+	// }
+
+
+	// We could implement the next errors for general errors in the parsing:
+	// Unprocessable Entity (422)
+	// The server understands the request, but the content is invalid (e.g., failing validation rules)
+
+	// Internal Server Error (500)
+	// The server encounters an unexpected condition (often due to a bug or misconfiguration)
+	return 0;
+}
 
 void Parser::setRequestMethod(const std::string& method) {
 	if (method == "GET") {
@@ -170,7 +242,7 @@ HeaderType	setType(const std::string& str) {
 		{"Cookie:",                  HeaderType::COOKIE},
 		{"Set-Cookie:",              HeaderType::SET_COOKIE},
 	};
-	
+
 	for (const auto& type : matches) {
 		if (type.first == str) {
 			return (type.second);
@@ -385,7 +457,7 @@ void	Parser::parse_body(std::string& input) {
 		// note by fabi: updated: there is simply no body I think
 		_request._finished = true;
 		return ;
-		
+
 		//std::cout << "error parsing body" << std::endl;
 		// handle logic for errors
 		// if there is no content lenght it can be an error,
@@ -499,3 +571,4 @@ bool Parser::ends_with(const std::string& str, const std::string& suffix) {
 // */_request.finished = false;
 // 	/* todo: reset every field in _request */
 // }
+//
