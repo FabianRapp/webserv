@@ -79,11 +79,12 @@ class Response {
 		WriteFd*&		get_writer(void);
 		CGIManager*&	get_cgi_manger(void);
 
-		void			load_status_code(int code);
+		void			load_status_code_response(int code, const std::string& status);
+		void			load_status_code_body(int code);
 
 		void			set_mode(ResponseMode mode);
-		void			read_fd(int read_fd, ssize_t byte_count, bool close_fd);
-		void			write_fd(int write_fd, bool close_fd);
+		void			read_fd(int read_fd, ssize_t byte_count);
+		void			write_fd(int write_fd);
 		void			reset_body(void);
 		std::string&&	get_read_fd_data(void);
 		void			set_fd_write_data(const std::string_view data);

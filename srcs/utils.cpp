@@ -51,17 +51,26 @@ void	init_status_codes(std::unordered_map<unsigned long, std::string> & codes) {
 }
 
 void	ft_close(int fd) {
+	int	old_err = errno;
+	errno = 0;
 	if (close(fd) == 0) {
+		errno = old_err;
 		return ;
 	}
 	if (errno == EBADF) {
-		errno = 0;
+		errno = old_err;
 		return ;
 	} else if (errno == EIO) {
 		errno = 0;
 		close(fd);
-	} else /* (errno == EINTR) */ {
+		if (errno == EINTR) {
+			errno = old_err;
+			ft_close(fd);
+			return ;
+		}
 		errno = 0;
+	} else /* (errno == EINTR) */ {
+		errno = old_err;
 		ft_close(fd);
 	}
 }

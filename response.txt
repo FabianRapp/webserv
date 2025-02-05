@@ -1,7 +1,7 @@
 HTTP/1.1 200 OK
 Content-Type: text/html
 Connection: close
-Content-Length: 250
+Content-Length: 284
 
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +11,7 @@ Content-Length: 250
     <title>Hello World</title>
 </head>
 <body>
-    <h1>404</h1>
-    <p>File not existing</p>
+    <h1>Hello, World2222222222!</h1>
+    <p>This is a simple HTML document.</p>
 </body>
 </html>

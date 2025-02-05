@@ -21,6 +21,10 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 	_mode(CGI_MODE::INIT_WRITING)
 {
 	int	 old_errno = errno;
+	inputPipe[0] = -1;
+	inputPipe[1] = -1;
+	outputPipe[0] = -1;
+	outputPipe[1] = -1;
 	errno = 0;
 	envCGI = {
 		static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),
@@ -44,30 +48,40 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 	envCGI.push_back(nullptr);
 
 	if (!isCGI(path)) {
-		throw std::runtime_error("Not CGI");
+		_client->response->load_status_code_response(500, "Internal Server Error");
+		_mode = CGI_MODE::FINISHED;
+		return ;
 	}
 
 	// File existence checks moved HERE (before execution)
 	if (access(path.c_str(), F_OK) == -1) {
-		throw std::runtime_error("Script file not found: " + path);
+		_client->response->load_status_code_response(500, "Internal Server Error");
+		_mode = CGI_MODE::FINISHED;
+		return ;
 	}
 	if (access(path.c_str(), R_OK) == -1) {
-		throw std::runtime_error("Script file not readable: " + path);
+		_client->response->load_status_code_response(500, "Internal Server Error");
+		_mode = CGI_MODE::FINISHED;
+		return ;
 	}
 
 	std::string interpreter = getInterpreter(path);
 	if (interpreter.empty()) {
-		throw std::runtime_error("Unsupported CGI type");
+		_client->response->load_status_code_response(500, "Internal Server Error");
+		_mode = CGI_MODE::FINISHED;
+		return ;
 	}
 
 	if (pipe(inputPipe) == -1 || pipe(outputPipe) == -1) {
-		//todo: how are we handeling errors?
-		throw std::runtime_error("Failed to create pipes");
+		_client->response->load_status_code_response(500, "Internal Server Error");
+		_mode = CGI_MODE::FINISHED;
+		return ;
 	}
 	_pid = fork();
 	if (_pid == -1) {
-		//todo: how are we handeling errors?
-		throw std::runtime_error("Failed to fork");
+		_client->response->load_status_code_response(500, "Internal Server Error");
+		_mode = CGI_MODE::FINISHED;
+		return ;
 	}
 
 	if (_pid == 0) { // Child process
@@ -112,12 +126,6 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 		ft_close(outputPipe[1]);
 		outputPipe[1] = -1;
 
-		//_response->set_mode(Response::ResponseMode::FINISH_UP);
-	}
-	if (errno) {
-		//for debugging
-		std::cerr << __LINE__ << ": end of cgi constructor: errno :" << strerror(errno) << "\n";
-		exit(1);
 	}
 	errno = old_errno;
 }
@@ -135,7 +143,7 @@ void	CGIManager::_init_reading(void) {
 	int	fd_to_read = outputPipe[0];
 	outputPipe[0] = -1;
 	//read_fd will make sure the cgi->execute does not get called unitil the data is read
-	_response->read_fd(fd_to_read, -1, true);
+	_response->read_fd(fd_to_read, -1);
 	_mode = CGI_MODE::FINISHED;
 }
 
@@ -154,7 +162,7 @@ void	CGIManager::_init_writing(void) {
 
 	_response->set_fd_write_data(test_body);
 	//write_fd will make sure the cgi->execute does not get called unitil the data is written
-	_response->write_fd(fd_to_write, true);
+	_response->write_fd(fd_to_write);
 	_mode = CGI_MODE::INIT_READING;
 }
 
@@ -216,17 +224,23 @@ std::string CGIManager::getInterpreter(const std::string& path) {
 		} else if (extension == ".php") {
 			interpreter = "/usr/bin/php";
 		} else {
-			throw std::runtime_error("Unsupported CGI type: " + extension);
+			// "Unsupported CGI type: " + extension
+			_client->response->load_status_code_response(500, "Internal Server Error");
+			_mode = CGI_MODE::FINISHED;
+			return "";
 		}
-
 		if (access(interpreter.c_str(), X_OK) == -1) {
-			throw std::runtime_error("Interpreter not found or not executable: " + interpreter);
+			//"Interpreter not found or not executable: " + interpreter
+			_client->response->load_status_code_response(500, "Internal Server Error");
+			_mode = CGI_MODE::FINISHED;
+			return "";
 		}
-
 		return interpreter;
 	}
 
-	// This ensures that all paths return a value or throw an exception
-	throw std::runtime_error("Internal error: No file extension found in path");
+	//"Internal error: No file extension found in path"
+	_client->response->load_status_code_response(500, "Internal Server Error");
+	_mode = CGI_MODE::FINISHED;
+	return "";
 }
 

@@ -11,7 +11,7 @@ Client::Client(DataManager& data, Server* parent_server):
 	_send_data({"", 0}),
 	_last_availability(std::chrono::steady_clock::now()),
 	_parser(input),
-	_response(nullptr)
+	response(nullptr)
 {
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));
@@ -32,7 +32,7 @@ Client::Client(DataManager& data, Server* parent_server):
 }
 
 Client::~Client(void) {
-	delete _response;
+	delete response;
 }
 
 void	Client::_receive_request(void) {
@@ -109,13 +109,12 @@ void	Client::execute(void) {
 		return ;
 	}
 	if (is_ready(POLLERR)) {
-		//todo: handle err
 		std::cout << FT_ANSI_RED << name << "(idx " << data_idx
-			 << ") had a poll exception..\n" FT_ANSI_RESET;
+			 << ") had a poll exception\n" FT_ANSI_RESET;
 		set_close();
 		return ;
 	}
-	std::cout << FT_ANSI_GREEN "Client " << this->data_idx << ": ";
+	std::cout << FT_ANSI_GREEN << name << " (idx " << this->data_idx << "): ";
 	std::cout << FT_ANSI_RESET;
 	switch (this->mode) {
 		case (ClientMode::RECEIVING): {
@@ -125,15 +124,15 @@ void	Client::execute(void) {
 		}
 		case (ClientMode::BUILD_RESPONSE): {
 			std::cout << "exec\n";
-			if (_response == nullptr) {
-				_response = new Response(_select_config(server->configs, _request), _request, *this, mode);
+			if (response == nullptr) {
+				response = new Response(_select_config(server->configs, _request), _request, *this, mode);
 			}
-			_response->execute();
+			response->execute();
 			if (mode == ClientMode::SENDING) {
-				_send_data.response = _response->get_str_response();
+				_send_data.response = response->get_str_response();
 				_send_data.pos = 0;
-				delete _response;
-				_response = nullptr;
+				delete response;
+				response = nullptr;
 			}
 			break ;
 		}
@@ -171,14 +170,8 @@ void	Client::_send_response(void) {
 		return ;
 	}
 	_last_availability = std::chrono::steady_clock::now();
-	{
-		/* todo: poll to catch potential issues: remove later */
-		struct pollfd	test_poll = {fd, POLLOUT, 0};
-		poll(&test_poll, 1, 0);
-		FT_ASSERT(test_poll.revents & POLLOUT);
-	}
 
-	const int send_flags = 0;
+	const int send_flags = 0;//todo: research flags
 	//std::cout << "sending:\n" << _send_data.response << "\n";
 	ssize_t send_bytes = send(
 		fd,
@@ -186,6 +179,8 @@ void	Client::_send_response(void) {
 		_send_data.response.size() - _send_data.pos,
 		send_flags
 	);
+		{
+			//remove this later
 			int dbg_fd= open("response.txt", O_WRONLY |O_CLOEXEC| O_TRUNC | O_CREAT, 0777);
 			std::cout << getenv("PWD");
 			write(dbg_fd, _send_data.response.c_str(), _send_data.response.size());
@@ -193,8 +188,10 @@ void	Client::_send_response(void) {
 			if (errno) {
 				std::cout << strerror(errno);
 			}
+		}
+
 	if (send_bytes <= 0) {
-		std::cerr << "Error: send: closing connection now\n";
+		std::cerr << "Error: " << name << ": send: closing connection now\n";
 		//todo: the line below has to removed before submission according to subject
 		std::cerr << "err: " << strerror(errno) << '\n';
 		set_close();
@@ -214,8 +211,8 @@ ClientMode&	Client::get_mode(void) {
  }
 
 void	Client::set_close(void) {
-	if (_response) {
-		_response->close_io_fds();
+	if (response) {
+		response->close_io_fds();
 	}
 	Client::BaseFd::set_close();
 }

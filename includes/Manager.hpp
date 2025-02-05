@@ -41,9 +41,9 @@ public:
 	void		new_server(std::vector<ServerConfigFile>& configs);
 	void		new_client(Server* server);
 	ReadFd*		new_read_fd(std::string& target_buffer, int fd, Client& client,
-					ssize_t byte_count, bool close_fd, std::function<void()> callback);
+					ssize_t byte_count, std::function<void()> callback);
 	WriteFd*	new_write_fd(int fd, const std::string_view& input_data, Client& client,
-					   bool close_fd, std::function<void()> callback);
+					   std::function<void()> callback);
 	CgiTimeouts	cgi_lifetimes;
 
 
