@@ -17,17 +17,33 @@ void ServerConfigFile::setPort(int port) {
 	_port = port;
 }
 
-void ServerConfigFile::setServerNames(const std::string& server_names) {
-	Line	names(server_names, " ");
-	_server_names = names;
+// void ServerConfigFile::setServerNames(const std::string& server_names) {
+// 	Line	names(server_names, " ");
+// 	_server_names = names;
 
-	for (auto& name : _server_names) {
-		std::transform(name.begin(), name.end(), name.begin(),
-			[](unsigned char c) {
-				return (std::tolower(c));
-			}
-		);
-	}
+// 	for (auto& name : _server_names) {
+// 		std::transform(name.begin(), name.end(), name.begin(),
+// 			[](unsigned char c) {
+// 				return (std::tolower(c));
+// 			}
+// 		);
+// 	}
+// }
+
+void ServerConfigFile::addServerName(const std::string& serverName) {
+	_server_names.push_back(serverName);
+}
+
+void ServerConfigFile::setMethods(bool get, bool post, bool del) {
+	_get_header = get;
+	_post_header = post;
+	_delete_header = del;
+
+	// validateMethods();
+}
+
+void ServerConfigFile::setAutoIndex(bool autoindex) {
+	_autoindex = autoindex;
 }
 
 void ServerConfigFile::setRoot(const std::string& root) {
@@ -66,8 +82,32 @@ int ServerConfigFile::getPort() const {
 	return _port;
 }
 
+// const std::vector<std::string>& ServerConfigFile::getServerNames() const {
+// 	return _server_names;
+// }
+
+const LocationConfigFile&	ServerConfigFile::getDefaultLocation(void) const {
+	return _defaultLocation;
+}
+
 const std::vector<std::string>& ServerConfigFile::getServerNames() const {
 	return _server_names;
+}
+
+bool ServerConfigFile::isGetAllowed() const {
+	return _get_header;
+}
+
+bool ServerConfigFile::isPostAllowed() const {
+	return _post_header;
+}
+
+bool ServerConfigFile::isDeleteAllowed() const {
+	return _delete_header;
+}
+
+bool ServerConfigFile::getAutoIndex() const {
+	return _autoindex;
 }
 
 const std::string& ServerConfigFile::getRoot() const {
@@ -91,8 +131,13 @@ int ServerConfigFile::getClientBodySize() const {
 	return _client_body_size;
 }
 
+LocationConfigFile& ServerConfigFile::setDefaultLocation() {
+	return _defaultLocation;
+}
+
 // Debug
 void ServerConfigFile::printServer() const {
+	std::cout << "********************************" << std::endl;
 	std::cout << "Server Port: " << _port << "\n";
 	std::cout << "Server Names:\n";
 	for (const auto& name : _server_names) {
@@ -105,12 +150,20 @@ void ServerConfigFile::printServer() const {
 	// _error_pages.printErrorPages();
 
 	// Print locations
+	std::cout << "********************************" << std::endl;
 	if (!_locations.empty()) {
-		std::cout << "Locations:\n";
+		std::cout << FT_ANSI_GREEN "Locations:\n" FT_ANSI_RESET FT_ANSI_ITALIC;
 		for (const auto& location : _locations) {
 			location.printLocation();
 			std::cout << "\n";
+			std::cout << FT_ANSI_RESET;
+			std::cout << "********************************" << std::endl;
 		}
 	}
+	// std::cout << "********************************" << std::endl;
+	std::cout << FT_ANSI_GREEN "default location:\n" FT_ANSI_RESET FT_ANSI_ITALIC;
+	_defaultLocation.printLocation();
+	std::cout << FT_ANSI_RESET;
+	std::cout << "********************************" << std::endl;
 }
 

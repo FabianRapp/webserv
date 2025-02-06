@@ -7,7 +7,7 @@
 class LocationConfigFile {
 
 private:
-	std::string _path;
+	std::string _path = "/";
 	bool _get_header = false;
 	bool _post_header = false;
 	bool _delete_header = false;
@@ -28,6 +28,7 @@ public:
 	bool isGetAllowed() const;
 	bool isPostAllowed() const;
 	bool isDeleteAllowed() const;
+	bool getAutoIndex() const;
 	const std::string& getRoot() const;
 	const std::string& getIndexFile() const;
 

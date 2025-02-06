@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/28 13:09:21 by adrherna          #+#    #+#             */
-/*   Updated: 2025/02/05 12:27:15 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/06 13:55:33 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,30 +62,15 @@ void	Response::set_mode(ResponseMode mode) {
 	_mode = mode;
 }
 
-// Use this to read froserverm from a pipe or a file.
+// Use this to read from a pipe or a file.
 // Appends to the body.
-// Switched int ClientMode::WRITING_FD, thus:
+// Switched into ClientMode::WRITING_FD, thus:
+// Don't close the fd after calling this.
 // After calling this function the caller should return straight to Client::execute
 // without any more actions besides the following:
-// Uses dup() on the given fd, if the fd is not needed anywher else simply close
-// the fd after calling this.
 // Assumes the given fd to be valid.
-void	Response::read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
-	//_fd_error.error = false;
+void	Response::read_fd(int read_fd, ssize_t byte_count) {
 	FT_ASSERT(read_fd > 0);
-	//char buff[1024];
-	//ssize_t val;
-	//std::cout << "read_fd\n";
-	//val = read(read_fd, buff, 1023);
-	//while (val > 0) {
-	//	assert(val > 0);
-	//	buff[val] = 0;
-	//	std::cout << "buff: " << buff << "\n";
-	//	_body += buff;
-	//	val = read(read_fd, buff, 1023);
-	//}
-	//printf("val: %ld\n", val);
-	//return ;
 	ClientMode	next_mode = _client_mode;
 	_client_mode = ClientMode::READING_FD;
 	_reader = _server->data.new_read_fd(
@@ -93,7 +78,6 @@ void	Response::read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
 		read_fd,
 		*_client,
 		byte_count,
-		close_fd,
 		[this, next_mode] () {
 			this->_client_mode = next_mode;
 			this->_reader = nullptr;
@@ -103,14 +87,12 @@ void	Response::read_fd(int read_fd, ssize_t byte_count, bool close_fd) {
 
 // Use this to write to a pipe or a file.
 // The input data has to be in Client::_fd_write_data
-// Switched int ClientMode::WRITING_FD, thus:
+// Switched into ClientMode::WRITING_FD, thus:
 // After calling this function the caller should return straight to Client::execute
 // without any more actions besides the following:
-// Uses dup() on the given fd, if the fd is not needed anywher else simply close
-// the fd after calling this.
+// Don't close the fd after calling this.
 // Assumes the given fd to be valid.
-void	Response::write_fd(int write_fd, bool close_fd) {
-	//_fd_error.error = false;
+void	Response::write_fd(int write_fd) {
 	FT_ASSERT(write_fd > 0);
 	ClientMode	next_mode = _client_mode;
 	_client_mode = ClientMode::WRITING_FD;
@@ -118,7 +100,6 @@ void	Response::write_fd(int write_fd, bool close_fd) {
 		write_fd,
 		_fd_write_data,
 		*_client,
-		close_fd,
 		[this, next_mode] () {
 			this->_client_mode = next_mode;
 			this->_writer = nullptr;
@@ -195,10 +176,11 @@ void	Response::_handle_auto_index(std::vector<std::string>&files) {
 void	Response::_handle_get_file(void) {
 	struct stat stats;
 
+	std::cout << "B: " << _path << "\n";
 	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
 	int	file_fd = open(_path.c_str(), O_CLOEXEC | O_RDONLY);
 	FT_ASSERT(file_fd >0);
-	read_fd(file_fd, stats.st_size, true);
+	read_fd(file_fd, stats.st_size);
 
 	_mode = ResponseMode::FINISH_UP;
 	_response_str =
@@ -213,36 +195,50 @@ void	Response::_handle_get_moved(void) {
 		"HTTP/1.1 301 Moved Permanently\r\n"
 		"Location: " + new_location + "\r\n"
 	;
-	load_status_code(301);
+	load_status_code_body(301);
+}
+
+//if index file is found returns true and puts it's path in index_file
+bool	Response::_has_index(std::vector<std::string>& files, std::string& index_file) {
+	// _config;//const ServerConfigFile&
+	// _locationConfig;//LocationConfigFile*
+	//default return
+	return (false);
 }
 
 //todo: commented lines
 void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
-		if (_request._uri.back() != '/') {
+		// std::cout << "WTF: " << _path << "\n";
+	 	if (_request._uri.back() != '/') {
+			std::cout << "MOVED\n";
+			//sleep(5);
 			_handle_get_moved();
 			return ;
 		}
 		std::vector<std::string>	files = _get_dir();
-		/*
 		std::string					index_file;
-		if (has_index(files, config, index_file)) {
+		if (_has_index(files, index_file)) {
 			_path = index_file;
-		} else if (enabled_auto_index(_path, config)) {
-		*/
+		} else if (_locationConfig->getAutoIndex()) {
 			_handle_auto_index(files);
 			return ;
 		/*
 		} else {
 			handle invlaid request
 			return ;
-		}
 		*/
+		}
 	}
-	/*
-	if (does not exist(_path)) {
+	if (access(_path.c_str(), F_OK) == -1) {
+		_client->response->load_status_code_response(404, "Not Found");
+		return ;
 	}
-	*/
+	if (access(_path.c_str(), R_OK) == -1) {
+		_client->response->load_status_code_response(404, "Not Found");
+		return ;
+	}
+
 	FT_ASSERT(!std::filesystem::is_directory(_path));
 
 	if (CGIManager::isCGI(_path)) {
@@ -279,15 +275,30 @@ void	Response::_handle_post(void) {
 	*/
 }
 
-//todo: needs to work with config not hard coded paths
-void	Response::load_status_code(int code) {
-	std::string stat_code_path = "default/error_pages/" + std::to_string(code) + ".html"; //todo
+//don't use this if the response needs any custom data besides the status
+//this response the respose
+void	Response::load_status_code_response(int code, const std::string& status) {
+	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back
+	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + status + "\r\n"
+		+ "Content-Type: text/html\r\n";
+	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
+
+	struct stat stats;
+	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
+	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
+	FT_ASSERT(file_fd >0);
+	read_fd(file_fd, stats.st_size);
+	_mode = ResponseMode::FINISH_UP;
+}
+
+void	Response::load_status_code_body(int code) {
+	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
 	_response_str += "Content-Type: text/html\r\n";
 	struct stat stats;
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
 	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
 	FT_ASSERT(file_fd >0);
-	read_fd(file_fd, stats.st_size, true);
+	read_fd(file_fd, stats.st_size);
 	_mode = ResponseMode::FINISH_UP;
 }
 
@@ -297,7 +308,8 @@ void	Response::_handle_delete(void) {
 		//success
 		_response_str =
 			"HTTP/1.1 204 No Content\r\n";
-		load_status_code(204);
+		load_status_code_body(204);
+		return ;
 	} else {
 		//error
 		switch (errno) {
@@ -318,7 +330,6 @@ bool	Response::isMethodAllowed(MethodType method) {
 
 void	Response::execute(void) {
 	if (_mode == ResponseMode::NORMAL) {
-
 		if (isMethodAllowed(_request._type))
 		{
 			switch (_request._type)
@@ -333,7 +344,9 @@ void	Response::execute(void) {
 					_handle_delete();
 					break ;
 				} default: {
-					break ;
+					_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
+					load_status_code_body(405);
+					return ;
 				}
 			}
 		}
@@ -341,9 +354,9 @@ void	Response::execute(void) {
 		{
 			std::cout << "ERROR IN EXECUTE\n";
 			_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
-			load_status_code(405);
+			load_status_code_body(405);
+			return ;
 		}
-
 	} else if (_mode == ResponseMode::FINISH_UP) {
 		/* for potential file reads:
 		 * can not be done in same function call as initial if statement!
@@ -384,20 +397,24 @@ void	Response::appendToBody(std::string content) {
 	_body += content;
 }
 
-LocationConfigFile* Response::getLocationConfig() {
+const LocationConfigFile* Response::getLocationConfig() {
+	const std::vector<LocationConfigFile>& locationsFiles = _config.getLocations();
 
-	std::vector<LocationConfigFile> locationsFiles;
-
-	for (auto& locationFile : locationsFiles)
+	size_t				longest_match = 0;
+	const LocationConfigFile*	best_match = &_config.getDefaultLocation();
+	for (const LocationConfigFile& locationFile : locationsFiles)
 	{
-		if (_request._uri == locationFile.getPath())
+		size_t	loc_path_len = locationFile.getPath().length();
+		if (loc_path_len > longest_match
+			&& !strncmp(_request._uri.c_str(), locationFile.getPath().c_str(), loc_path_len)
+			&& (_request._uri.length() == loc_path_len || _request._uri[loc_path_len] == '/'))
 		{
-			std::cout << "URI = |" << _request._uri << " LOC = |" << locationFile.getPath() << "|\n";
-			return &locationFile;
+			longest_match = loc_path_len;
+			best_match = &locationFile;
 		}
 	}
-	std::cout << "NO LOCATION CONFIG FOUND\n";
-	return nullptr;
+	// std::cout << best_match <<
+	return best_match;
 }
 
 void Response::setAllowedMethods() {
@@ -409,6 +426,7 @@ void Response::setAllowedMethods() {
 		std::cout << "NO LOCATION PRESENT, default all methods allowed\n";
 		return ;
 	}
+	//todo: for testing since LocationFile has unreliable data
 	if (_locationConfig->isGetAllowed())
 	{
 		_allowedMethods.push_back(MethodType::GET);
@@ -423,18 +441,50 @@ void Response::setAllowedMethods() {
 	}
 }
 
+std::string getResource(const std::string& uri) {
+	size_t pos = uri.find_last_of('/');
+	if (pos == std::string::npos) {
+		return uri;
+	}
+	return uri.substr(pos);
+}
+
 std::string	Response::getExpandedTarget(void) {
-	std::string expandedPath = _config.getRoot() + _request._uri;
+	std::string expandedPath;
+	std::string resource = getResource(_request._uri);
+	_locationConfig->printLocation();
+
+	std::cout << "\n";
+
+	std::cout << "--- Config.getRoot() " << _config.getRoot() + "\n";
+	std::cout << "--- LocationConfig() " << _locationConfig->getRoot() + "\n";
+	std::cout << "--- request._uri " << _request._uri + "\n";
+	std::cout << "--- resource " << resource  + "\n";
+
+	std::cout << "\n";
+
+	if (_locationConfig->getRoot() != "/" && _locationConfig->getRoot() != resource)
+	{
+		expandedPath = _config.getRoot() + _locationConfig->getRoot() + resource;
+		std::cout << "ME\n";
+	}
+	else
+	{
+		expandedPath = _config.getRoot() + _request._uri;
+
+	}
+
 	std::cout << "RESPONSE PATH SETTED TO |" << expandedPath << "|\n";
 
 	if (std::filesystem::exists(expandedPath)) {
 		std::cout << "File exists: " << expandedPath << std::endl;
 	} else {
 		std::cout << "File does not exist: " << expandedPath << std::endl;
+		// load_status_code_body(404);
 		return (_config.getRoot() + "/404.html");
 		// throw std::runtime_error("File does not exist: " + expandedPath);
 	}
-
+\
 	return (expandedPath);
 }
 

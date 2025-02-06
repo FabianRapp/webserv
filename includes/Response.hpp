@@ -44,7 +44,7 @@ class Response {
 		ClientMode&				_client_mode;
 		std::string				_body;
 		const ServerConfigFile&	_config;
-		LocationConfigFile*	_locationConfig;
+		const LocationConfigFile*		_locationConfig;
 		std::string				_target;
 		Server*					_server;
 		Client*					_client;
@@ -67,6 +67,7 @@ class Response {
 	void	_handle_delete(void);
 	void	_handle_get(void);
 	void	_handle_get_file(void);
+	bool	_has_index(std::vector<std::string>& files, std::string& index_file);
 
 	public:
 		Response () = delete;
@@ -79,11 +80,12 @@ class Response {
 		WriteFd*&		get_writer(void);
 		CGIManager*&	get_cgi_manger(void);
 
-		void			load_status_code(int code);
+		void			load_status_code_response(int code, const std::string& status);
+		void			load_status_code_body(int code);
 
 		void			set_mode(ResponseMode mode);
-		void			read_fd(int read_fd, ssize_t byte_count, bool close_fd);
-		void			write_fd(int write_fd, bool close_fd);
+		void			read_fd(int read_fd, ssize_t byte_count);
+		void			write_fd(int write_fd);
 		void			reset_body(void);
 		std::string&&	get_read_fd_data(void);
 		void			set_fd_write_data(const std::string_view data);
@@ -97,7 +99,7 @@ class Response {
 		void	appendToBody(std::string content);
 		std::string	getExpandedTarget(void);
 		void setAllowedMethods();
-		LocationConfigFile*	getLocationConfig(void);
+		const LocationConfigFile*	getLocationConfig(void);
 
 		bool isMethodAllowed(MethodType method);
 		// std::string expandPath();
