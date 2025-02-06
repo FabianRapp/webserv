@@ -209,9 +209,10 @@ bool	Response::_has_index(std::vector<std::string>& files, std::string& index_fi
 //todo: commented lines
 void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
-		if (_request._uri.back() != '/') {
+		std::cout << "WTF: " << _path << "\n";
+	 	if (_request._uri.back() != '/') {
 			std::cout << "MOVED\n";
-			sleep(5);
+			//sleep(5);
 			_handle_get_moved();
 			return ;
 		}
@@ -229,10 +230,15 @@ void	Response::_handle_get(void) {
 		*/
 		}
 	}
-	/*
-	if (does not exist(_path)) {
+	if (access(_path.c_str(), F_OK) == -1) {
+		_client->response->load_status_code_response(404, "Not Found");
+		return ;
 	}
-	*/
+	if (access(_path.c_str(), R_OK) == -1) {
+		_client->response->load_status_code_response(404, "Not Found");
+		return ;
+	}
+
 	FT_ASSERT(!std::filesystem::is_directory(_path));
 
 	if (CGIManager::isCGI(_path)) {
@@ -394,18 +400,17 @@ void	Response::appendToBody(std::string content) {
 const LocationConfigFile* Response::getLocationConfig() {
 	const std::vector<LocationConfigFile>& locationsFiles = _config.getLocations();
 
-	for (auto& locationFile : locationsFiles)
+	size_t				longest_match = 0;
+	const LocationConfigFile*	best_match = &_config.getDefaultLocation();
+	for (const LocationConfigFile& locationFile : locationsFiles)
 	{
-		//todo: if uri has a file type ending remove the the file name from uri for the match checking
-		if (_request._uri == locationFile.getPath() + '/'
-			|| (_request._uri.length() == 1 && _request._uri == locationFile.getPath()))
-		{
-			std::cout << "URI = |" << _request._uri << " LOC = |" << locationFile.getPath() << "|\n";
-			return &locationFile;
+		size_t	loc_path_len = locationFile.getPath().length();
+		if (loc_path_len > longest_match && !strncmp(_request._uri.c_str(), locationFile.getPath().c_str(), loc_path_len)) {
+			longest_match = loc_path_len;
+			best_match = &locationFile;
 		}
 	}
-	std::cout << "NO LOCATION CONFIG FOUND... using default\n";
-	return &_config.getDefaultLocation();
+	return best_match;
 }
 
 void Response::setAllowedMethods() {
@@ -448,7 +453,8 @@ std::string	Response::getExpandedTarget(void) {
 		std::cout << "File exists: " << expandedPath << std::endl;
 	} else {
 		std::cout << "File does not exist: " << expandedPath << std::endl;
-		return (_config.getRoot() + "/404.html");
+		load_status_code_body(404);
+		return ("");
 		// throw std::runtime_error("File does not exist: " + expandedPath);
 	}
 \
