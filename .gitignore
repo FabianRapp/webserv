@@ -41,3 +41,5 @@ objs
 *.exe
 *.out
 *.app
+
+.vscode
