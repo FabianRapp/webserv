@@ -137,6 +137,7 @@ LocationConfigFile& ServerConfigFile::setDefaultLocation() {
 
 // Debug
 void ServerConfigFile::printServer() const {
+	std::cout << "********************************" << std::endl;
 	std::cout << "Server Port: " << _port << "\n";
 	std::cout << "Server Names:\n";
 	for (const auto& name : _server_names) {
@@ -149,12 +150,20 @@ void ServerConfigFile::printServer() const {
 	// _error_pages.printErrorPages();
 
 	// Print locations
+	std::cout << "********************************" << std::endl;
 	if (!_locations.empty()) {
-		std::cout << "Locations:\n";
+		std::cout << FT_ANSI_GREEN "Locations:\n" FT_ANSI_RESET FT_ANSI_ITALIC;
 		for (const auto& location : _locations) {
 			location.printLocation();
 			std::cout << "\n";
+			std::cout << FT_ANSI_RESET;
+			std::cout << "********************************" << std::endl;
 		}
 	}
+	// std::cout << "********************************" << std::endl;
+	std::cout << FT_ANSI_GREEN "default location:\n" FT_ANSI_RESET FT_ANSI_ITALIC;
+	_defaultLocation.printLocation();
+	std::cout << FT_ANSI_RESET;
+	std::cout << "********************************" << std::endl;
 }
 

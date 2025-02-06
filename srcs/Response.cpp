@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/28 13:09:21 by adrherna          #+#    #+#             */
-/*   Updated: 2025/02/05 13:20:58 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/06 13:55:33 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,8 +200,8 @@ void	Response::_handle_get_moved(void) {
 
 //if index file is found returns true and puts it's path in index_file
 bool	Response::_has_index(std::vector<std::string>& files, std::string& index_file) {
-	_config;//const ServerConfigFile&
-	_locationConfig;//LocationConfigFile*
+	// _config;//const ServerConfigFile&
+	// _locationConfig;//LocationConfigFile*
 	//default return
 	return (false);
 }
@@ -209,7 +209,7 @@ bool	Response::_has_index(std::vector<std::string>& files, std::string& index_fi
 //todo: commented lines
 void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
-		std::cout << "WTF: " << _path << "\n";
+		// std::cout << "WTF: " << _path << "\n";
 	 	if (_request._uri.back() != '/') {
 			std::cout << "MOVED\n";
 			//sleep(5);
@@ -282,7 +282,7 @@ void	Response::load_status_code_response(int code, const std::string& status) {
 	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + status + "\r\n"
 		+ "Content-Type: text/html\r\n";
 	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
-	
+
 	struct stat stats;
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
 	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
@@ -405,11 +405,15 @@ const LocationConfigFile* Response::getLocationConfig() {
 	for (const LocationConfigFile& locationFile : locationsFiles)
 	{
 		size_t	loc_path_len = locationFile.getPath().length();
-		if (loc_path_len > longest_match && !strncmp(_request._uri.c_str(), locationFile.getPath().c_str(), loc_path_len)) {
+		if (loc_path_len > longest_match
+			&& !strncmp(_request._uri.c_str(), locationFile.getPath().c_str(), loc_path_len)
+			&& (_request._uri.length() == loc_path_len || _request._uri[loc_path_len] == '/'))
+		{
 			longest_match = loc_path_len;
 			best_match = &locationFile;
 		}
 	}
+	// std::cout << best_match <<
 	return best_match;
 }
 
@@ -437,14 +441,37 @@ void Response::setAllowedMethods() {
 	}
 }
 
+std::string getResource(const std::string& uri) {
+	size_t pos = uri.find_last_of('/');
+	if (pos == std::string::npos) {
+		return uri;
+	}
+	return uri.substr(pos);
+}
+
 std::string	Response::getExpandedTarget(void) {
 	std::string expandedPath;
+	std::string resource = getResource(_request._uri);
+	_locationConfig->printLocation();
 
-//
-	if (_locationConfig != nullptr)
-		expandedPath = _config.getRoot() + _locationConfig->getRoot();
-	else {
+	std::cout << "\n";
+
+	std::cout << "--- Config.getRoot() " << _config.getRoot() + "\n";
+	std::cout << "--- LocationConfig() " << _locationConfig->getRoot() + "\n";
+	std::cout << "--- request._uri " << _request._uri + "\n";
+	std::cout << "--- resource " << resource  + "\n";
+
+	std::cout << "\n";
+
+	if (_locationConfig->getRoot() != "/" && _locationConfig->getRoot() != resource)
+	{
+		expandedPath = _config.getRoot() + _locationConfig->getRoot() + resource;
+		std::cout << "ME\n";
+	}
+	else
+	{
 		expandedPath = _config.getRoot() + _request._uri;
+
 	}
 
 	std::cout << "RESPONSE PATH SETTED TO |" << expandedPath << "|\n";
@@ -453,8 +480,8 @@ std::string	Response::getExpandedTarget(void) {
 		std::cout << "File exists: " << expandedPath << std::endl;
 	} else {
 		std::cout << "File does not exist: " << expandedPath << std::endl;
-		load_status_code_body(404);
-		return ("");
+		// load_status_code_body(404);
+		return (_config.getRoot() + "/404.html");
 		// throw std::runtime_error("File does not exist: " + expandedPath);
 	}
 \
