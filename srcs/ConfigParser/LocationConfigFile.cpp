@@ -75,7 +75,7 @@ void LocationConfigFile::printLocation() const {
 				<< (_delete_header ? "DELETE" : "") << "\n";
 	std::cout << "Autoindex: " << (_autoindex ? "on" : "off") << "\n";
 	if (!_root.empty()) {
-		std::cout << "Upload Directory: " << _root << "\n";
+		std::cout << "_root: " << _root << "\n";
 	}
 	std::cout << "Index File: " << _index_file << "\n";
 }

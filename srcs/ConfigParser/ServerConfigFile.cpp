@@ -131,6 +131,10 @@ int ServerConfigFile::getClientBodySize() const {
 	return _client_body_size;
 }
 
+LocationConfigFile& ServerConfigFile::setDefaultLocation() {
+	return _defaultLocation;
+}
+
 // Debug
 void ServerConfigFile::printServer() const {
 	std::cout << "Server Port: " << _port << "\n";

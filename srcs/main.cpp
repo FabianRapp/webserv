@@ -33,6 +33,7 @@ void	webserv(int ac, char **av) {
 	std::vector<ServerConfigFile>	matching_ports;
 	for (auto & config : all_configs) {
 		//config.printServer();
+		//config.getDefaultLocation().printLocation();
 		if (matching_ports.size() == 0 || matching_ports[0].getPort() == config.getPort()) {
 			matching_ports.push_back(config);
 			continue ;

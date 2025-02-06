@@ -40,9 +40,9 @@ private:
 
 	void validateClientBodySize(const std::string& value);
 
-	 std::string sanitizeLine(const std::string& line) const;
+	std::string sanitizeLine(const std::string& line) const;
 
-	 std::vector<std::string> splitByWhitespace(const std::string& str) const;
+	std::vector<std::string> splitByWhitespace(const std::string& str) const;
 
 public:
 	ConfigParser();

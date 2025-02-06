@@ -7,7 +7,7 @@
 class LocationConfigFile {
 
 private:
-	std::string _path;
+	std::string _path = "/";
 	bool _get_header = false;
 	bool _post_header = false;
 	bool _delete_header = false;

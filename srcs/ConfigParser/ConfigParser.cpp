@@ -1,7 +1,7 @@
 #include "../../includes/ConfigParser/ConfigParser.hpp"
 #include <iostream>
 #include <stdexcept>
-
+#include  <unistd.h>
 //validateMethods
 #include <set>
 #include <sstream>
@@ -303,6 +303,10 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 
 			// Validate and set allowed methods for the server block
 			validateMethods(methods_str, current_server);
+			validateMethods(methods_str, current_server.setDefaultLocation());
+
+			std::cout << "METHODSDSDS: " << methods_str << std::endl;
+
 		} else if (line.find("root ") == 0) {
 			std::string root_value = trimWhiteSpace(line.substr(5)); // Extract the value after "root "
 
@@ -318,7 +322,7 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			// Validate and set the root path
 			validateRoot(root_value, "root", true); // true indicates this is a server block
 			current_server.setRoot(root_value);
-
+			current_server.setDefaultLocation().setRoot("/");
 		} else if (line.find("error_page ") == 0) {
 			int code = std::stoi(line.substr(11, 3)); // Extract error code
 			std::string path = trimWhiteSpace(line.substr(15)); // Extract path
@@ -346,6 +350,29 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 
 			// Call the shared validation method
 			validateIndex(index_value, current_server);
+			validateIndex(index_value, current_server.setDefaultLocation());
+
+		} else if (line.find("autoindex ") == 0) {
+
+			std::string autoindex_value = trimWhiteSpace(line.substr(10));
+
+			// Remove trailing semicolon if present
+			if (!autoindex_value.empty() && autoindex_value.back() == ';') {
+				autoindex_value.pop_back();
+			}
+
+			// Validate and set for server
+			if (autoindex_value == "on") {
+				current_server.setAutoIndex(true);
+				current_server.setDefaultLocation().setAutoIndex(true);
+			} else if (autoindex_value == "off") {
+				current_server.setAutoIndex(false);
+				current_server.setDefaultLocation().setAutoIndex(false);
+			} else {
+				throw std::runtime_error("Invalid autoindex value: " + autoindex_value + ". Must be 'on' or 'off'");
+			}
+				std::cout << "DEFAULT_LOCATION_AUTOINDEX: " << "|" << current_server.getDefaultLocation().getAutoIndex() << "|" << std::endl;
+				std::cout << "DEFAULT_LOCATION_AUTOINDEX: " << "|" << current_server.getDefaultLocation().getAutoIndex() << "|" << std::endl;
 		} else {
 			throw std::runtime_error("Invalid directive inside server block: " + line);
 		}

@@ -44,6 +44,12 @@ public:
 
 	int getPort() const;
 	const LocationConfigFile&	getDefaultLocation(void) const;
+
+	// In ServerConfigFile class declaration (header)
+
+	// LocationConfigFile& getDefaultLocation() { return _defaultLocation; }
+	// const LocationConfigFile& getDefaultLocation() const { return _defaultLocation; }
+
 	// const std::vector<std::string>& getServerNames() const;
 	const std::vector<std::string>& getServerNames() const;
 	bool isGetAllowed() const;
@@ -55,6 +61,7 @@ public:
 	const DefaultErrorPages& getErrorPages() const;
 	const std::vector<LocationConfigFile>& getLocations() const;
 	int getClientBodySize() const;
+	LocationConfigFile& setDefaultLocation();
 
 	void printServer() const;
 
