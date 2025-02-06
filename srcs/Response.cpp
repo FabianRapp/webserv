@@ -210,6 +210,8 @@ bool	Response::_has_index(std::vector<std::string>& files, std::string& index_fi
 void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
 		if (_request._uri.back() != '/') {
+			std::cout << "MOVED\n";
+			sleep(5);
 			_handle_get_moved();
 			return ;
 		}
@@ -301,6 +303,7 @@ void	Response::_handle_delete(void) {
 		_response_str =
 			"HTTP/1.1 204 No Content\r\n";
 		load_status_code_body(204);
+		return ;
 	} else {
 		//error
 		switch (errno) {
@@ -335,7 +338,9 @@ void	Response::execute(void) {
 					_handle_delete();
 					break ;
 				} default: {
-					break ;
+					_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
+					load_status_code_body(405);
+					return ;
 				}
 			}
 		}
@@ -344,6 +349,7 @@ void	Response::execute(void) {
 			std::cout << "ERROR IN EXECUTE\n";
 			_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
 			load_status_code_body(405);
+			return ;
 		}
 	} else if (_mode == ResponseMode::FINISH_UP) {
 		/* for potential file reads:
@@ -390,7 +396,9 @@ const LocationConfigFile* Response::getLocationConfig() {
 
 	for (auto& locationFile : locationsFiles)
 	{
-		if (_request._uri == locationFile.getPath())
+		//todo: if uri has a file type ending remove the the file name from uri for the match checking
+		if (_request._uri == locationFile.getPath() + '/'
+			|| (_request._uri.length() == 1 && _request._uri == locationFile.getPath()))
 		{
 			std::cout << "URI = |" << _request._uri << " LOC = |" << locationFile.getPath() << "|\n";
 			return &locationFile;
@@ -409,6 +417,7 @@ void Response::setAllowedMethods() {
 		std::cout << "NO LOCATION PRESENT, default all methods allowed\n";
 		return ;
 	}
+	//todo: for testing since LocationFile has unreliable data
 	if (_locationConfig->isGetAllowed())
 	{
 		_allowedMethods.push_back(MethodType::GET);
