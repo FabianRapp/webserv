@@ -30,7 +30,8 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 	_reader(nullptr),
 	_mode(ResponseMode::NORMAL),
 	_cgi_manager(nullptr),
-	_first_iter(true)
+	_first_iter(true),
+	_dir(nullptr)
 {
 	//later expansions have to be applied if upload_dir is present
 
@@ -40,6 +41,9 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 }
 
 Response::~Response(void) {
+	if (_dir) {
+		closedir(_dir);
+	}
 	//if (this->_reader) {
 	//	this->_reader->set_close();
 	//}
@@ -107,30 +111,26 @@ void	Response::write_fd(int write_fd) {
 	);
 }
 
-// assumes dqir to be a valid directory
-// check errno for potential errors
 std::vector<std::string>	Response::_get_dir(void) {
-	DIR*	dir = opendir(_path.c_str()); // todo: has to be part of some class for err handling
-	if (!dir) {
+	_dir = opendir(_path.c_str()); // todo: opendir err handling
+	if (!_dir) {
 		if (errno == ENOMEM) {
 			throw (std::bad_alloc());
 		}
-		//todo: other errors
-		//500 or 403?
 		std::cerr << "err: opendir: " << strerror(errno) << "\n";
 		errno = 0;
 		return (std::vector<std::string>());
 	}
 	std::vector<std::string>	files;
-	struct dirent	*dir_data = readdir(dir);
+	struct dirent	*dir_data = readdir(_dir);
 	while (dir_data != NULL) {
 		std::string	name = dir_data->d_name;
 		files.push_back(name);
-		dir_data = readdir(dir);
+		dir_data = readdir(_dir);
 	}
 	//todo: check for errrors of readdir
-	//todo: check if auto index is enabled for the given directory
-	closedir(dir);
+	closedir(_dir);
+	_dir = nullptr;
 	return (files);
 }
 
@@ -183,11 +183,9 @@ void	Response::_handle_get_file(void) {
 	read_fd(file_fd, stats.st_size);
 
 	_mode = ResponseMode::FINISH_UP;
-	_response_str =
-		std::string("HTTP/1.1 200 OK\r\n")
-		+ "Content-Type: text/html\r\n"
-		//+ "Content-Type: image/jpeg\r\n"
-	;
+	//todo: have some kind of function to set correct content type
+	_response_str = std::string("HTTP/1.1 200 OK\r\n");
+	_append_content_type(_path);
 }
 
 void	Response::_handle_get_moved(void) {
@@ -207,7 +205,6 @@ bool	Response::_has_index(std::vector<std::string>& files, std::string& index_fi
 	return (false);
 }
 
-//todo: commented lines
 void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
 	 	if (_request._uri.back() != '/') {
@@ -256,11 +253,38 @@ void	Response::_handle_get(void) {
 	}
 }
 
+void	Response::_append_content_type(const std::string& path) {
+	_response_str += "Content-Type: ";
+    size_t pos = path.find_last_of(".");
+    if (pos == std::string::npos) {
+		_response_str += "application/octet-stream\r\n";
+		return ;
+    }
+
+    std::string ext = path.substr(pos + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    if (ext == "html" || ext == "htm") {
+		_response_str += "text/html\r\n";
+	} else if (ext == "css") {
+		_response_str += "text/css\r\n";
+	} else if (ext == "js") {
+		_response_str += "application/javascript\r\n";
+	} else if (ext == "jpg" || ext == "jpeg") {
+		_response_str += "image/jpeg\r\n";
+	} else if (ext == "png") {
+		_response_str += "image/png\r\n";
+	} else {
+		_response_str += "application/octet-stream";
+	}
+}
+
 void	Response::_handle_post_file(void) {
 	int flags;
 	//flags = O_WRONLY | O_CREAT | O_APPEND | O_EXCL;
-	//debugging flags
+	//^^^^^^^^^^^^^^^flags to only post successfully if the fiel does not exist
 	flags = O_WRONLY | O_CREAT | O_TRUNC;
+	//^^^^^^^^^^^^^^^flags to post successfully even if the file exists(overwrite)
 	int	post_fd = open(_path.c_str(), flags, 0644);
 	if (post_fd < 0) {
 		std::cout << "Error: POST: failed open(): " << strerror(errno) << std::endl;
@@ -268,19 +292,19 @@ void	Response::_handle_post_file(void) {
 			case ENOMEM:
 				errno = 0;
 				throw std::bad_alloc();
-				break;
+				break ;
 			case EACCES:
 			case EFAULT:
 			case ENOENT:
 			case ENOTDIR:
 				load_status_code_response(404, "Not Found");
-				break;
+				break ;
 			case EEXIST:
-				load_status_code_response(409, "Conflict");  // Conflict response
-				break;
+				load_status_code_response(409, "Conflict");
+				break ;
 			case ENOSPC:
 				load_status_code_response(507, "Insufficient Storage");
-				break;
+				break ;
 			case EROFS:
 			case EPERM:
 			case EBUSY:
@@ -291,7 +315,7 @@ void	Response::_handle_post_file(void) {
 			case EIO:
 			default:
 				load_status_code_response(500, "Internal Server Error");
-				break;
+				break ;
 		}
 		errno = 0;
 		return ;
@@ -523,7 +547,6 @@ void Response::setAllowedMethods() {
 		std::cout << "NO LOCATION PRESENT, default all methods allowed\n";
 		return ;
 	}
-	//todo: for testing since LocationFile has unreliable data
 	if (_locationConfig->isGetAllowed())
 	{
 		_allowedMethods.push_back(MethodType::GET);
@@ -577,7 +600,7 @@ std::string	Response::getExpandedTarget(void) {
 		std::cout << "File exists: " << expandedPath << std::endl;
 	} else if (_request.getMethod() == MethodType::GET) {
 		std::cout << "File does not exist: " << expandedPath << std::endl;
-		load_status_code_body(404);
+		load_status_code_response(404, "Not Found");
 		return ("");
 		//return (_config.getRoot() + "/404.html");
 		// throw std::runtime_error("File does not exist: " + expandedPath);

@@ -22,6 +22,9 @@ ReadFd::~ReadFd(void) {
 }
 
 void	ReadFd::execute(void) {
+	static
+	char	buffer[1024 * 1024];
+
 	if (is_ready(POLLHUP) && !is_ready(POLLIN)) {
 		std::cout << FT_ANSI_RED "readfd POLLHUP\n" FT_ANSI_RESET;
 		data.set_close(data_idx);

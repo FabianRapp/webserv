@@ -1,7 +1,6 @@
 #pragma once
 
 #include "general_includes.hpp"
-#include "parser/Token.hpp"
 #include "parser/Parser.hpp"
 #include "utils.hpp"
 #include "types.hpp"
@@ -63,6 +62,7 @@ public:
 	bool	in_panic(void) const;
 
 	ConfigParser	*config_parser;
+	size_t		get_total_count(void) const;
 private:
 	size_t	_total_entrys;
 	void	_add_entry(BaseFd *entry, short poll_events);

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Token.hpp"
-#include "Lexer.hpp"
 #include "../Request.hpp"
 #include "../enums.hpp"
 #include "../macros.h"
@@ -50,43 +48,6 @@ class Parser {
 		std::string extract_first_line(const std::string& request);
 		// std::vector<std::string> split(const std::string& str, char delimiter);
 		bool		ends_with(const std::string& str, const std::string& suffix);
-		bool		is_finished(void) const;
+		bool		is_finished(void);
 		Request		get_request(void) const;
 };
-
-
-// /* todo: parse(): main logic */
-// /* assumes one parser object per client connection */
-// class Parser {
-// public:
-// 					Parser(std::string & http_input);
-// 					~Parser(void);
-// 	void			parse(void);
-// 	bool			is_finished(void) const; /* to check wether the read request is
-// 									complete or needs to be read further */
-// 	t_http_request	get_request(void) const; /* once is_finished is true this can be
-// 	called. Resets the parser/lexer for the next client request with the same
-// 	connection. */
-// private:
-// 	void			_reset(void);
-// 	void			_handle_header(Token & token);
-// 	t_http_request	_request;
-// 	Lexer			_lexer;
-// };
-
-// class Parser {
-// 	public:
-// 		Parser(std::string & http_input);
-// 		~Parser(void);
-// 		void			parse(void);
-// 		bool			is_finished(void) const; /* to check wether the read request is complete or needs to be read further */
-// 		t_http_request	get_request(void) const; /* once is_finished is true this can be
-// 		called. Resets the parser/lexer for the next client request with the same
-// 		connection. */
-
-// 	private:
-// 		void			_reset(void);
-// 		void			_handle_header(Token & token);
-// 		t_http_request	_request;
-// 		Lexer			_lexer;
-// };

@@ -20,7 +20,7 @@ public:
 	DataManager&		data;
 	int					fd;
 	size_t				data_idx;
-	const std::string	name;//for debugging
+	std::string			name;//for debugging
 
 	//be very carefull with calling this outside of the object itself
 	virtual

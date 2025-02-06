@@ -59,6 +59,7 @@ class Response {
 	
 		std::string_view		_fd_write_data;
 		bool					_first_iter;
+		DIR*					_dir;
 
 
 	void						_handle_get_moved(void);
@@ -71,6 +72,7 @@ class Response {
 	void	_handle_get_file(void);
 	bool	_has_index(std::vector<std::string>& files, std::string& index_file);
 	void	_handle_post_file(void);
+	void	_append_content_type(const std::string& path);
 
 	public:
 		Response () = delete;
