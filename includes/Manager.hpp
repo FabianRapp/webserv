@@ -32,6 +32,7 @@
 // #include <types.hpp>
 
 
+//todo: needs panic functionality which is like bad alloc i guess
 class DataManager {
 public:
 	DataManager(void);

@@ -115,8 +115,8 @@ void	DataManager::run_poll() {
 	//std::cout << "polling " << static_cast<nfds_t>(_count) << "\n";
 	if (poll(&_pollfds[0], static_cast<nfds_t>(_count), 0) < 0) {
 		std::cerr << "Error: poll: " << strerror(errno) << "\n";
-		_consecutive_poll_fails++;
-		if (_consecutive_poll_fails > 1000) {
+		FT_ASSERT(errno != EINVAL && errno != EFAULT && errno != EBADF);// would indicate a bug
+		if (errno != EINTR && ++_consecutive_poll_fails > 1000) {
 			_panic = true;
 			std::cerr << "Critical error: poll keeps failing.. full exit..\n";
 			std::cerr << "poll: " << strerror(errno) << "\n";

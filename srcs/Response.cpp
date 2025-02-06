@@ -13,7 +13,7 @@
 #include "../includes/Response.hpp"
 #include "../includes/FdClasses/Client.hpp"
 #include "../includes/CGIManager.hpp"
-#include <stdexcept>
+
 #include <vector>
 
 Response::Response(const ServerConfigFile& configFile, const Request& request, Client& client,
@@ -33,23 +33,14 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 	_first_iter(true),
 	_dir(nullptr)
 {
-	//later expansions have to be applied if upload_dir is present
-
 	_locationConfig = getLocationConfig();
 	setAllowedMethods();
-
 }
 
 Response::~Response(void) {
 	if (_dir) {
 		closedir(_dir);
 	}
-	//if (this->_reader) {
-	//	this->_reader->set_close();
-	//}
-	//if (this->_writer) {
-	//	this->_writer->set_close();
-	//}
 }
 
 // call this from client in case of early destruction
@@ -114,21 +105,49 @@ void	Response::write_fd(int write_fd) {
 std::vector<std::string>	Response::_get_dir(void) {
 	_dir = opendir(_path.c_str()); // todo: opendir err handling
 	if (!_dir) {
-		if (errno == ENOMEM) {
-			throw (std::bad_alloc());
+		std::cerr << FT_ANSI_RED " ERROR " FT_ANSI_RESET << "opendir: " << _path << " failed: " << strerror(errno) << "\n";
+		switch (errno) {
+			case ENOMEM:
+			case EMFILE:  // Process limit reached for open files
+			case ENFILE:  // System limit reached for open files
+				errno = 0;
+				throw std::bad_alloc();
+			case EACCES:
+			case ELOOP:
+			case ENAMETOOLONG:
+			case ENOENT:
+			case ENOTDIR:
+				load_status_code_response(404, "Not Found");
+				break ;
+			case EIO:
+			case EBADF:
+			case EFAULT:
+			default:
+				load_status_code_response(500, "Internal Server Error");
+				break ;
 		}
-		std::cerr << "err: opendir: " << strerror(errno) << "\n";
 		errno = 0;
 		return (std::vector<std::string>());
 	}
 	std::vector<std::string>	files;
+	//FT_ASSERT(errno == 0); todo: this somehow triggers with 'operation timed out'
+	//where does that come from
+	//let's come back to this when the genral error handling is better
+	errno = 0;
 	struct dirent	*dir_data = readdir(_dir);
 	while (dir_data != NULL) {
 		std::string	name = dir_data->d_name;
 		files.push_back(name);
 		dir_data = readdir(_dir);
 	}
-	//todo: check for errrors of readdir
+	if (errno) {
+		std::cerr << FT_ANSI_RED " ERROR " FT_ANSI_RESET << "readdir: " << strerror(errno) << "\n";
+		closedir(_dir);
+		_dir = nullptr;
+		errno = 0;
+		load_status_code_response(500, "Internal Server Error");
+		return (std::vector<std::string>());
+	}
 	closedir(_dir);
 	_dir = nullptr;
 	return (files);
@@ -172,18 +191,16 @@ void	Response::_handle_auto_index(std::vector<std::string>&files) {
 }
 
 // _path is a file that is not CGI
-// todo: err handling
 void	Response::_handle_get_file(void) {
 	struct stat stats;
 
 	std::cout << "B: " << _path << "\n";
 	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
 	int	file_fd = open(_path.c_str(), O_CLOEXEC | O_RDONLY);
-	FT_ASSERT(file_fd >0);
+	FT_ASSERT(file_fd >0); //todo: errno check if fd < 0
 	read_fd(file_fd, stats.st_size);
 
 	_mode = ResponseMode::FINISH_UP;
-	//todo: have some kind of function to set correct content type
 	_response_str = std::string("HTTP/1.1 200 OK\r\n");
 	_append_content_type(_path);
 }
@@ -197,6 +214,7 @@ void	Response::_handle_get_moved(void) {
 	load_status_code_body(301);
 }
 
+//todo:
 //if index file is found returns true and puts it's path in index_file
 bool	Response::_has_index(std::vector<std::string>& files, std::string& index_file) {
 	// _config;//const ServerConfigFile&
@@ -255,16 +273,16 @@ void	Response::_handle_get(void) {
 
 void	Response::_append_content_type(const std::string& path) {
 	_response_str += "Content-Type: ";
-    size_t pos = path.find_last_of(".");
-    if (pos == std::string::npos) {
+	size_t pos = path.find_last_of(".");
+	if (pos == std::string::npos) {
 		_response_str += "application/octet-stream\r\n";
 		return ;
-    }
+	}
 
-    std::string ext = path.substr(pos + 1);
-    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+	std::string ext = path.substr(pos + 1);
+	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
-    if (ext == "html" || ext == "htm") {
+	if (ext == "html" || ext == "htm") {
 		_response_str += "text/html\r\n";
 	} else if (ext == "css") {
 		_response_str += "text/css\r\n";
@@ -290,6 +308,8 @@ void	Response::_handle_post_file(void) {
 		std::cout << "Error: POST: failed open(): " << strerror(errno) << std::endl;
 		switch (errno) {
 			case ENOMEM:
+			case EMFILE:  // Process limit reached for open files
+			case ENFILE:  // System limit reached for open files
 				errno = 0;
 				throw std::bad_alloc();
 				break ;
@@ -362,7 +382,7 @@ void	Response::_handle_post(void) {
 //don't use this if the response needs any custom data besides the status
 //this response the respose
 void	Response::load_status_code_response(int code, const std::string& status) {
-	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back
+	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back like cgi manager
 	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + status + "\r\n"
 		+ "Content-Type: text/html\r\n";
 	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
@@ -370,7 +390,7 @@ void	Response::load_status_code_response(int code, const std::string& status) {
 	struct stat stats;
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
 	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
-	FT_ASSERT(file_fd >0);
+	FT_ASSERT(file_fd > 0); //todo: errno check if fd < 0
 	read_fd(file_fd, stats.st_size);
 	_mode = ResponseMode::FINISH_UP;
 }
@@ -381,7 +401,7 @@ void	Response::load_status_code_body(int code) {
 	struct stat stats;
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
 	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
-	FT_ASSERT(file_fd >0);
+	FT_ASSERT(file_fd > 0); //todo: errno check if fd < 0
 	read_fd(file_fd, stats.st_size);
 	_mode = ResponseMode::FINISH_UP;
 }
@@ -397,7 +417,6 @@ void	Response::_handle_delete(void) {
 		return ;
 	} else {
 		std::cout << FT_ANSI_RED " DELETE " FT_ANSI_RESET << _path << " failed:\n";
-		//error
 		std::cout << strerror(errno) << std::endl;
 		switch (errno) {
 			case (ENOMEM):
