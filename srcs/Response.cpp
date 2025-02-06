@@ -35,7 +35,6 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 
 	_locationConfig = getLocationConfig();
 	setAllowedMethods();
-	_path = getExpandedTarget();
 
 }
 
@@ -232,11 +231,11 @@ void	Response::_handle_get(void) {
 		}
 	}
 	if (access(_path.c_str(), F_OK) == -1) {
-		_client->response->load_status_code_response(404, "Not Found");
+		load_status_code_response(404, "Not Found");
 		return ;
 	}
 	if (access(_path.c_str(), R_OK) == -1) {
-		_client->response->load_status_code_response(404, "Not Found");
+		load_status_code_response(404, "Not Found");
 		return ;
 	}
 
@@ -303,23 +302,47 @@ void	Response::load_status_code_body(int code) {
 	_mode = ResponseMode::FINISH_UP;
 }
 
+//todo: do we want delete to delte recursivly?
+//if so change to std::filesystem::remove_all(_path) for directories
+//currently it gives a 409 for not empty directories
 void	Response::_handle_delete(void) {
-	std::cout << "Would" FT_ANSI_RED " DELETE " FT_ANSI_RESET << _path << "\n";
-	if (1 /* std::remove(_path.c_str()) == 0 */) {
+	if (std::remove(_path.c_str()) == 0) {
 		//success
-		_response_str =
-			"HTTP/1.1 204 No Content\r\n";
-		load_status_code_body(204);
+		std::cout << FT_ANSI_RED " DELETE " FT_ANSI_RESET << _path << "\n";
+		load_status_code_response(204, "No Content");
 		return ;
 	} else {
+		std::cout << FT_ANSI_RED " DELETE " FT_ANSI_RESET << _path << " failed:\n";
 		//error
+		std::cout << strerror(errno) << std::endl;
 		switch (errno) {
 			case (ENOMEM):
 				errno = 0;
-				throw(std::bad_alloc()); break ;
+				throw(std::bad_alloc());
+				break ;
+			case (EACCES):
+			case (EFAULT):
+			case (ENOENT):
+			case (ENOTDIR):
+				load_status_code_response(404, "Not Found");
+				break;
+			case (ENOTEMPTY):
+				load_status_code_response(409, "Conflict");
+				// todo ideally somhow add this to the html out, idk how tho:
+				// "Cannot delete a non-empty directory"
+				break ;
+			case (EBADF):
+			case (EROFS):
+			case (EPERM):
+			case (ENAMETOOLONG):
+			case (ELOOP):
+			case (EBUSY):
+			case (EISDIR):
+			case (EIO):
+			case (EINVAL):
 			default:
-			//todo
-			break ;
+				load_status_code_response(500, "Internal Server Error");
+				break ;
 		}
 		errno = 0;
 	}
@@ -331,6 +354,10 @@ bool	Response::isMethodAllowed(MethodType method) {
 
 void	Response::execute(void) {
 	if (_mode == ResponseMode::NORMAL) {
+		_path = getExpandedTarget();
+		if (_mode != ResponseMode::NORMAL) {
+			return ;
+		}
 		if (isMethodAllowed(_request._type))
 		{
 			switch (_request._type)
@@ -486,8 +513,9 @@ std::string	Response::getExpandedTarget(void) {
 		std::cout << "File exists: " << expandedPath << std::endl;
 	} else {
 		std::cout << "File does not exist: " << expandedPath << std::endl;
-		// load_status_code_body(404);
-		return (_config.getRoot() + "/404.html");
+		load_status_code_body(404);
+		return ("");
+		//return (_config.getRoot() + "/404.html");
 		// throw std::runtime_error("File does not exist: " + expandedPath);
 	}
 \
