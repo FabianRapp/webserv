@@ -186,6 +186,7 @@ void	Response::_handle_get_file(void) {
 	_response_str =
 		std::string("HTTP/1.1 200 OK\r\n")
 		+ "Content-Type: text/html\r\n"
+		//+ "Content-Type: image/jpeg\r\n"
 	;
 }
 
@@ -368,6 +369,11 @@ void	Response::execute(void) {
 			+ _body
 		;
 		_client_mode = ClientMode::SENDING;
+		//for debugging: saves the body as file
+		int debug_body_fd = open("body", O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		FT_ASSERT(debug_body_fd >  0);
+		write(debug_body_fd, _body.c_str(), _body.length());
+		close(debug_body_fd);
 	} else {
 		FT_ASSERT(0);
 	}

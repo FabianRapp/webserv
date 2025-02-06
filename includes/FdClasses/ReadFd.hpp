@@ -22,5 +22,9 @@ protected:
 	std::function<void()>				completion_callback;
 	Client*								client;
 	Server*								server;
+
+
+	//debug: remove later
+	int									debug_fd;
 };
 

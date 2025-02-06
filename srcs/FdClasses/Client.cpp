@@ -55,9 +55,9 @@ void	Client::_receive_request(void) {
 		set_close();
 		return ;
 	}
-	buffer[bytes_read] = 0;
+	buffer[bytes_read] = 0;//not needed, only for debugging
 	std::cout << "Read:\n" << buffer << '\n';
-	this->input += buffer;
+	this->input.append(buffer, static_cast<size_t>(bytes_read));
 
 	this->parse();
 	//std::cout << "Request STATUS = " << _parser.is_finished() << std::endl;
