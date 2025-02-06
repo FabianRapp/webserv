@@ -1,19 +1,11 @@
-HTTP/1.1 405 Method Not Allowed
+HTTP/1.1 200 OK
 Content-Type: text/html
+Content-Length: 344
 Connection: close
-Content-Length: 361
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>405 Method Not Allowed</title>
-    <link rel="stylesheet" href="./css/style.css">
-</head>
-<body>
-    <div class="container">
-        <img src="./img/405.jpg" alt="Error 405 Image">
-    </div>
-</body>
-</html>
+<!DOCTYPE HTML><html> <head>  <title>Index of /errors/</title> </head> <body>  <h1>Index of /errors/</h1>  <hr>  <a href="/errors/.">.</a><br>
+  <a href="/errors/..">..</a><br>
+  <a href="/errors/404.html">404.html</a><br>
+  <a href="/errors/404.jpg">404.jpg</a><br>
+  <a href="/errors/style.css">style.css</a><br>
+  </pre>  <hr> </body></html>

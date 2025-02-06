@@ -1,0 +1,18 @@
+body {
+	margin: 0;
+	padding: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	background-color: #391818;
+}
+
+.container {
+	text-align: center;
+}
+
+img {
+	max-width: 100%;
+	height: auto;
+}
