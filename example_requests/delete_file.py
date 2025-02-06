@@ -1,7 +1,4 @@
-import socket
-
-HOST = "has_delte.com"
-PORT = 8080
+HOST = "has_delete.com"
 
 TYPE = "DELETE"
 URI = "/here_is_delete_allowed/delete_me.txt"
@@ -13,16 +10,3 @@ User-Agent: CustomClient/1.0\r
 Connection: close\r
 \r
 """.format(type=TYPE, uri=URI, host=HOST)
-
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-	s.connect(("127.0.0.1", PORT))
-	s.sendall(http_request.encode())
-	response = b""
-	
-	while True:
-		data = s.recv(1024)
-		if not data:
-			break
-		response += data
-
-print(response.decode())

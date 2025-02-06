@@ -212,6 +212,7 @@ void	Parser::setVersion(const std::string& version) {
 HeaderType	setType(const std::string& str) {
 	std::pair<const std::string, HeaderType>	matches[] = {
 		{"Accept:",                  HeaderType::ACCEPT},
+		{"Content-Length:",          HeaderType::CONTENT_LENGTH},
 		{"Accept-Charset:",          HeaderType::ACCEPT_CHARSET},
 		{"Accept-Encoding:",         HeaderType::ACCEPT_ENCODING},
 		{"Accept-Language:",         HeaderType::ACCEPT_LANGUAGE},
@@ -454,6 +455,7 @@ void	Parser::parse_body(std::string& input) {
 	}
 	else
 	{
+		std::cout << "NO BODY\n";
 		// note by fabi: updated: there is simply no body I think
 		_request._finished = true;
 		return ;

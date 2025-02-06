@@ -1,13 +1,13 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Response.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/28 13:09:21 by adrherna          #+#    #+#             */
-/*   Updated: 2025/02/06 13:55:33 by adrherna         ###   ########.fr       */
-/*                                                                            */
+/*																			*/
+/*														:::	  ::::::::   */
+/*   Response.cpp									   :+:	  :+:	:+:   */
+/*													+:+ +:+		 +:+	 */
+/*   By: adrherna <adrianhdt.2001@gmail.com>		+#+  +:+	   +#+		*/
+/*												+#+#+#+#+#+   +#+		   */
+/*   Created: 2025/01/28 13:09:21 by adrherna		  #+#	#+#			 */
+/*   Updated: 2025/02/06 13:55:33 by adrherna		 ###   ########.fr	   */
+/*																			*/
 /* ************************************************************************** */
 
 #include "../includes/Response.hpp"
@@ -29,7 +29,8 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 	_writer(nullptr),
 	_reader(nullptr),
 	_mode(ResponseMode::NORMAL),
-	_cgi_manager(nullptr)
+	_cgi_manager(nullptr),
+	_first_iter(true)
 {
 	//later expansions have to be applied if upload_dir is present
 
@@ -209,10 +210,8 @@ bool	Response::_has_index(std::vector<std::string>& files, std::string& index_fi
 //todo: commented lines
 void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
-		// std::cout << "WTF: " << _path << "\n";
 	 	if (_request._uri.back() != '/') {
 			std::cout << "MOVED\n";
-			//sleep(5);
 			_handle_get_moved();
 			return ;
 		}
@@ -223,11 +222,9 @@ void	Response::_handle_get(void) {
 		} else if (_locationConfig->getAutoIndex()) {
 			_handle_auto_index(files);
 			return ;
-		/*
 		} else {
-			handle invlaid request
+			load_status_code_response(404, "Not Found");
 			return ;
-		*/
 		}
 	}
 	if (access(_path.c_str(), F_OK) == -1) {
@@ -259,20 +256,83 @@ void	Response::_handle_get(void) {
 	}
 }
 
+void	Response::_handle_post_file(void) {
+	int flags;
+	//flags = O_WRONLY | O_CREAT | O_APPEND | O_EXCL;
+	//debugging flags
+	flags = O_WRONLY | O_CREAT | O_TRUNC;
+	int	post_fd = open(_path.c_str(), flags, 0644);
+	if (post_fd < 0) {
+		std::cout << "Error: POST: failed open(): " << strerror(errno) << std::endl;
+		switch (errno) {
+			case ENOMEM:
+				errno = 0;
+				throw std::bad_alloc();
+				break;
+			case EACCES:
+			case EFAULT:
+			case ENOENT:
+			case ENOTDIR:
+				load_status_code_response(404, "Not Found");
+				break;
+			case EEXIST:
+				load_status_code_response(409, "Conflict");  // Conflict response
+				break;
+			case ENOSPC:
+				load_status_code_response(507, "Insufficient Storage");
+				break;
+			case EROFS:
+			case EPERM:
+			case EBUSY:
+			case EISDIR:
+			case EINVAL:
+			case ENAMETOOLONG:
+			case ELOOP:
+			case EIO:
+			default:
+				load_status_code_response(500, "Internal Server Error");
+				break;
+		}
+		errno = 0;
+		return ;
+	}
+	std::cout << "body size; " << _request._body.size() << std::endl ;
+	_fd_write_data = std::string_view(_request._body);
+	write_fd(post_fd);
+	_mode = ResponseMode::FINISH_UP;
+}
+
 void	Response::_handle_post(void) {
-	/*
-	if (!is_dir(_path)) {
-		err;
+	std::cout << "handle_post\n";
+	if (std::filesystem::is_directory(_path)) {
+	 	if (_request._uri.back() != '/') {
+			_handle_get_moved();
+			return ;
+		}
+		std::vector<std::string>	files = _get_dir();
+		std::string					index_file;
+		if (_has_index(files, index_file) && CGIManager::isCGI(index_file)) {
+			_path = index_file;
+		} else {
+			load_status_code_response(403, "Forbidden");
+			return ;
+		}
 	}
 	if(CGIManager::isCGI(_path)) {
-		_cgi_manager = new CGIManager(_path, _request);
-		_response_str = _cgi_manager->execute();
-		_client_mode = ClientMode::SENDING;
-		delete _cgi_manager;
+		_cgi_manager = new CGIManager(_client, this, _path, _request);
+		if (_cgi_manager->execute()) {
+			_response_str =
+				std::string("HTTP/1.1 200 OK\r\n")
+				+ "Content-Type: text/html\r\n"
+			;
+			delete _cgi_manager;
+			_cgi_manager = nullptr;
+			_mode = ResponseMode::FINISH_UP;
+		}
 	} else {
 		_handle_post_file();
+
 	}
-	*/
 }
 
 //don't use this if the response needs any custom data besides the status
@@ -353,11 +413,15 @@ bool	Response::isMethodAllowed(MethodType method) {
 }
 
 void	Response::execute(void) {
-	if (_mode == ResponseMode::NORMAL) {
+	if (_first_iter) {
 		_path = getExpandedTarget();
+		_first_iter = false;
+		//return if a status code file was requested
 		if (_mode != ResponseMode::NORMAL) {
 			return ;
 		}
+	}
+	if (_mode == ResponseMode::NORMAL) {
 		if (isMethodAllowed(_request._type))
 		{
 			switch (_request._type)
@@ -511,7 +575,7 @@ std::string	Response::getExpandedTarget(void) {
 
 	if (std::filesystem::exists(expandedPath)) {
 		std::cout << "File exists: " << expandedPath << std::endl;
-	} else {
+	} else if (_request.getMethod() == MethodType::GET) {
 		std::cout << "File does not exist: " << expandedPath << std::endl;
 		load_status_code_body(404);
 		return ("");
