@@ -371,7 +371,9 @@ void	Response::_handle_post(void) {
 		}
 	}
 	if(CGIManager::isCGI(_path)) {
-		_cgi_manager = new CGIManager(_client, this, _path, _request);
+		if (!_cgi_manager) {
+			_cgi_manager = new CGIManager(_client, this, _path, _request);
+		}
 		if (_cgi_manager->execute()) {
 			_response_str =
 				std::string("HTTP/1.1 200 OK\r\n")

@@ -161,7 +161,8 @@ void	DataManager::_add_entry(BaseFd *entry, short poll_events) {
 }
 
 void	DataManager::_fd_close(size_t idx) {
-	std::cout << "closing fd " << _fd_users[idx]->name << " with idx " << idx << "\n";
+	std::cout << "closing fd " << _fd_users[idx]->fd
+		<< "(name: " << _fd_users[idx]->name << ") with idx " << idx << "\n";
 	delete _fd_users[idx];
 	if (_pollfds[idx].fd > 0) {
 		ft_close(_pollfds[idx].fd);
