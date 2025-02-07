@@ -17,18 +17,24 @@ Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 	init_status_codes(_codes);
 	fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (fd < 0) {
-		throw(ServerError("server: socket: " + std::string(strerror(errno))));
+		int err = errno;
+		errno = 0;
+		throw(ServerError("server: socket: " + std::string(strerror(err))));
 		return ;
 	}
 
 	int	option_val = 1;
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &option_val, sizeof option_val) < 0) {
+		int err = errno;
+		errno = 0;
 		ft_close(fd);
-		throw(ServerError("server: setsockopt: " + std::string(strerror(errno))));
+		throw(ServerError("server: setsockopt: " + std::string(strerror(err))));
 	}
 	_set_non_blocking();
 	if (fd < 0) {
-		throw(ServerError("server: set non blocking: " + std::string(strerror(errno))));
+		int err = errno;
+		errno = 0;
+		throw(ServerError("server: set non blocking: " + std::string(strerror(err))));
 		return ;
 	}
 

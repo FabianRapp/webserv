@@ -7,8 +7,10 @@ ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd, Client& cl
 	target_buf(target_buffer),
 	completion_callback(std::move(completion_callback)),
 	client(&client),
-	server(client.server)
+	server(client.server),
+	debug_fd(open("read_data_debug", O_CREAT | O_TRUNC | O_WRONLY, 0777))
 {
+	FT_ASSERT(debug_fd >= 0);
 	this->fd = fd;
 	_set_non_blocking();
 	left_over_bytes = byte_count;
@@ -16,9 +18,13 @@ ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd, Client& cl
 }
 
 ReadFd::~ReadFd(void) {
+	close(debug_fd);
 }
 
 void	ReadFd::execute(void) {
+	static
+	char	buffer[1024 * 1024 * 100]; // 100mb read buffer
+
 	if (is_ready(POLLHUP) && !is_ready(POLLIN)) {
 		std::cout << FT_ANSI_RED "readfd POLLHUP\n" FT_ANSI_RESET;
 		data.set_close(data_idx);
@@ -41,15 +47,16 @@ void	ReadFd::execute(void) {
 		//todo: err
 		FT_ASSERT(0);
 	}
-	buffer[read_ret] = 0;
+	buffer[read_ret] = 0;//not needed, only for debugging
 
 	left_over_bytes -= read_ret;
-	target_buf += buffer;
+	target_buf.append(buffer, static_cast<size_t>(read_ret));
 	//std::cout << "buffer: " << target_buf << "\n";
 	//std::cout << "read_size: " << read_size << "\n";
 	//std::cout << "read_ret: " << read_ret << "\n";
 	//std::cout << "left_over_bytes: " << left_over_bytes << "\n";
 	if (left_over_bytes == 0 || read_ret == 0) {
+		write(debug_fd, target_buf.c_str(), static_cast<size_t>(target_buf.size()));
 		data.set_close(data_idx);
 		completion_callback();
 		return ;

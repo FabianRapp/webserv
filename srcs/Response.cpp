@@ -1,19 +1,19 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Response.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/28 13:09:21 by adrherna          #+#    #+#             */
-/*   Updated: 2025/02/06 13:55:33 by adrherna         ###   ########.fr       */
-/*                                                                            */
+/*																			*/
+/*														:::	  ::::::::   */
+/*   Response.cpp									   :+:	  :+:	:+:   */
+/*													+:+ +:+		 +:+	 */
+/*   By: adrherna <adrianhdt.2001@gmail.com>		+#+  +:+	   +#+		*/
+/*												+#+#+#+#+#+   +#+		   */
+/*   Created: 2025/01/28 13:09:21 by adrherna		  #+#	#+#			 */
+/*   Updated: 2025/02/06 13:55:33 by adrherna		 ###   ########.fr	   */
+/*																			*/
 /* ************************************************************************** */
 
 #include "../includes/Response.hpp"
 #include "../includes/FdClasses/Client.hpp"
 #include "../includes/CGIManager.hpp"
-#include <stdexcept>
+
 #include <vector>
 
 Response::Response(const ServerConfigFile& configFile, const Request& request, Client& client,
@@ -29,23 +29,18 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 	_writer(nullptr),
 	_reader(nullptr),
 	_mode(ResponseMode::NORMAL),
-	_cgi_manager(nullptr)
+	_cgi_manager(nullptr),
+	_first_iter(true),
+	_dir(nullptr)
 {
-	//later expansions have to be applied if upload_dir is present
-
 	_locationConfig = getLocationConfig();
 	setAllowedMethods();
-	_path = getExpandedTarget();
-
 }
 
 Response::~Response(void) {
-	//if (this->_reader) {
-	//	this->_reader->set_close();
-	//}
-	//if (this->_writer) {
-	//	this->_writer->set_close();
-	//}
+	if (_dir) {
+		closedir(_dir);
+	}
 }
 
 // call this from client in case of early destruction
@@ -107,30 +102,54 @@ void	Response::write_fd(int write_fd) {
 	);
 }
 
-// assumes dqir to be a valid directory
-// check errno for potential errors
 std::vector<std::string>	Response::_get_dir(void) {
-	DIR*	dir = opendir(_path.c_str()); // todo: has to be part of some class for err handling
-	if (!dir) {
-		if (errno == ENOMEM) {
-			throw (std::bad_alloc());
+	_dir = opendir(_path.c_str());
+	if (!_dir) {
+		std::cerr << FT_ANSI_RED " ERROR " FT_ANSI_RESET << "opendir: " << _path << " failed: " << strerror(errno) << "\n";
+		switch (errno) {
+			case ENOMEM:
+			case EMFILE:  // Process limit reached for open files
+			case ENFILE:  // System limit reached for open files
+				errno = 0;
+				throw std::bad_alloc();
+			case EACCES:
+			case ELOOP:
+			case ENAMETOOLONG:
+			case ENOENT:
+			case ENOTDIR:
+				load_status_code_response(404, "Not Found");
+				break ;
+			case EIO:
+			case EBADF:
+			case EFAULT:
+			default:
+				load_status_code_response(500, "Internal Server Error");
+				break ;
 		}
-		//todo: other errors
-		//500 or 403?
-		std::cerr << "err: opendir: " << strerror(errno) << "\n";
 		errno = 0;
 		return (std::vector<std::string>());
 	}
 	std::vector<std::string>	files;
-	struct dirent	*dir_data = readdir(dir);
+	//FT_ASSERT(errno == 0); todo: this somehow triggers with 'operation timed out'
+	//where does that come from
+	//let's come back to this when the genral error handling is better
+	errno = 0;
+	struct dirent	*dir_data = readdir(_dir);
 	while (dir_data != NULL) {
 		std::string	name = dir_data->d_name;
 		files.push_back(name);
-		dir_data = readdir(dir);
+		dir_data = readdir(_dir);
 	}
-	//todo: check for errrors of readdir
-	//todo: check if auto index is enabled for the given directory
-	closedir(dir);
+	if (errno) {
+		std::cerr << FT_ANSI_RED " ERROR " FT_ANSI_RESET << "readdir: " << strerror(errno) << "\n";
+		closedir(_dir);
+		_dir = nullptr;
+		errno = 0;
+		load_status_code_response(500, "Internal Server Error");
+		return (std::vector<std::string>());
+	}
+	closedir(_dir);
+	_dir = nullptr;
 	return (files);
 }
 
@@ -172,21 +191,18 @@ void	Response::_handle_auto_index(std::vector<std::string>&files) {
 }
 
 // _path is a file that is not CGI
-// todo: err handling
 void	Response::_handle_get_file(void) {
 	struct stat stats;
 
 	std::cout << "B: " << _path << "\n";
 	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
 	int	file_fd = open(_path.c_str(), O_CLOEXEC | O_RDONLY);
-	FT_ASSERT(file_fd >0);
+	FT_ASSERT(file_fd >0); //todo: errno check if fd < 0
 	read_fd(file_fd, stats.st_size);
 
 	_mode = ResponseMode::FINISH_UP;
-	_response_str =
-		std::string("HTTP/1.1 200 OK\r\n")
-		+ "Content-Type: text/html\r\n"
-	;
+	_response_str = std::string("HTTP/1.1 200 OK\r\n");
+	_append_content_type(_path);
 }
 
 void	Response::_handle_get_moved(void) {
@@ -198,6 +214,7 @@ void	Response::_handle_get_moved(void) {
 	load_status_code_body(301);
 }
 
+//todo:
 //if index file is found returns true and puts it's path in index_file
 bool	Response::_has_index(std::vector<std::string>& files, std::string& index_file) {
 	// _config;//const ServerConfigFile&
@@ -206,13 +223,10 @@ bool	Response::_has_index(std::vector<std::string>& files, std::string& index_fi
 	return (false);
 }
 
-//todo: commented lines
 void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
-		// std::cout << "WTF: " << _path << "\n";
 	 	if (_request._uri.back() != '/') {
 			std::cout << "MOVED\n";
-			//sleep(5);
 			_handle_get_moved();
 			return ;
 		}
@@ -223,19 +237,17 @@ void	Response::_handle_get(void) {
 		} else if (_locationConfig->getAutoIndex()) {
 			_handle_auto_index(files);
 			return ;
-		/*
 		} else {
-			handle invlaid request
+			load_status_code_response(404, "Not Found");
 			return ;
-		*/
 		}
 	}
 	if (access(_path.c_str(), F_OK) == -1) {
-		_client->response->load_status_code_response(404, "Not Found");
+		load_status_code_response(404, "Not Found");
 		return ;
 	}
 	if (access(_path.c_str(), R_OK) == -1) {
-		_client->response->load_status_code_response(404, "Not Found");
+		load_status_code_response(404, "Not Found");
 		return ;
 	}
 
@@ -259,34 +271,126 @@ void	Response::_handle_get(void) {
 	}
 }
 
+void	Response::_append_content_type(const std::string& path) {
+	_response_str += "Content-Type: ";
+	size_t pos = path.find_last_of(".");
+	if (pos == std::string::npos) {
+		_response_str += "application/octet-stream\r\n";
+		return ;
+	}
+
+	std::string ext = path.substr(pos + 1);
+	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+	if (ext == "html" || ext == "htm") {
+		_response_str += "text/html\r\n";
+	} else if (ext == "css") {
+		_response_str += "text/css\r\n";
+	} else if (ext == "js") {
+		_response_str += "application/javascript\r\n";
+	} else if (ext == "jpg" || ext == "jpeg") {
+		_response_str += "image/jpeg\r\n";
+	} else if (ext == "png") {
+		_response_str += "image/png\r\n";
+	} else {
+		_response_str += "application/octet-stream";
+	}
+}
+
+void	Response::_handle_post_file(void) {
+	int flags;
+	//flags = O_WRONLY | O_CREAT | O_APPEND | O_EXCL;
+	//^^^^^^^^^^^^^^^flags to only post successfully if the fiel does not exist
+	flags = O_WRONLY | O_CREAT | O_TRUNC;
+	//^^^^^^^^^^^^^^^flags to post successfully even if the file exists(overwrite)
+	int	post_fd = open(_path.c_str(), flags, 0644);
+	if (post_fd < 0) {
+		std::cout << "Error: POST: failed open(): " << strerror(errno) << std::endl;
+		switch (errno) {
+			case ENOMEM:
+			case EMFILE:  // Process limit reached for open files
+			case ENFILE:  // System limit reached for open files
+				errno = 0;
+				throw std::bad_alloc();
+				break ;
+			case EACCES:
+			case EFAULT:
+			case ENOENT:
+			case ENOTDIR:
+				load_status_code_response(404, "Not Found");
+				break ;
+			case EEXIST:
+				load_status_code_response(409, "Conflict");
+				break ;
+			case ENOSPC:
+				load_status_code_response(507, "Insufficient Storage");
+				break ;
+			case EROFS:
+			case EPERM:
+			case EBUSY:
+			case EISDIR:
+			case EINVAL:
+			case ENAMETOOLONG:
+			case ELOOP:
+			case EIO:
+			default:
+				load_status_code_response(500, "Internal Server Error");
+				break ;
+		}
+		errno = 0;
+		return ;
+	}
+	std::cout << "body size; " << _request._body.size() << std::endl ;
+	_fd_write_data = std::string_view(_request._body);
+	write_fd(post_fd);
+	_mode = ResponseMode::FINISH_UP;
+}
+
 void	Response::_handle_post(void) {
-	/*
-	if (!is_dir(_path)) {
-		err;
+	std::cout << "handle_post\n";
+	if (std::filesystem::is_directory(_path)) {
+	 	if (_request._uri.back() != '/') {
+			_handle_get_moved();
+			return ;
+		}
+		std::vector<std::string>	files = _get_dir();
+		std::string					index_file;
+		if (_has_index(files, index_file) && CGIManager::isCGI(index_file)) {
+			_path = index_file;
+		} else {
+			load_status_code_response(403, "Forbidden");
+			return ;
+		}
 	}
 	if(CGIManager::isCGI(_path)) {
-		_cgi_manager = new CGIManager(_path, _request);
-		_response_str = _cgi_manager->execute();
-		_client_mode = ClientMode::SENDING;
-		delete _cgi_manager;
+		_cgi_manager = new CGIManager(_client, this, _path, _request);
+		if (_cgi_manager->execute()) {
+			_response_str =
+				std::string("HTTP/1.1 200 OK\r\n")
+				+ "Content-Type: text/html\r\n"
+			;
+			delete _cgi_manager;
+			_cgi_manager = nullptr;
+			_mode = ResponseMode::FINISH_UP;
+		}
 	} else {
 		_handle_post_file();
+
 	}
-	*/
 }
 
 //don't use this if the response needs any custom data besides the status
 //this response the respose
 void	Response::load_status_code_response(int code, const std::string& status) {
-	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back
-	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + status + "\r\n"
+	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back like cgi manager
+	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + " " + status + "\r\n"
 		+ "Content-Type: text/html\r\n";
 	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
 
 	struct stat stats;
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
 	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
-	FT_ASSERT(file_fd >0);
+	FT_ASSERT(file_fd > 0); //todo: errno check if fd < 0
 	read_fd(file_fd, stats.st_size);
 	_mode = ResponseMode::FINISH_UP;
 }
@@ -297,28 +401,51 @@ void	Response::load_status_code_body(int code) {
 	struct stat stats;
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
 	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
-	FT_ASSERT(file_fd >0);
+	FT_ASSERT(file_fd > 0); //todo: errno check if fd < 0
 	read_fd(file_fd, stats.st_size);
 	_mode = ResponseMode::FINISH_UP;
 }
 
+//todo: do we want delete to delte recursivly?
+//if so change to std::filesystem::remove_all(_path) for directories
+//currently it gives a 409 for not empty directories
 void	Response::_handle_delete(void) {
-	std::cout << "Would" FT_ANSI_RED " DELETE " FT_ANSI_RESET << _path << "\n";
-	if (1 /* std::remove(_path.c_str()) == 0 */) {
+	if (std::remove(_path.c_str()) == 0) {
 		//success
-		_response_str =
-			"HTTP/1.1 204 No Content\r\n";
-		load_status_code_body(204);
+		std::cout << FT_ANSI_RED " DELETE " FT_ANSI_RESET << _path << "\n";
+		load_status_code_response(204, "No Content");
 		return ;
 	} else {
-		//error
+		std::cout << FT_ANSI_RED " DELETE " FT_ANSI_RESET << _path << " failed:\n";
+		std::cout << strerror(errno) << std::endl;
 		switch (errno) {
 			case (ENOMEM):
 				errno = 0;
-				throw(std::bad_alloc()); break ;
+				throw(std::bad_alloc());
+				break ;
+			case (EACCES):
+			case (EFAULT):
+			case (ENOENT):
+			case (ENOTDIR):
+				load_status_code_response(404, "Not Found");
+				break;
+			case (ENOTEMPTY):
+				load_status_code_response(409, "Conflict");
+				// todo ideally somhow add this to the html out, idk how tho:
+				// "Cannot delete a non-empty directory"
+				break ;
+			case (EBADF):
+			case (EROFS):
+			case (EPERM):
+			case (ENAMETOOLONG):
+			case (ELOOP):
+			case (EBUSY):
+			case (EISDIR):
+			case (EIO):
+			case (EINVAL):
 			default:
-			//todo
-			break ;
+				load_status_code_response(500, "Internal Server Error");
+				break ;
 		}
 		errno = 0;
 	}
@@ -329,6 +456,14 @@ bool	Response::isMethodAllowed(MethodType method) {
 }
 
 void	Response::execute(void) {
+	if (_first_iter) {
+		_path = getExpandedTarget();
+		_first_iter = false;
+		//return if a status code file was requested
+		if (_mode != ResponseMode::NORMAL) {
+			return ;
+		}
+	}
 	if (_mode == ResponseMode::NORMAL) {
 		if (isMethodAllowed(_request._type))
 		{
@@ -368,6 +503,11 @@ void	Response::execute(void) {
 			+ _body
 		;
 		_client_mode = ClientMode::SENDING;
+		//for debugging: saves the body as file
+		int debug_body_fd = open("body", O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		FT_ASSERT(debug_body_fd >  0);
+		write(debug_body_fd, _body.c_str(), _body.length());
+		close(debug_body_fd);
 	} else {
 		FT_ASSERT(0);
 	}
@@ -426,7 +566,6 @@ void Response::setAllowedMethods() {
 		std::cout << "NO LOCATION PRESENT, default all methods allowed\n";
 		return ;
 	}
-	//todo: for testing since LocationFile has unreliable data
 	if (_locationConfig->isGetAllowed())
 	{
 		_allowedMethods.push_back(MethodType::GET);
@@ -478,10 +617,11 @@ std::string	Response::getExpandedTarget(void) {
 
 	if (std::filesystem::exists(expandedPath)) {
 		std::cout << "File exists: " << expandedPath << std::endl;
-	} else {
+	} else if (_request.getMethod() == MethodType::GET) {
 		std::cout << "File does not exist: " << expandedPath << std::endl;
-		// load_status_code_body(404);
-		return (_config.getRoot() + "/404.html");
+		load_status_code_response(404, "Not Found");
+		return ("");
+		//return (_config.getRoot() + "/404.html");
 		// throw std::runtime_error("File does not exist: " + expandedPath);
 	}
 \

@@ -212,6 +212,7 @@ void	Parser::setVersion(const std::string& version) {
 HeaderType	setType(const std::string& str) {
 	std::pair<const std::string, HeaderType>	matches[] = {
 		{"Accept:",                  HeaderType::ACCEPT},
+		{"Content-Length:",          HeaderType::CONTENT_LENGTH},
 		{"Accept-Charset:",          HeaderType::ACCEPT_CHARSET},
 		{"Accept-Encoding:",         HeaderType::ACCEPT_ENCODING},
 		{"Accept-Language:",         HeaderType::ACCEPT_LANGUAGE},
@@ -454,6 +455,7 @@ void	Parser::parse_body(std::string& input) {
 	}
 	else
 	{
+		std::cout << "NO BODY\n";
 		// note by fabi: updated: there is simply no body I think
 		_request._finished = true;
 		return ;
@@ -540,7 +542,11 @@ bool Parser::is_header_present(const std::string& str) {
 }
 
 /* to check wether the read request is complete or needs to be read further */
-bool	Parser::is_finished(void) const {
+bool	Parser::is_finished(void) {
+	if (_request._finished) {
+		std::transform(_request._uri.begin(), _request._uri.end(), _request._uri.begin(),
+			[](unsigned char c) { return (std::tolower(c));});
+	}
 	return (_request._finished);
 }
 
@@ -555,20 +561,3 @@ bool Parser::ends_with(const std::string& str, const std::string& suffix) {
 	}
 	return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
 }
-
-
-/* once is_finished is true this can be called.
- * Resets the parser/lexer for the next client request with the same
- 	connection.
- * todo: think of way to handle persistant connection (andvance input and reuse
-	it
-*/
-// void	Parser::_reset(void) {
-
-// /* once is_finished is true this can be called.
-//  * Resets the parser/lexer for the next client request with the same
-//  	connection.
-// */_request.finished = false;
-// 	/* todo: reset every field in _request */
-// }
-//

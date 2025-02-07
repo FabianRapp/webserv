@@ -17,10 +17,14 @@ public:
 
 protected:
 	std::string&						target_buf;
-	char								buffer[1024];
+	//char								buffer[1024];
 	ssize_t								left_over_bytes;
 	std::function<void()>				completion_callback;
 	Client*								client;
 	Server*								server;
+
+
+	//debug: remove later
+	int									debug_fd;
 };
 

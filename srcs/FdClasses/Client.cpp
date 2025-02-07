@@ -4,7 +4,6 @@
 #include "../../includes/Response.hpp"
 #include "../../includes/macros.h"
 
-//todo: constructor err handling
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT, "Client"),
 	mode(ClientMode::RECEIVING),
@@ -23,12 +22,15 @@ Client::Client(DataManager& data, Server* parent_server):
 	memset(&addr, 0, sizeof addr);// might not be needed
 	fd = accept(server->fd, addr_ptr, &addr_len);
 	if (fd < 0) {
-		//todo: out of fds: manager panic
+		std::cerr << "Error: " << name << "could not be accepted\n";
+		set_close();
+		return ;
 	}
+	name = name + ": " + std::string(inet_ntoa(addr.sin_addr)) + "::" +
+		std::to_string(ntohs(addr.sin_port));
 	_set_non_blocking();
-	std::cout << "Connection accepted from address("
-		<< inet_ntoa(addr.sin_addr) << "): PORT("
-		<< ntohs(addr.sin_port) << ")\n";
+	std::cout << FT_ANSI_BOLD FT_ANSI_GREEN "Connection accepted: " << name
+		<< FT_ANSI_RESET "\n";
 }
 
 Client::~Client(void) {
@@ -55,9 +57,9 @@ void	Client::_receive_request(void) {
 		set_close();
 		return ;
 	}
-	buffer[bytes_read] = 0;
+	buffer[bytes_read] = 0;//not needed, only for debugging
 	std::cout << "Read:\n" << buffer << '\n';
-	this->input += buffer;
+	this->input.append(buffer, static_cast<size_t>(bytes_read));
 
 	this->parse();
 	//std::cout << "Request STATUS = " << _parser.is_finished() << std::endl;
@@ -196,8 +198,6 @@ void	Client::_send_response(void) {
 
 	if (send_bytes <= 0) {
 		std::cerr << "Error: " << name << ": send: closing connection now\n";
-		//todo: the line below has to removed before submission according to subject
-		std::cerr << "err: " << strerror(errno) << '\n';
 		set_close();
 		return ;
 	}

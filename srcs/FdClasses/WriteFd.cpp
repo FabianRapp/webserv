@@ -10,6 +10,7 @@ WriteFd::WriteFd(DataManager& data, const std::string_view& src, int fd, Client&
 	client(&client),
 	server(client.server)
 {
+	std::cout << "writer constructor: src size: " << src.size() << std::endl;
 	this->fd = fd;
 	_set_non_blocking();
 }
@@ -26,6 +27,7 @@ void	WriteFd::execute(void) {
 	ssize_t write_ret = write(fd, src.data() + pos, src.size() - pos);
 	if (write_ret < 0) {
 		//todo: internal server error: 500
+		std::cout << "fd: " << fd << std::endl;
 		FT_ASSERT(0);
 	}
 	//std::cout << "written: |" << src.substr(0, static_cast<size_t>(write_ret)) << "|\n";

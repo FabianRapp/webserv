@@ -49,12 +49,9 @@ void	webserv(int ac, char **av) {
 	delete manager.config_parser;
 	manager.config_parser = nullptr;
 
-	while (!exit_ && !manager.in_panic()) {
-		//usleep(100000);
+	while (!exit_) {
+		usleep(100000);
 		manager.run_poll();
-		if (manager.in_panic()) {
-			return ;
-		}
 		manager.execute_all();
 		manager.process_closures();
 		manager.cgi_lifetimes.handle_timeouts();
@@ -69,11 +66,15 @@ start:
 	try {
 		errno = 0;
 		webserv(ac, av);
+	} catch (const ConfigParseError& err) {
+		std::cerr << err.what() << "\n";
 	} catch (const std::bad_alloc&) {
 		std::cerr << "Bad alloc!\nRestarting servers..\n";
 		goto start;
-	} catch (const ConfigParseError& err) {
-		std::cerr << err.what() << "\n";
+	} catch (const std::ios_base::failure& e) {
+		std::cerr << "Error: " << e.what() << std::endl;
+		std::cerr << "Restarting servers..\n";
+		goto start;
 	}
 	return (0);
 }

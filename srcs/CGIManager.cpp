@@ -239,20 +239,17 @@ void	CGIManager::_init_reading(void) {
 	_mode = CGI_MODE::FINISHED;
 }
 
-//todo: this is a place holder body since I'm too lazy to make a client that sends a request with body
-const std::string test_body = "\ntest body, raplace this later(" __FILE__ " line " + std::to_string(__LINE__) + ")\n";
 void	CGIManager::_init_writing(void) {
-	//request_body <--
-
 	int	fd_to_write = inputPipe[1];
 	inputPipe[1] = -1;
 
-	if (test_body.empty()) {
+	if (request_body.empty()) {
 		ft_close(fd_to_write);
+		_mode = CGI_MODE::INIT_READING;
 		return ;
 	}
 
-	_response->set_fd_write_data(test_body);
+	_response->set_fd_write_data(request_body);
 	//write_fd will make sure the cgi->execute does not get called unitil the data is written
 	_response->write_fd(fd_to_write);
 	_mode = CGI_MODE::INIT_READING;

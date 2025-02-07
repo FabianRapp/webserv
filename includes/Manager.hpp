@@ -1,7 +1,6 @@
 #pragma once
 
 #include "general_includes.hpp"
-#include "parser/Token.hpp"
 #include "parser/Parser.hpp"
 #include "utils.hpp"
 #include "types.hpp"
@@ -60,9 +59,9 @@ public:
 	size_t	get_count(void) const;
 
 	void	execute_all(void);
-	bool	in_panic(void) const;
 
 	ConfigParser	*config_parser;
+	size_t		get_total_count(void) const;
 private:
 	size_t	_total_entrys;
 	void	_add_entry(BaseFd *entry, short poll_events);
@@ -76,6 +75,5 @@ private:
 	std::vector<bool>				_close_later;
 	std::vector<BaseFd*>			_fd_users;
 	size_t							_consecutive_poll_fails;
-	bool							_panic;
 };
 

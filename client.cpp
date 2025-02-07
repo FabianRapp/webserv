@@ -33,7 +33,7 @@ int	main(void) {
 	//	usleep(1000);
 	//}
 	const char				*hostname = "localhost";
-	const int16_t			port = 9090;
+	const int16_t			port = 8080;
 	//const char				*hostname = "google.com";
 	//const int16_t			port = 80;
 	const struct hostent	*server = gethostbyname(hostname);
@@ -62,11 +62,15 @@ int	main(void) {
 		return (1);
 	}
 
-	std::string	request =
-		std::string("GET hello.py HTTP/1.1\r\n")
-		+ "Host: " + hostname + "\r\n"
-		+ "Connection: close\r\n\r\n"
 
+	std::string body = "posted by post, fine to delete";
+	std::string	request =
+		std::string("POST /here_is_delete_allowed/delete_me.txt HTTP/1.1\r\n")
+		+ "Host: has_delete.com\r\n"
+		+ "Connection: close\r\n"
+		+ "Content-Length: " + std::to_string(body.size()) + "\r\n" 
+		+ "\r\n"
+		+ body
 	;
 	if (send(fd, request.c_str(), request.length(), 0) < 0) {
 		std::cerr << "Error: send error: " << strerror(errno) << '\n';

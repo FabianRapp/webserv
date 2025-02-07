@@ -87,8 +87,8 @@ const std::string DefaultErrorPages::getErrorPageLink(int err_code) const {
 	if(it != _error_pages.end()) {
 		return it->second;
 	} else {
-		//todo: trow error
-		std::cout << "Error code not found" << std::endl;
+		throw (std::ios_base::failure("Status page for code("
+			+ std::to_string(err_code) + ") not found"));
 	}
 	return 0;
 }
@@ -101,8 +101,8 @@ void DefaultErrorPages::setErrorPageLink(int err_code, std::string link) {
 		std::cout << "Replaced link for error code " << err_code << " with: "
 		<< link << std::endl;
 	} else {
-		//todo: trow error
-		std::cout << "Error code does not exists" << std::endl;
+		throw (std::ios_base::failure("Status page for code("
+			+ std::to_string(err_code) + ") not found"));
 	}
 }
 

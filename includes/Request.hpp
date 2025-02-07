@@ -37,7 +37,7 @@ class Request {
 		Request	operator=(const Request& old);
 		~Request() = default;
 
-		MethodType getMethod() {
+		MethodType getMethod() const {
 			return _type;
 		}
 
