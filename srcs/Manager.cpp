@@ -134,11 +134,12 @@ void	DataManager::execute_all(void) {
 	// fabi: 07/02: canged loop para from _count to count:
 	// i think _count would just check the same + new obj where none of the
 	// new can possibly be ready(since they were not polled yet)
+	//std::cout << "**************\n";
 	for (size_t i = 0; i < count; i++) {
 		BaseFd* user = _fd_users[i];
-		//if (user->name != "Server") {
-		//	std::cout << "Manager: execec " << user->name << "\n";
-		//}
+		if (user->name != "Server") {
+			//std::cout << "Manager: execec " << user->name << "\n";
+		}
 		user->execute();
 	}
 }

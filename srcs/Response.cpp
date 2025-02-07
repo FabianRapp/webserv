@@ -220,6 +220,14 @@ bool	Response::_has_index(std::vector<std::string>& files, std::string& index_fi
 	// _config;//const ServerConfigFile&
 	// _locationConfig;//LocationConfigFile*
 	//default return
+	const std::string&	index_name = _locationConfig->getIndexFile();
+	for (const auto& file : files) {
+		if (file == index_name) {
+			index_file = _path + index_name;
+			std::cout << index_file;
+			return (true);
+		}
+	}
 	return (false);
 }
 

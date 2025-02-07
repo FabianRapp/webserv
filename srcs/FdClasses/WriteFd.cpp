@@ -19,7 +19,13 @@ WriteFd::~WriteFd(void) {
 }
 
 void	WriteFd::execute(void) {
-	//todo: check if there is a poll value for closed pipes
+	//todo: idk about this POLLHUP for write fd
+	if (is_ready(POLLHUP) && !is_ready(POLLIN)) {
+		std::cout << FT_ANSI_RED "write POLLHUP\n" FT_ANSI_RESET;
+		data.set_close(data_idx);
+		completion_callback();
+		return ;
+	}
 	if (!is_ready(POLLOUT)) {
 		return ;
 	}

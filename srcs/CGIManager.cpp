@@ -246,9 +246,10 @@ void	CGIManager::_init_writing(void) {
 	if (request_body.empty()) {
 		ft_close(fd_to_write);
 		_mode = CGI_MODE::INIT_READING;
+		//std::cout << "no request body in cgi init writing\n";
 		return ;
 	}
-
+	//std::cout << "has request body in cgi init writing\n";
 	_response->set_fd_write_data(request_body);
 	//write_fd will make sure the cgi->execute does not get called unitil the data is written
 	_response->write_fd(fd_to_write);
@@ -275,9 +276,14 @@ CGIManager::~CGIManager(void) {
 // returns true when done
 bool	CGIManager::execute() {
 	bool	debug = true;
-	if (debug) std::cout << "cgi::execute: ";
+	if (debug) {
+		std::cout << "cgi::execute: ";
+	}
 	switch (_mode) {
 		case (CGI_MODE::PASS):
+			if (debug) {
+				std::cout << "mode: PASS: ";
+			}
 			break ;
 		case (CGI_MODE::INIT_WRITING):
 			if (debug) std::cout << "init_writing\n";
