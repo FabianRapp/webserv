@@ -192,7 +192,7 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 
 		ft_close(inputPipe[1]);
 		inputPipe[1] = -1;
-	
+
 		ft_close(outputPipe[0]);
 		outputPipe[0] = -1;
 
@@ -315,8 +315,8 @@ std::string CGIManager::getInterpreter(const std::string& path) {
 			interpreter = "/usr/bin/python3";
 		} else if (extension == ".php") {
 			//todo: try to check if the interpreter is available, because it might be in different location on different machines
-			// interpreter = "/usr/bin/php";
-			interpreter = "/usr/local/bin/php";
+			interpreter = "/usr/bin/php";
+			// interpreter = "/usr/local/bin/php";
 		} else {
 			// "Unsupported CGI type: " + extension
 			_client->response->load_status_code_response(500, "Internal Server Error");
