@@ -32,6 +32,98 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 		static_cast<const char*>("CONTENT_TYPE=application/x-www-form-urlencoded"),
 		static_cast<const char*>((("SCRIPT_NAME=" + path).c_str())),
 	};
+
+// envCGI = {
+// 	// The HTTP method used for the request (e.g., GET, POST, PUT, DELETE).
+// 	static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),
+
+// 	// The length of the request body in bytes (used for POST and PUT requests).
+// 	static_cast<const char*>(("CONTENT_LENGTH=" + std::to_string(request._body.size())).c_str()),
+
+// 	// The MIME type of the request body (e.g., application/x-www-form-urlencoded).
+// 	static_cast<const char*>("CONTENT_TYPE=application/x-www-form-urlencoded"),
+
+// 	// The virtual path to the script being executed.
+// 	// static_cast<const char*>("SCRIPT_NAME=/cgi-bin/script.cgi"),
+// 	static_cast<const char*>((("SCRIPT_NAME=" + path).c_str())),
+
+// 	// The extra path information provided in the URL after the script name.
+// 	static_cast<const char*>("PATH_INFO=/extra/path/info"),
+
+// 	// The physical file system path corresponding to PATH_INFO.
+// 	static_cast<const char*>("PATH_TRANSLATED=/var/www/html/extra/path/info"),
+
+// 	// The full URI of the current request, including query strings.
+// 	static_cast<const char*>("REQUEST_URI=/cgi-bin/script.cgi?name=value"),
+
+// 	// The query string part of the URL (everything after the `?` in the URL).
+// 	static_cast<const char*>("QUERY_STRING=name=value"),
+
+// 	// The hostname or IP address of the server handling the request.
+// 	static_cast<const char*>("SERVER_NAME=localhost"),
+
+// 	// The IP address of the server handling the request.
+// 	static_cast<const char*>("SERVER_ADDR=127.0.0.1"),
+
+// 	// The port number on which the server is listening for requests.
+// 	static_cast<const char*>("SERVER_PORT=80"),
+
+// 	// The protocol and version used for the request (e.g., HTTP/1.1).
+// 	static_cast<const char*>("SERVER_PROTOCOL=HTTP/1.1"),
+
+// 	// The name and version of your web server software.
+// 	static_cast<const char*>("SERVER_SOFTWARE=CustomWebServer/1.0"),
+
+// 	// The CGI specification version supported by the server (e.g., CGI/1.1).
+// 	static_cast<const char*>("GATEWAY_INTERFACE=CGI/1.1"),
+
+// 	// The IP address of the client making the request.
+// 	static_cast<const char*>("REMOTE_ADDR=192.168.1.100"),
+
+// 	// The hostname of the client making the request (if available).
+// 	static_cast<const char*>("REMOTE_HOST=client.localdomain"),
+
+// 	// The port number from which the client made the request.
+// 	static_cast<const char*>("REMOTE_PORT=54321"),
+
+// 	// If authentication is required, this specifies the authentication method used (e.g., Basic).
+// 	static_cast<const char*>("AUTH_TYPE=Basic"),
+
+// 	// If authentication is required, this specifies the authenticated username.
+// 	static_cast<const char*>("REMOTE_USER=username"),
+
+// 	// If RFC 931 identification is supported, this specifies the remote username for logging purposes.
+// 	static_cast<const char*>("REMOTE_IDENT=user_identification"),
+
+// 	// All HTTP headers sent by the client, prefixed with `HTTP_` and transformed to uppercase.
+// 	static_cast<const char*>("ALL_HTTP=HTTP_ACCEPT:text/html; HTTP_USER_AGENT:Mozilla/5.0; HTTP_HOST:localhost;"),
+
+// 	// All raw HTTP headers sent by the client without transformation.
+// 	static_cast<const char*>("ALL_RAW=Accept: text/html\r\nUser-Agent: Mozilla/5.0\r\nHost: localhost\r\n"),
+
+// 	// A list of MIME types that the client can accept, separated by commas (from HTTP headers).
+// 	static_cast<const char*>("HTTP_ACCEPT=text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+
+// 	// Information about the client's browser or user agent (from HTTP headers).
+// 	static_cast<const char*>("HTTP_USER_AGENT=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/114 Safari/537.36"),
+
+// 	// If SSL is enabled, this indicates whether HTTPS is being used ("on" or "off").
+// 	static_cast<const char*>("HTTPS=off"),  // Use "on" if HTTPS is enabled.
+
+// 	// If SSL is enabled, this specifies the protocol version used (e.g., TLSv1.3).
+// 	static_cast<const char*>("SSL_PROTOCOL=TLSv1.3"),  // Only relevant if HTTPS is on.
+
+// 	// If SSL is enabled, this specifies the cipher used for encryption.
+// 	static_cast<const char*>("SSL_CIPHER=AES256-GCM-SHA384"),  // Only relevant if HTTPS is on.
+
+// 	// Absolute path to your web server's document root directory.
+// 	static_cast<const char*>("DOCUMENT_ROOT=/var/www/html"),
+
+// 	// Full URL to access this script or resource requested by a client
+// 	static_cast <const char*> ("SCRIPT_URI=http://localhost/cgi-bin/script.cgi")
+// };
+
+
 	if (request._headers.find(HeaderType::COOKIE) != request._headers.end()) {
 
 		//std::cout << std::string(request._headers[HeaderType::HOST]);
@@ -222,7 +314,9 @@ std::string CGIManager::getInterpreter(const std::string& path) {
 		if (extension == ".py") {
 			interpreter = "/usr/bin/python3";
 		} else if (extension == ".php") {
-			interpreter = "/usr/bin/php";
+			//todo: try to check if the interpreter is available, because it might be in different location on different machines
+			// interpreter = "/usr/bin/php";
+			interpreter = "/usr/local/bin/php";
 		} else {
 			// "Unsupported CGI type: " + extension
 			_client->response->load_status_code_response(500, "Internal Server Error");
