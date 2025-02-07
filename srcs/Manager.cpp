@@ -3,8 +3,7 @@
 
 DataManager::DataManager(void): config_parser(nullptr), _total_entrys(0), _count(0),
 	cgi_lifetimes(std::chrono::seconds(3)),
-	_consecutive_poll_fails(0),
-	_panic(false)
+	_consecutive_poll_fails(0)
 {}
 
 DataManager::~DataManager(void) {
@@ -117,9 +116,8 @@ void	DataManager::run_poll() {
 		std::cerr << "Error: poll: " << strerror(errno) << "\n";
 		FT_ASSERT(errno != EINVAL && errno != EFAULT && errno != EBADF);// would indicate a bug
 		if (errno != EINTR && ++_consecutive_poll_fails > 1000) {
-			_panic = true;
-			std::cerr << "Critical error: poll keeps failing.. full exit..\n";
-			std::cerr << "poll: " << strerror(errno) << "\n";
+			throw (std::ios_base::failure(std::string("poll: ")
+				+ strerror(errno) + "failed more than 1000 times in a row"));
 		}
 		for (auto& pollfd : _pollfds) {
 			pollfd.revents = 0;
@@ -133,7 +131,10 @@ void	DataManager::execute_all(void) {
 	size_t	count = _count;
 	// std::cout << count << "=count\n";
 
-	for (size_t i = 0; i < _count; i++) {
+	// fabi: 07/02: canged loop para from _count to count:
+	// i think _count would just check the same + new obj where none of the
+	// new can possibly be ready(since they were not polled yet)
+	for (size_t i = 0; i < count; i++) {
 		BaseFd* user = _fd_users[i];
 		//if (user->name != "Server") {
 		//	std::cout << "Manager: execec " << user->name << "\n";
@@ -176,10 +177,6 @@ void	DataManager::_fd_close(size_t idx) {
 	_fd_users.pop_back();
 
 	std::cout << _count << "--count\n";
-}
-
-bool	DataManager::in_panic(void) const {
-	return (_panic);
 }
 
 size_t		DataManager::get_total_count(void) const {

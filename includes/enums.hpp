@@ -43,7 +43,6 @@ enum class HeaderType {
 	TE,
 	USER_AGENT,
 
-	/* todo: from here onwards header types by chatgpt, needs verification */
 	// General Headers
 	CACHE_CONTROL,
 	CONNECTION, /* example "close" */

@@ -23,7 +23,6 @@ private:
 	std::string _index_file = "index.html";
 	DefaultErrorPages _error_pages;
 	std::vector<LocationConfigFile> _locations;
-	//todo: fill defaultLocation with values from server block
 	LocationConfigFile				_defaultLocation;
 
 public:

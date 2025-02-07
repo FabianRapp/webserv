@@ -198,8 +198,6 @@ void	Client::_send_response(void) {
 
 	if (send_bytes <= 0) {
 		std::cerr << "Error: " << name << ": send: closing connection now\n";
-		//todo: the line below has to removed before submission according to subject
-		std::cerr << "err: " << strerror(errno) << '\n';
 		set_close();
 		return ;
 	}

@@ -32,7 +32,6 @@
 // #include <types.hpp>
 
 
-//todo: needs panic functionality which is like bad alloc i guess
 class DataManager {
 public:
 	DataManager(void);
@@ -60,7 +59,6 @@ public:
 	size_t	get_count(void) const;
 
 	void	execute_all(void);
-	bool	in_panic(void) const;
 
 	ConfigParser	*config_parser;
 	size_t		get_total_count(void) const;
@@ -77,6 +75,5 @@ private:
 	std::vector<bool>				_close_later;
 	std::vector<BaseFd*>			_fd_users;
 	size_t							_consecutive_poll_fails;
-	bool							_panic;
 };
 

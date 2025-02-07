@@ -103,7 +103,7 @@ void	Response::write_fd(int write_fd) {
 }
 
 std::vector<std::string>	Response::_get_dir(void) {
-	_dir = opendir(_path.c_str()); // todo: opendir err handling
+	_dir = opendir(_path.c_str());
 	if (!_dir) {
 		std::cerr << FT_ANSI_RED " ERROR " FT_ANSI_RESET << "opendir: " << _path << " failed: " << strerror(errno) << "\n";
 		switch (errno) {
