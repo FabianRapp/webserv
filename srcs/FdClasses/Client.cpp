@@ -49,7 +49,8 @@ void	Client::_receive_request(void) {
 		return ;
 	}
 	_last_availability = std::chrono::steady_clock::now();
-	char		buffer[4096];
+	static
+	char		buffer[1024 * 1024 * 100]; //100 mb
 	int			recv_flags = MSG_DONTWAIT;
 	long int	bytes_read = recv(this->fd, buffer, sizeof buffer - 1, recv_flags);
 	if (bytes_read < 0) {

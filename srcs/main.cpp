@@ -50,7 +50,7 @@ void	webserv(int ac, char **av) {
 	manager.config_parser = nullptr;
 
 	while (!exit_) {
-		usleep(100000);
+		//usleep(100000);
 		manager.run_poll();
 		manager.execute_all();
 		manager.process_closures();
