@@ -383,7 +383,7 @@ void	Response::_handle_post(void) {
 //this response the respose
 void	Response::load_status_code_response(int code, const std::string& status) {
 	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back like cgi manager
-	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + status + "\r\n"
+	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + " " + status + "\r\n"
 		+ "Content-Type: text/html\r\n";
 	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
 
