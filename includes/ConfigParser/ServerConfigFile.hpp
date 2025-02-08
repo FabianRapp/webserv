@@ -19,6 +19,7 @@ private:
 	bool _delete_header = false;
 	bool _autoindex = false;
 	int _request_body_size = -1;
+	std::map<std::string, std::string> _cgi_map;
 	// std::map<int, std::string> _error_pages;
 	std::string _index_file = "index.html";
 	DefaultErrorPages _error_pages;
@@ -40,8 +41,9 @@ public:
 	void addErrorPage(int err_code, const std::string& path);
 	void addLocation(const LocationConfigFile& location);
 	void setRequestBodySize(int size);
+	void addCgiExtension(const std::string& ext, const std::string& path_to_binary);
 
-	int getPort() const;
+
 	const LocationConfigFile&	getDefaultLocation(void) const;
 
 	// In ServerConfigFile class declaration (header)
@@ -50,6 +52,7 @@ public:
 	// const LocationConfigFile& getDefaultLocation() const { return _defaultLocation; }
 
 	// const std::vector<std::string>& getServerNames() const;
+	int getPort() const;
 	const std::vector<std::string>& getServerNames() const;
 	bool isGetAllowed() const;
 	bool isPostAllowed() const;
@@ -60,6 +63,8 @@ public:
 	const DefaultErrorPages& getErrorPages() const;
 	const std::vector<LocationConfigFile>& getLocations() const;
 	int getRequestBodySize() const;
+	const std::map<std::string, std::string>& getCgiExtensions() const;
+
 	LocationConfigFile& setDefaultLocation();
 
 	void printServer() const;

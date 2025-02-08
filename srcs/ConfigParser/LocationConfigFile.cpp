@@ -2,8 +2,6 @@
 
 LocationConfigFile::LocationConfigFile() {}
 
-
-
 // Setters
 void LocationConfigFile::setPath(const std::string& path) {
 	_path = path;
@@ -29,6 +27,9 @@ void LocationConfigFile::setIndexFile(const std::string index_file) {
 	_index_file = index_file;
 }
 
+void LocationConfigFile::addCgiExtension(const std::string& ext, const std::string& path_to_binary) {
+	_cgi_map[ext] = path_to_binary;
+}
 
 // Getters
 const std::string& LocationConfigFile::getPath() const {
@@ -57,6 +58,10 @@ const std::string& LocationConfigFile::getRoot() const{
 
 const std::string& LocationConfigFile::getIndexFile() const {
 	return _index_file;
+}
+
+const std::map<std::string, std::string>& LocationConfigFile::getCgiExtensions() const {
+	return _cgi_map;
 }
 
 // void LocationConfigFile::validateMethods() const {

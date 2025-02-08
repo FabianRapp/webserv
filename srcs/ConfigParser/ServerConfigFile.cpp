@@ -77,6 +77,10 @@ void ServerConfigFile::setRequestBodySize(int size) {
 	_request_body_size = size;
 }
 
+void ServerConfigFile::addCgiExtension(const std::string& ext, const std::string& path_to_binary) {
+	_cgi_map[ext] = path_to_binary;
+}
+
 // Getters
 int ServerConfigFile::getPort() const {
 	return _port;
@@ -129,6 +133,10 @@ const std::vector<LocationConfigFile>& ServerConfigFile::getLocations() const {
 int ServerConfigFile::getRequestBodySize() const {
 	// std::cout << "ServerConfigFile::getRequestBodySize(): " <<  _request_body_size << std::endl;
 	return _request_body_size;
+}
+
+const std::map<std::string, std::string>& ServerConfigFile::getCgiExtensions() const {
+	return _cgi_map;
 }
 
 LocationConfigFile& ServerConfigFile::setDefaultLocation() {
