@@ -24,27 +24,27 @@ void	webserv(int ac, char **av) {
 		manager.config_parser = new ConfigParser(av[1]);
 	}
 	all_configs = manager.config_parser->getServers();
-	//todo: dont use std::sort
-	sort(all_configs.begin(), all_configs.end(),
-		[](ServerConfigFile&a, ServerConfigFile&b) {
-			return (a.getPort() - b.getPort());
-		}
-	);
+	//todo: dont use std::sort sice it changes order
+	//sort(all_configs.begin(), all_configs.end(),
+	//	[](ServerConfigFile&a, ServerConfigFile&b) {
+	//		return (a.getPort() - b.getPort());
+	//	}
+	//);
 
 	std::vector<ServerConfigFile>	matching_ports;
-	for (auto & config : all_configs) {
-		config.printServer();
-		config.getDefaultLocation().printLocation();
-		if (matching_ports.size() == 0 || matching_ports[0].getPort() == config.getPort()) {
-			matching_ports.push_back(config);
-			continue ;
+	while (all_configs.size()) {
+		int	cur_port = all_configs[0].getPort();
+		for (size_t i = 0; i < all_configs.size(); ) {
+			if (all_configs[i].getPort() == cur_port) {
+				all_configs[i].printServer();
+				matching_ports.push_back(all_configs[i]);
+				all_configs.erase(all_configs.begin() + static_cast<ssize_t>(i));
+			} else {
+				i++;
+			}
 		}
 		manager.new_server(matching_ports);
 		matching_ports.clear();
-		matching_ports.push_back(config);
-	}
-	if (matching_ports.size()) {
-		manager.new_server(matching_ports);
 	}
 
 	delete manager.config_parser;
