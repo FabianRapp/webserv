@@ -11,14 +11,17 @@
 #include <colors.h>
 #include <WriteFd.hpp>
 #include <ReadFd.hpp>
+#include <enums.hpp>
 
-CGIManager::CGIManager(Client* client, Response* response, std::string path, const Request& request):
+CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config,
+		Response* response, std::string path, const Request& request):
 	path(path),
 	request_body(request._body),
 	_client(client),
 	_response(response),
 	_main_manager(client->data),
-	_mode(CGI_MODE::INIT_WRITING)
+	_mode(CGI_MODE::INIT_WRITING),
+	_location_cofig(location_config)
 {
 	int	 old_errno = errno;
 	inputPipe[0] = -1;
@@ -26,22 +29,27 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 	outputPipe[0] = -1;
 	outputPipe[1] = -1;
 	errno = 0;
-	envCGI = {
-		static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),
-		static_cast<const char*>(("CONTENT_LENGTH=" + std::to_string(request._body.size())).c_str()),
-		static_cast<const char*>("CONTENT_TYPE=application/x-www-form-urlencoded"),
-		static_cast<const char*>((("SCRIPT_NAME=" + path).c_str())),
+	envCGI_storage = {
+		//"REQUEST_METHOD=" + to_string(request._type),
+		//"CONTENT_LENGTH=" + std::to_string(request._body.size()),
+		//"CONTENT_TYPE=application/x-www-form-urlencoded",
+		"SCRIPT_NAME=" + path,
 	};
-
-// envCGI = {
+	for (const auto& [type, value] : request._headers) {
+		std::string	env_var;
+		if (type == HeaderType::CONTENT_LENGTH
+			|| type == HeaderType::CONTENT_TYPE
+		){
+			env_var = to_string(type) + "=" + value;
+		} else {
+			env_var = "HTTP_" + to_string(type) + "=" + value;
+		}
+		envCGI_storage.push_back(env_var);
+	}
+// envCGI_storage = {
 // 	// The HTTP method used for the request (e.g., GET, POST, PUT, DELETE).
 // 	static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),
 
-// 	// The length of the request body in bytes (used for POST and PUT requests).
-// 	static_cast<const char*>(("CONTENT_LENGTH=" + std::to_string(request._body.size())).c_str()),
-
-// 	// The MIME type of the request body (e.g., application/x-www-form-urlencoded).
-// 	static_cast<const char*>("CONTENT_TYPE=application/x-www-form-urlencoded"),
 
 // 	// The virtual path to the script being executed.
 // 	// static_cast<const char*>("SCRIPT_NAME=/cgi-bin/script.cgi"),
@@ -133,13 +141,20 @@ CGIManager::CGIManager(Client* client, Response* response, std::string path, con
 			/*todo: verification
 			if (cookie_data_structure.find(var)) {
 			*/
-				envCGI.push_back(var.c_str());
+				envCGI_storage.push_back(var);
 			//}
 		}
 	}
+
+
+
+	for (std::string& var : envCGI_storage) {
+		envCGI.push_back(var.c_str());
+	}
 	envCGI.push_back(nullptr);
 
-	if (!isCGI(path)) {
+
+	if (!isCGI(path, _location_cofig)) {
 		_client->response->load_status_code_response(500, "Internal Server Error");
 		_mode = CGI_MODE::FINISHED;
 		return ;
@@ -277,7 +292,8 @@ CGIManager::~CGIManager(void) {
 bool	CGIManager::execute() {
 	bool	debug = true;
 	if (debug) {
-		std::cout << "cgi::execute: ";
+		std::cout << "cgi::execute: " << std::endl;;
+
 	}
 	switch (_mode) {
 		case (CGI_MODE::PASS):
@@ -300,7 +316,13 @@ bool	CGIManager::execute() {
 	return (false);
 }
 
-bool CGIManager::isCGI(const std::string& path) {
+bool CGIManager::isCGI(const std::string& path, const LocationConfigFile& location_config) {
+
+			std::cout << "CGI EXTENSIONS: " << std::endl;
+		// std::cout << "Response: " << _response->getConfig().getCgiExtensions() << std::endl;
+		// for (const auto& [ext, interp] : _response->getConfig().getCgiExtensions()) {
+		// 	std::cout << ext << " => " << interp << std::endl;
+		// }
 	size_t last_dot = path.find_last_of('.');
 	if (last_dot == std::string::npos)
 		return false;

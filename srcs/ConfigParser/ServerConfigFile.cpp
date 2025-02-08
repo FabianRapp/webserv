@@ -34,6 +34,7 @@ void ServerConfigFile::setPort(int port) {
 
 void ServerConfigFile::addServerName(const std::string& serverName) {
 	_server_names.push_back(serverName);
+
 }
 
 void ServerConfigFile::setMethods(bool get, bool post, bool del) {

@@ -56,7 +56,7 @@ class Response {
 		ReadFd*					_reader;
 		ResponseMode			_mode;
 		CGIManager*				_cgi_manager;
-	
+
 		std::string_view		_fd_write_data;
 		bool					_first_iter;
 		DIR*					_dir;

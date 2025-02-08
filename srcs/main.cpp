@@ -24,6 +24,7 @@ void	webserv(int ac, char **av) {
 		manager.config_parser = new ConfigParser(av[1]);
 	}
 	all_configs = manager.config_parser->getServers();
+	//todo: dont use std::sort
 	sort(all_configs.begin(), all_configs.end(),
 		[](ServerConfigFile&a, ServerConfigFile&b) {
 			return (a.getPort() - b.getPort());
@@ -61,6 +62,8 @@ void	webserv(int ac, char **av) {
 int	main(int ac, char *av[]) {
 	signal(SIGINT, sig_int);
 	signal(SIGTSTP, sig_int);
+
+	//todo: remove this, just for testing
 
 start:
 	try {

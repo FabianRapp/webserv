@@ -320,7 +320,7 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 
 			// Add each server name to the ServerConfigFile object
 			for (const auto& name : server_names) {
-				std::cout << "SERVER NAME: " << "|" << name << "|" << std::endl;
+				std::cout << "SERVER NAME : " << "|" << name << "|" << std::endl;
 				current_server.addServerName(name); // Use addServerName from ServerConfigFile
 			}
 		} else if (line.find("cgi_path ") == 0) {

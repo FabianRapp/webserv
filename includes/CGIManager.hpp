@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-
+#include <LocationConfigFile.hpp>
 class Request;
 class Response;
 class Client;
@@ -16,6 +16,7 @@ class CGIManager {
 private:
 	std::string path;
 	const std::string& request_body;
+	std::vector<std::string> envCGI_storage;
 	std::vector<const char*> envCGI; // Use vector of char* for environment variables
 	Client*				_client;
 	Response*			_response;
@@ -24,7 +25,7 @@ private:
 	WriteFd*			_writer;
 	ReadFd*				_reader;
 	pid_t				_pid;
-
+	const LocationConfigFile&	_location_cofig;
 	enum class CGI_MODE {
 		PASS,
 		INIT_READING,
@@ -45,10 +46,10 @@ private:
 
 public:
 	static
-	bool isCGI(const std::string& path);
+	bool isCGI(const std::string& path, const LocationConfigFile& location_config);
 
 	CGIManager(void) = delete;
-	CGIManager(Client* client, Response* response, std::string path, const Request& request);
+	CGIManager(Client* client, const LocationConfigFile& location_config, Response* response, std::string path, const Request& request);
 	~CGIManager(void);
 
 	bool	execute();

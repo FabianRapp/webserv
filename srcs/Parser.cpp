@@ -43,11 +43,19 @@ void	Parser::_select_server_config(void) {
 		[](unsigned char c) { return (std::tolower(c));});
 
 
+
 	for (size_t i = 0; i < _server_configs.size(); i++) {
 		const auto& config = _server_configs[i];
 		const std::vector<std::string>&	names = config.getServerNames();
 		for (const auto& name : names) {
-			if (name == to_match) {
+			std::string	postfix = ":" + std::to_string(config.getPort());
+			std::string	prefix = "www.";
+			if (name == to_match
+				|| to_match == prefix + name + postfix
+				|| to_match == prefix + name
+				|| to_match == name + postfix)
+			{
+				std::cout << "found!\n";
 				_config_index = static_cast<int>(i);
 				return ;
 			}

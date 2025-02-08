@@ -261,9 +261,9 @@ void	Response::_handle_get(void) {
 
 	FT_ASSERT(!std::filesystem::is_directory(_path));
 
-	if (CGIManager::isCGI(_path)) {
+	if (CGIManager::isCGI(_path, _location_config)) {
 		if (!_cgi_manager) {
-			_cgi_manager = new CGIManager(_client, this, _path, _request);
+			_cgi_manager = new CGIManager(_client, _location_config, this, _path, _request);
 		}
 		if (_cgi_manager->execute()) {
 			_response_str =
@@ -363,16 +363,16 @@ void	Response::_handle_post(void) {
 		}
 		std::vector<std::string>	files = _get_dir();
 		std::string					index_file;
-		if (_has_index(files, index_file) && CGIManager::isCGI(index_file)) {
+		if (_has_index(files, index_file) && CGIManager::isCGI(index_file, _location_config)) {
 			_path = index_file;
 		} else {
 			load_status_code_response(403, "Forbidden");
 			return ;
 		}
 	}
-	if(CGIManager::isCGI(_path)) {
+	if(CGIManager::isCGI(_path, _location_config)) {
 		if (!_cgi_manager) {
-			_cgi_manager = new CGIManager(_client, this, _path, _request);
+			_cgi_manager = new CGIManager(_client, _location_config, this, _path, _request);
 		}
 		if (_cgi_manager->execute()) {
 			_response_str =
@@ -475,9 +475,9 @@ void	Response::execute(void) {
 	}
 	if (_first_iter) {
 		_first_iter = false;
-	
 
-	
+
+
 		_path = getExpandedTarget();
 		//return if a status code file was requested
 		if (_mode != ResponseMode::NORMAL) {

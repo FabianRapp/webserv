@@ -16,8 +16,18 @@ https://acquia.my.site.com/s/article/360005257154-Use-cURL-s-resolve-option-to-p
 
 ./webserv config/cgitest.conf
 curl http://www.kotlet.com:9090 --resolve www.kotlet.com:9090:127.0.0.1
-curl http://hello.com:8080 --resolve hello.com:8080:127.0.0.1
 
+curl http://magicform.com:8080 --resolve magicform.com:8080:127.0.0.1
+
+curl http://www.getbetter.com:8080 --resolve www.getbetter.com:8080:127.0.0.1
+
+curl http://magicform.com:8080 --resolve magicform.com:8080:127.0.0.1
+
+curl http://magicform.com:9090 --resolve magicform.com:9090:127.0.0.1
+
+curl http://www.^-getbetter.com:9090 --resolve www.^-getbetter.com:9090:127.0.0.1
+
+curl http://www.getbetter.com:9090 --resolve www.getbetter.com:9090:127.0.0.1
 
 telnet?
 
