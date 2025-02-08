@@ -33,6 +33,11 @@ private:
 	template <typename T>
 	void validateIndex(const std::string& value, T& config_object);
 
+	template <typename T>
+	void handleCgiPath(const std::string& line, T& config);
+	void validateCgiExtension(const std::string& ext);
+	void validateExecutablePath(const std::string& path);
+
 	void validatePort(const std::string& line, ServerConfigFile& current_server);
 
 	// void validateRoot(const std::string& value, const std::string& directive_name);

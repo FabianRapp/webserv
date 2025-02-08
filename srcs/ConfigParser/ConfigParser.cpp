@@ -196,6 +196,8 @@ bool ConfigParser::isValidLocationPath(const std::string& path) const {
 	return true;
 }
 
+
+
 template <typename T>
 void ConfigParser::validateMethods(const std::string& methods_str, T& config_object) {
 	const std::set<std::string> valid_methods = {"GET", "POST", "DELETE"};
@@ -219,6 +221,35 @@ void ConfigParser::validateMethods(const std::string& methods_str, T& config_obj
 	}
 
 	config_object.setMethods(get, post, del);
+}
+
+template <typename T>
+void ConfigParser::handleCgiPath(const std::string& line, T& config_object) {
+	std::vector<std::string> tokens = splitByWhitespace(line);
+
+	if (tokens.size() != 3 || tokens[0] != "cgi_path") {
+		throw ConfigParseError("Invalid cgi_pass format: " + line);
+	}
+
+	const std::string& ext = tokens[1];
+	const std::string& path = tokens[2];
+
+	validateCgiExtension(ext);
+	validateExecutablePath(path);
+
+	config_object.addCgiExtension(ext, path);
+}
+
+void ConfigParser::validateCgiExtension(const std::string& ext) {
+	if (ext.empty() || ext[0] != '.' || ext.find_first_of(" \t\n") != std::string::npos) {
+		throw ConfigParseError("Invalid CGI extension: " + ext);
+	}
+}
+
+void ConfigParser::validateExecutablePath(const std::string& path) {
+	if (path.empty() || path[0] != '/' || path.find("..") != std::string::npos) {
+		throw ConfigParseError("Invalid CGI executable path: " + path);
+	}
 }
 
 void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count) {
@@ -292,6 +323,9 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 				std::cout << "SERVER NAME: " << "|" << name << "|" << std::endl;
 				current_server.addServerName(name); // Use addServerName from ServerConfigFile
 			}
+		} else if (line.find("cgi_path ") == 0) {
+			handleCgiPath(line, current_server);
+			handleCgiPath(line, current_server.setDefaultLocation());
 		} else if (line.find("allowed_methods ") == 0) {
 			//todo: fix this shit later
 			std::string methods_str = trimWhiteSpace(line.substr(15)); // Extract the value after "allowed_methods "
@@ -539,6 +573,8 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			// Validate and set allowed methods for the location block
 			validateMethods(methods_str, current_location);
 
+		} else if (line.find("cgi_path ") == 0) {
+			handleCgiPath(line, current_location);
 		} else if (line.find("autoindex ") == 0) {
 			std::string value = trimWhiteSpace(line.substr(10)); // Extract value after "autoindex "
 

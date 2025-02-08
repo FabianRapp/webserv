@@ -20,3 +20,8 @@ curl http://hello.com:8080 --resolve hello.com:8080:127.0.0.1
 
 
 telnet?
+
+
+----------------
+CGI:
+You need to test with files containing errors to see if the error handling works properly. You can use a script containing an infinite loop or an error; you are free to do whatever tests you want within the limits of acceptability that remain at your discretion. The group being evaluated should help you with this.
