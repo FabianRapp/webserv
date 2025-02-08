@@ -9,7 +9,7 @@ Client::Client(DataManager& data, Server* parent_server):
 	mode(ClientMode::RECEIVING),
 	_send_data({"", 0}),
 	_last_availability(std::chrono::steady_clock::now()),
-	_parser(input),
+	_parser(input, parent_server->configs),
 	response(nullptr)
 {
 	this->server = parent_server;
@@ -69,6 +69,7 @@ void	Client::_receive_request(void) {
 		int errorCode;
 		if ((errorCode = _parser.getErrorCode()))
 		{
+			//todo:
 			std::cout << "Parser had Error but handling is not yet implemented\n";
 			// build also response based on the error code 
 		}
@@ -84,28 +85,6 @@ void	Client::_receive_request(void) {
 		_send_data.pos = 0;
 		_send_data.response = "";
 	}
-}
-
-ServerConfigFile&	Client::_select_config(
-	std::vector<ServerConfigFile>& server_configs, Request& request)
-{
-	if (request._headers.find(HeaderType::HOST) == request._headers.end()) {
-		return (server_configs[0]);
-	}
-	std::string	to_match = request._headers[HeaderType::HOST];
-
-	std::transform(to_match.begin(), to_match.end(), to_match.begin(),
-		[](unsigned char c) { return (std::tolower(c));});
-
-	for (ServerConfigFile& config : server_configs) {
-		const std::vector<std::string>&	names = config.getServerNames();
-		for (const auto& name : names) {
-			if (name == to_match) {
-				return (config);
-			}
-		}
-	}
-	return (server_configs[0]);
 }
 
 void	Client::execute(void) {
@@ -132,7 +111,7 @@ void	Client::execute(void) {
 		case (ClientMode::BUILD_RESPONSE): {
 			std::cout << "exec\n";
 			if (response == nullptr) {
-				response = new Response(_select_config(server->configs, _request), _request, *this, mode);
+				response = new Response(_parser.get_config(), _parser.get_location_config(), _request, *this, mode);
 			}
 			response->execute();
 			if (mode == ClientMode::SENDING) {

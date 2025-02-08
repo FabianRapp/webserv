@@ -16,13 +16,14 @@
 
 #include <vector>
 
-Response::Response(const ServerConfigFile& configFile, const Request& request, Client& client,
-		ClientMode& client_mode):
+Response::Response(const ServerConfigFile& configFile, const LocationConfigFile& locationConfig,
+		const Request& request, Client& client, ClientMode& client_mode):
 	_response_str(),
 	_request(request),
 	_client_mode(client_mode),
 	_body(""),
 	_config(configFile),
+	_location_config(locationConfig),
 	_target(request._uri),
 	_server(client.server),
 	_client(&client),
@@ -33,7 +34,6 @@ Response::Response(const ServerConfigFile& configFile, const Request& request, C
 	_first_iter(true),
 	_dir(nullptr)
 {
-	_locationConfig = getLocationConfig();
 	setAllowedMethods();
 }
 
@@ -218,9 +218,9 @@ void	Response::_handle_get_moved(void) {
 //if index file is found returns true and puts it's path in index_file
 bool	Response::_has_index(std::vector<std::string>& files, std::string& index_file) {
 	// _config;//const ServerConfigFile&
-	// _locationConfig;//LocationConfigFile*
+	// _location_config;//LocationConfigFile*
 	//default return
-	const std::string&	index_name = _locationConfig->getIndexFile();
+	const std::string&	index_name = _location_config.getIndexFile();
 	for (const auto& file : files) {
 		if (file == index_name) {
 			index_file = _path + index_name;
@@ -242,7 +242,7 @@ void	Response::_handle_get(void) {
 		std::string					index_file;
 		if (_has_index(files, index_file)) {
 			_path = index_file;
-		} else if (_locationConfig->getAutoIndex()) {
+		} else if (_location_config.getAutoIndex()) {
 			_handle_auto_index(files);
 			return ;
 		} else {
@@ -466,9 +466,19 @@ bool	Response::isMethodAllowed(MethodType method) {
 }
 
 void	Response::execute(void) {
+	// check if the status was changed from 200 by something outside the Response class
+	int	status_code = _request._status_code.first;
+	const std::string&	status_str = _request._status_code.second;
+	if (status_code != 200) {
+		load_status_code_response(status_code, status_str);
+		return ;
+	}
 	if (_first_iter) {
-		_path = getExpandedTarget();
 		_first_iter = false;
+	
+
+	
+		_path = getExpandedTarget();
 		//return if a status code file was requested
 		if (_mode != ResponseMode::NORMAL) {
 			return ;
@@ -547,44 +557,16 @@ void	Response::appendToBody(std::string content) {
 	_body += content;
 }
 
-const LocationConfigFile* Response::getLocationConfig() {
-	const std::vector<LocationConfigFile>& locationsFiles = _config.getLocations();
-
-	size_t				longest_match = 0;
-	const LocationConfigFile*	best_match = &_config.getDefaultLocation();
-	for (const LocationConfigFile& locationFile : locationsFiles)
-	{
-		size_t	loc_path_len = locationFile.getPath().length();
-		if (loc_path_len > longest_match
-			&& !strncmp(_request._uri.c_str(), locationFile.getPath().c_str(), loc_path_len)
-			&& (_request._uri.length() == loc_path_len || _request._uri[loc_path_len] == '/'))
-		{
-			longest_match = loc_path_len;
-			best_match = &locationFile;
-		}
-	}
-	// std::cout << best_match <<
-	return best_match;
-}
-
 void Response::setAllowedMethods() {
-
-	if (_locationConfig == nullptr) {
-		_allowedMethods.push_back(MethodType::GET);
-		_allowedMethods.push_back(MethodType::POST);
-		_allowedMethods.push_back(MethodType::DELETE);
-		std::cout << "NO LOCATION PRESENT, default all methods allowed\n";
-		return ;
-	}
-	if (_locationConfig->isGetAllowed())
+	if (_location_config.isGetAllowed())
 	{
 		_allowedMethods.push_back(MethodType::GET);
 	}
-	if (_locationConfig->isPostAllowed())
+	if (_location_config.isPostAllowed())
 	{
 		_allowedMethods.push_back(MethodType::POST);
 	}
-	if (_locationConfig->isPostAllowed())
+	if (_location_config.isPostAllowed())
 	{
 		_allowedMethods.push_back(MethodType::DELETE);
 	}
@@ -601,20 +583,20 @@ std::string getResource(const std::string& uri) {
 std::string	Response::getExpandedTarget(void) {
 	std::string expandedPath;
 	std::string resource = getResource(_request._uri);
-	_locationConfig->printLocation();
+	_location_config.printLocation();
 
 	std::cout << "\n";
 
 	std::cout << "--- Config.getRoot() " << _config.getRoot() + "\n";
-	std::cout << "--- LocationConfig() " << _locationConfig->getRoot() + "\n";
+	std::cout << "--- LocationConfig() " << _location_config.getRoot() + "\n";
 	std::cout << "--- request._uri " << _request._uri + "\n";
 	std::cout << "--- resource " << resource  + "\n";
 
 	std::cout << "\n";
 
-	if (_locationConfig->getRoot() != "/" && _locationConfig->getRoot() != resource)
+	if (_location_config.getRoot() != "/" && _location_config.getRoot() != resource)
 	{
-		expandedPath = _config.getRoot() + _locationConfig->getRoot() + resource;
+		expandedPath = _config.getRoot() + _location_config.getRoot() + resource;
 		std::cout << "ME\n";
 	}
 	else

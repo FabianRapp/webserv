@@ -10,6 +10,9 @@
 #include <ostream>
 #include <vector>
 #include <sstream>
+#include <algorithm>
+#include <ServerConfigFile.hpp>
+#include <LocationConfigFile.hpp>
 
 #include "StringArray.hpp"
 
@@ -17,12 +20,20 @@ using String = std::string;
 
 class Parser {
 	private:
-		Request			_request;
-		std::string&	_input;
+		Request									_request;
+		std::string&							_input;
+		int										_max_request_body_size;
+		const std::vector<ServerConfigFile>&	_server_configs;
+		int										_config_index;//-1 indicates condigs were not set
+		int										_location_index;// -1 indicates default location or not set
 
 
+		void	_select_server_config(void);
+		void	_select_location_config(void);
+		void	_select_config(void);
 	public:
-		Parser(std::string& input): _input(input){};
+
+		Parser(std::string& input, const std::vector<ServerConfigFile>& configs);
 		~Parser() = default;
 
 		void	parse(void);
@@ -33,7 +44,11 @@ class Parser {
 		void	parser_chunked(std::string& input);
 		void	parse_chunk(std::string& input);
 
+		const ServerConfigFile&	get_config(void) const;
+		const LocationConfigFile&	get_location_config(void) const;
+
 		// Setters
+		void set_max_request_body_size(int max_request_body_size);
 		void setRequestMethod(const std::string& method);
 		void setUri(const std::string& uri);
 		void setVersion(const std::string& version);

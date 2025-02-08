@@ -21,16 +21,17 @@ using HeadersMap = std::unordered_map<HeaderType, std::string>;
 
 class Request {
 	public:
-		bool						_finished;
-		bool						_areHeadersParsed;
-		MethodType					_type;
-		std::string					_uri;
-		std::string					_version;
-		HeadersMap					_headers;
-		std::string					_body;
-		size_t						_startBodyIdx;
-		std::vector<std::string>	_bodyTokens;
-		std::string					_response_str;
+		bool								_finished;
+		bool								_areHeadersParsed;
+		MethodType							_type;
+		std::string							_uri;
+		std::string							_version;
+		HeadersMap							_headers;
+		std::string							_body;
+		size_t								_startBodyIdx;
+		std::vector<std::string>			_bodyTokens;
+		std::string							_response_str;
+		std::pair<int, std::string>			_status_code;
 
 		Request();
 		Request(const Request& old);
@@ -40,6 +41,7 @@ class Request {
 		MethodType getMethod() const {
 			return _type;
 		}
+
 
 		void displayRequest() const {
 			std::cout << "Request state:" << std::endl;
@@ -56,4 +58,5 @@ class Request {
 			std::cout << "Body: " << (_body.empty() ? "No body" : _body) << std::endl;
 		}
 
+		void	set_status_code(int code);
 };

@@ -45,7 +45,7 @@ class Response {
 		ClientMode&				_client_mode;
 		std::string				_body;
 		const ServerConfigFile&	_config;
-		const LocationConfigFile*		_locationConfig;
+		const LocationConfigFile&	_location_config;
 		std::string				_target;
 		Server*					_server;
 		Client*					_client;
@@ -76,8 +76,8 @@ class Response {
 
 	public:
 		Response () = delete;
-		Response(const ServerConfigFile& configFile, const Request& request,Client& client,
-			ClientMode& client_mode);
+		Response(const ServerConfigFile& configFile, const LocationConfigFile& locationConfig,
+			const Request& request,Client& client, ClientMode& client_mode);
 		~Response();
 		Response operator=(const Response& old);
 
@@ -104,7 +104,6 @@ class Response {
 		void	appendToBody(std::string content);
 		std::string	getExpandedTarget(void);
 		void setAllowedMethods();
-		const LocationConfigFile*	getLocationConfig(void);
 
 		bool isMethodAllowed(MethodType method);
 		// std::string expandPath();
