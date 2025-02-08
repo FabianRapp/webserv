@@ -327,8 +327,8 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			int code = std::stoi(line.substr(11, 3)); // Extract error code
 			std::string path = trimWhiteSpace(line.substr(15)); // Extract path
 			current_server.addErrorPage(code, path);
-		} else if (line.find("client_body_size ") == 0) {
-			std::string size_value = trimWhiteSpace(line.substr(17)); // Extract the value after "client_body_size "
+		} else if (line.find("request_body_size ") == 0) {
+			std::string size_value = trimWhiteSpace(line.substr(17)); // Extract the value after "request_body_size "
 			// std::cout << "REAL SIZE HERE: " << size_value << std::endl;
 			// Remove trailing semicolon if present
 			if (!size_value.empty() && size_value.back() == ';') {
@@ -338,7 +338,7 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 
 			// Validate and set client body size
 			validateClientBodySize(size_value);
-			current_server.setClientBodySize(std::stoi(size_value));
+			current_server.setRequestBodySize(std::stoi(size_value));
 
 		} else if (line.find("index ") == 0) {
 			std::string index_value = trimWhiteSpace(line.substr(6)); // Extract index file name
@@ -578,17 +578,17 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 
 void ConfigParser::validateClientBodySize(const std::string& value) {
 	// Debug: Print the raw value
-	// std::cout << "Raw client_body_size value: " << value << std::endl;
+	// std::cout << "Raw request_body_size value: " << value << std::endl;
 
 	// Check if the value starts with a '-' (negative number)
 	if (!value.empty() && value[0] == '-') {
-		throw std::runtime_error("Invalid client_body_size value: " + value + ". Negative values are not allowed.");
+		throw std::runtime_error("Invalid request_body_size value: " + value + ". Negative values are not allowed.");
 	}
 
 	// Ensure the value is numeric
 	for (char ch : value) {
 		if (!std::isdigit(ch)) {
-			throw std::runtime_error("Invalid client_body_size value: " + value + ". Must be a non-negative integer.");
+			throw std::runtime_error("Invalid request_body_size value: " + value + ". Must be a non-negative integer.");
 		}
 	}
 
@@ -598,7 +598,7 @@ void ConfigParser::validateClientBodySize(const std::string& value) {
 	// Check for maximum allowed size (e.g., 1 GB = 1073741824 bytes)
 	const int MAX_SIZE = 1073741824; // 1 GB
 	if (size > MAX_SIZE) {
-		throw std::runtime_error("Invalid client_body_size value: " + value + ". Maximum allowed is " +
+		throw std::runtime_error("Invalid request_body_size value: " + value + ". Maximum allowed is " +
 			std::to_string(MAX_SIZE) + " bytes.");
 	}
 }

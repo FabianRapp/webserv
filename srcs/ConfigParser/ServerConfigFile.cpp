@@ -73,8 +73,8 @@ void ServerConfigFile::addLocation(const LocationConfigFile& location) {
 	_locations.push_back(location);
 }
 
-void ServerConfigFile::setClientBodySize(int size) {
-	_client_body_size = size;
+void ServerConfigFile::setRequestBodySize(int size) {
+	_request_body_size = size;
 }
 
 // Getters
@@ -126,9 +126,9 @@ const std::vector<LocationConfigFile>& ServerConfigFile::getLocations() const {
 	return _locations;
 }
 
-int ServerConfigFile::getClientBodySize() const {
-	// std::cout << "ServerConfigFile::getClientBodySize(): " <<  _client_body_size << std::endl;
-	return _client_body_size;
+int ServerConfigFile::getRequestBodySize() const {
+	// std::cout << "ServerConfigFile::getRequestBodySize(): " <<  _request_body_size << std::endl;
+	return _request_body_size;
 }
 
 LocationConfigFile& ServerConfigFile::setDefaultLocation() {
