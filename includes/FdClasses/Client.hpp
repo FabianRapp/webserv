@@ -46,8 +46,6 @@ private:
 
 	void			_receive_request(void);
 
-	ServerConfigFile&	_select_config(
-		std::vector<ServerConfigFile>& server_configs, Request& request);
 	Request			_request;
 	ClientMode		mode;
 

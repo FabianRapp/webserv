@@ -126,6 +126,7 @@ std::ostream	&operator<<(std::ostream &output, const StringArray &arr) {
 	return (output);
 }
 
+//too: catch line exceptions
 RequestArray::RequestArray(const String& input):
 	std::vector<Line>(),
 	_full_input(input)

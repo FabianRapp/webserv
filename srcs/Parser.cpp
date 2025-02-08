@@ -20,7 +20,81 @@
 // If neither Content-Length nor Transfer-Encoding is specified, the end of the body is signaled by the server closing the connection.
 // This is a fallback mechanism in HTTP/1.1 but is considered bad practice and is rarely used.
 
+Parser::Parser(std::string& input, const std::vector<ServerConfigFile>& configs):
+	_input(input),
+	_max_request_body_size(-1),
+	_server_configs(configs),
+	_config_index(-1),
+	_location_index(-1)
+{
+}
 
+void	Parser::_select_server_config(void) {
+	FT_ASSERT(_request._areHeadersParsed);
+
+	if (_request._headers.find(HeaderType::HOST) == _request._headers.end()) {
+		_config_index = 0;
+		return ;
+	}
+
+	std::string	to_match = _request._headers[HeaderType::HOST];
+
+	std::transform(to_match.begin(), to_match.end(), to_match.begin(),
+		[](unsigned char c) { return (std::tolower(c));});
+
+
+	for (size_t i = 0; i < _server_configs.size(); i++) {
+		const auto& config = _server_configs[i];
+		const std::vector<std::string>&	names = config.getServerNames();
+		for (const auto& name : names) {
+			if (name == to_match) {
+				_config_index = static_cast<int>(i);
+				return ;
+			}
+		}
+	}
+	_config_index = 0;
+}
+
+void	Parser::_select_location_config(void) {
+	FT_ASSERT(_config_index >= 0);
+
+	const std::vector<LocationConfigFile>	&locationsFiles =
+		_server_configs[static_cast<size_t>(_config_index)].getLocations();
+
+	size_t				longest_match = 0;
+	for (size_t i = 0; i < locationsFiles.size(); i++) {
+		const LocationConfigFile& locationFile = locationsFiles[i];
+		size_t	loc_path_len = locationFile.getPath().length();
+		if (loc_path_len > longest_match
+			&& !strncmp(_request._uri.c_str(), locationFile.getPath().c_str(), loc_path_len)
+			&& (_request._uri.length() == loc_path_len || _request._uri[loc_path_len] == '/'))
+		{
+			longest_match = loc_path_len;
+			_location_index = static_cast<int>(i);
+		}
+	}
+}
+
+void	Parser::_select_config(void) {
+	_select_server_config();
+	_select_location_config();
+}
+
+// only callabled once _select_config(void) was used
+const ServerConfigFile&	Parser::get_config(void) const {
+	FT_ASSERT(_config_index >= 0 && "config has not been set");
+	return (_server_configs[static_cast<size_t>(_config_index)]);
+}
+
+// only callabled once _select_config(void) was used
+const LocationConfigFile&	Parser::get_location_config(void) const {
+	if (_location_index == -1) {
+		return (get_config().getDefaultLocation());
+	}
+	const std::vector<LocationConfigFile>	&locations_files = get_config().getLocations();
+	return (locations_files[static_cast<size_t>(_location_index)]);
+}
 
 int sizeLineToInt(const std::string& hexStr) {
 	int value = 0;
@@ -187,6 +261,10 @@ int Parser::getErrorCode() {
 	return 0;
 }
 
+void Parser::set_max_request_body_size(int max_request_body_size) {
+	_max_request_body_size = max_request_body_size;
+}
+
 void Parser::setRequestMethod(const std::string& method) {
 	if (method == "GET") {
 		_request._type = MethodType::GET;
@@ -261,13 +339,17 @@ void Parser::insertHeader(const std::string& key, const std::string& value) {
 }
 
 void	Parser::parse_first_line(const RequestArray& array) {
-	if (array[0].size() != 3)
-	{
-		//handle error logic, first line is incomplete
+	if (array[0].size() > 3) {
+		_request.set_status_code(400);
+		_request._finished = true;
+	} else if (array[0].size() != 3) {
+		//todo:
+		//first line is incomplete
+	} else {
+		setRequestMethod(array[0][0]);
+		setUri(array[0][1]);
+		setVersion(array[0][2]);
 	}
-	setRequestMethod(array[0][0]);
-	setUri(array[0][1]);
-	setVersion(array[0][2]);
 }
 
 void	Parser::parse_headers(const RequestArray& array) {
@@ -277,7 +359,9 @@ void	Parser::parse_headers(const RequestArray& array) {
 	{
 		if (array[i].size() != 2)
 		{
-			// todo: handle logic when headers are not key pair value
+			_request.set_status_code(400);
+			_request._finished = true;
+			return ;
 		}
 		insertHeader(array[i][0], array[i][1]);
 		i++;
@@ -478,7 +562,6 @@ void Parser::parse(void) {
 	RequestArray	array;
 	if (!_request._areHeadersParsed)
 	{
-		RequestArray		*arr_ptr;
 		try {
 			array = RequestArray(_input);
 		} catch (const RequestArray::NotTerminated& e) {
@@ -490,10 +573,45 @@ void Parser::parse(void) {
 		std::cout << array;
 
 		parse_first_line(array);
+		if (_request._finished) {
+			return ;
+		}
 		parse_headers(array);
+		if (_request._finished) {
+			return ;
+		}
 	}
-	if (_request._areHeadersParsed)
+
+	if (_request._areHeadersParsed) {
+		if (_config_index == -1) {
+			_select_config();
+		}
+		//todo: if we update to make request_body_size a part of a location config
+		//instead of a serve config change this below according
+		int allowed_body_size = get_config().getRequestBodySize();
+		bool body_too_large = false;
+		bool invalid_body_size = false;
+		try {
+			int actual_body_size = std::stoi(_request._headers[HeaderType::CONTENT_LENGTH]);
+			body_too_large = allowed_body_size != -1 && actual_body_size > allowed_body_size;
+			invalid_body_size = actual_body_size < 0;
+		} catch (const std::invalid_argument&) {
+			invalid_body_size = true;
+		} catch (const std::out_of_range&) {
+			invalid_body_size = true;
+		}
+
+		if (body_too_large) {
+			_request.set_status_code(400);
+			_request._finished = true;
+			return ;
+		} else if (invalid_body_size) {
+			_request.set_status_code(500);
+			_request._finished = true;
+			return ;
+		}
 		parse_body(_input);
+	}
 
 	//_request.displayRequest();
 }
