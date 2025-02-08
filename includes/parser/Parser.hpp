@@ -10,6 +10,7 @@
 #include <ostream>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 
 #include "StringArray.hpp"
 
