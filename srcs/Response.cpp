@@ -466,9 +466,19 @@ bool	Response::isMethodAllowed(MethodType method) {
 }
 
 void	Response::execute(void) {
+	// check if the status was changed from 200 by something outside the Response class
+	int	status_code = _request._status_code.first;
+	const std::string&	status_str = _request._status_code.second;
+	if (status_code != 200) {
+		load_status_code_response(status_code, status_str);
+		return ;
+	}
 	if (_first_iter) {
-		_path = getExpandedTarget();
 		_first_iter = false;
+	
+
+	
+		_path = getExpandedTarget();
 		//return if a status code file was requested
 		if (_mode != ResponseMode::NORMAL) {
 			return ;
