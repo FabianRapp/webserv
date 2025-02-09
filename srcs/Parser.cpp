@@ -6,7 +6,7 @@
 /*   By: adrherna <adrianhdt.2001@gmail.com>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 13:43:05 by adrherna          #+#    #+#             */
-/*   Updated: 2025/02/05 12:31:17 by adrherna         ###   ########.fr       */
+/*   Updated: 2025/02/09 15:45:59 by adrherna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,9 +74,14 @@ void	Parser::_select_location_config(void) {
 	for (size_t i = 0; i < locationsFiles.size(); i++) {
 		const LocationConfigFile& locationFile = locationsFiles[i];
 		size_t	loc_path_len = locationFile.getPath().length();
+		std::cout << "uri: " << _request._uri << "\n";
+		std::cout << "locationFile.getPath(): " << locationFile.getPath() << "\n";
+		std::cout << "\n";
 		if (loc_path_len > longest_match
 			&& !strncmp(_request._uri.c_str(), locationFile.getPath().c_str(), loc_path_len)
-			&& (_request._uri.length() == loc_path_len || _request._uri[loc_path_len] == '/'))
+			&& (_request._uri.length() == loc_path_len || _request._uri[loc_path_len] == '/'
+				|| (locationFile.getPath() == "/"))
+			)
 		{
 			longest_match = loc_path_len;
 			_location_index = static_cast<int>(i);
