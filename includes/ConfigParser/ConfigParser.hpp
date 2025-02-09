@@ -43,7 +43,9 @@ private:
 	// void validateRoot(const std::string& value, const std::string& directive_name);
 	void validateRoot(const std::string& value, const std::string& directive_name, bool is_server_block);
 
-	void validateClientBodySize(const std::string& value);
+	// void validateClientBodySize(const std::string& value);
+	template <typename T>
+	void validateClientBodySize(const std::string& value, T& config_object);
 
 	std::string sanitizeLine(const std::string& line) const;
 

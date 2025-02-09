@@ -30,6 +30,10 @@ void LocationConfigFile::setIndexFile(const std::string index_file) {
 	_index_file = index_file;
 }
 
+void LocationConfigFile::setRequestBodySize(int size) {
+	_request_body_size = size;
+}
+
 void LocationConfigFile::addCgiExtension(const std::string& ext, const std::string& path_to_binary) {
 	// Validate extension format
 	if (ext.empty() || ext[0] != '.') {
@@ -89,6 +93,10 @@ const std::string& LocationConfigFile::getIndexFile() const {
 	return _index_file;
 }
 
+int LocationConfigFile::getRequestBodySize() const {
+	return _request_body_size;
+}
+
 const std::map<std::string, std::string>& LocationConfigFile::getCgiExtensions() const {
 	return _cgi_map;
 }
@@ -103,14 +111,34 @@ const std::map<std::string, std::string>& LocationConfigFile::getCgiExtensions()
 //todo: delete this later. Debugging utility
 void LocationConfigFile::printLocation() const {
 	std::cout << "Location Path: " << _path << "\n";
+
 	std::cout << "Allowed Methods: "
 				<< (_get_header ? "GET " : "")
 				<< (_post_header ? "POST " : "")
 				<< (_delete_header ? "DELETE " : "")
 				<< (_put_header ? "PUT" : "") << "\n";
+
 	std::cout << "Autoindex: " << (_autoindex ? "on" : "off") << "\n";
+
 	if (!_root.empty()) {
-		std::cout << "_root: " << _root << "\n";
+		std::cout << "Root: " << _root << "\n";
 	}
+
 	std::cout << "Index File: " << _index_file << "\n";
+
+	if (_request_body_size != -1) {
+		std::cout << "Request Body Size: " << _request_body_size << " bytes\n";
+	} else {
+		std::cout << "Request Body Size: Not set\n";
+	}
+
+	if (!_cgi_map.empty()) {
+		std::cout << "CGI Extensions:\n";
+		for (const auto& [ext, path] : _cgi_map) {
+			std::cout << "\tExtension: " << ext << ", Path to Binary: " << path << "\n";
+		}
+	} else {
+		std::cout << "CGI Extensions: None\n";
+	}
 }
+

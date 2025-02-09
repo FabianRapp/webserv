@@ -408,8 +408,8 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 
 
 			// Validate and set client body size
-			validateClientBodySize(size_value);
-			current_server.setRequestBodySize(std::stoi(size_value));
+			validateClientBodySize(size_value, current_server);
+			validateClientBodySize(size_value, current_server.setDefaultLocation());
 
 		} else if (line.find("index ") == 0) {
 			std::string index_value = trimWhiteSpace(line.substr(6)); // Extract index file name
@@ -632,6 +632,16 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 
 			validateRoot(root_value, "root", false); // false indicates this is a location block
 			current_location.setRoot(root_value);
+		} else if (line.find("request_body_size ") == 0) {
+			std::string size_value = trimWhiteSpace(line.substr(17)); // Extract the value after "request_body_size "
+			// std::cout << "REAL SIZE HERE: " << size_value << std::endl;
+			// Remove trailing semicolon if present
+			if (!size_value.empty() && size_value.back() == ';') {
+				size_value.pop_back();
+			}
+
+			// Validate and set client body size
+			validateClientBodySize(size_value, current_location);
 
 		} else if (line.find("index ") == 0) {
 			std::string index_value = trimWhiteSpace(line.substr(6)); // Extract index file name
@@ -649,32 +659,32 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 	}
 }
 
-void ConfigParser::validateClientBodySize(const std::string& value) {
-	// Debug: Print the raw value
-	// std::cout << "Raw request_body_size value: " << value << std::endl;
-
-	// Check if the value starts with a '-' (negative number)
+template <typename T>
+void ConfigParser::validateClientBodySize(const std::string& value, T& config_object) {
+	// Ensure the value is numeric and non-negative
 	if (!value.empty() && value[0] == '-') {
 		throw std::runtime_error("Invalid request_body_size value: " + value + ". Negative values are not allowed.");
 	}
 
-	// Ensure the value is numeric
 	for (char ch : value) {
 		if (!std::isdigit(ch)) {
 			throw std::runtime_error("Invalid request_body_size value: " + value + ". Must be a non-negative integer.");
 		}
 	}
 
-	// Convert to integer and check range
+	// Convert to integer and validate range
 	int size = std::stoi(value);
-
-	// Check for maximum allowed size (e.g., 1 GB = 1073741824 bytes)
 	const int MAX_SIZE = 1073741824; // 1 GB
+
 	if (size > MAX_SIZE) {
-		throw std::runtime_error("Invalid request_body_size value: " + value + ". Maximum allowed is " +
-			std::to_string(MAX_SIZE) + " bytes.");
+		throw std::runtime_error("Invalid request_body_size value: " + value +
+									". Maximum allowed is " + std::to_string(MAX_SIZE) + " bytes.");
 	}
+
+	// Set the validated size in the config object
+	config_object.setRequestBodySize(size);
 }
+
 
 
 

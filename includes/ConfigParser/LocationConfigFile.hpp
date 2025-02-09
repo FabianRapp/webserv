@@ -14,6 +14,7 @@ private:
 	bool _delete_header = false;
 	bool _put_header = false;
 	bool _autoindex = false;
+	int _request_body_size = -1;
 	std::map<std::string, std::string> _cgi_map;
 	std::string _root = "";
 	std::string _index_file = "index.html";
@@ -26,6 +27,7 @@ public:
 	void setAutoIndex(bool autoindex);
 	void setRoot(const std::string root);
 	void setIndexFile(const std::string index_file);
+	void setRequestBodySize(int size);
 	void addCgiExtension(const std::string& ext, const std::string& path_to_binary);
 
 	const std::string& getPath() const;
@@ -36,6 +38,7 @@ public:
 	bool getAutoIndex() const;
 	const std::string& getRoot() const;
 	const std::string& getIndexFile() const;
+	int getRequestBodySize() const;
 	const std::map<std::string, std::string>& getCgiExtensions() const;
 
 	// void validateMethods() const;
