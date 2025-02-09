@@ -12,6 +12,7 @@ private:
 	bool _get_header = false;
 	bool _post_header = false;
 	bool _delete_header = false;
+	bool _put_header = false;
 	bool _autoindex = false;
 	std::map<std::string, std::string> _cgi_map;
 	std::string _root = "";
@@ -21,7 +22,7 @@ public:
 	LocationConfigFile();
 
 	void setPath(const std::string& path);
-	void setMethods(bool get, bool post, bool del);
+	void setMethods(bool get, bool post, bool del, bool put);
 	void setAutoIndex(bool autoindex);
 	void setRoot(const std::string root);
 	void setIndexFile(const std::string index_file);
@@ -31,6 +32,7 @@ public:
 	bool isGetAllowed() const;
 	bool isPostAllowed() const;
 	bool isDeleteAllowed() const;
+	bool isPutAllowed() const;
 	bool getAutoIndex() const;
 	const std::string& getRoot() const;
 	const std::string& getIndexFile() const;

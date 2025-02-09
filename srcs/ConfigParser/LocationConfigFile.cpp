@@ -9,10 +9,11 @@ void LocationConfigFile::setPath(const std::string& path) {
 	_path = path;
 }
 
-void LocationConfigFile::setMethods(bool get, bool post, bool del) {
+void LocationConfigFile::setMethods(bool get, bool post, bool del, bool put) {
 	_get_header = get;
 	_post_header = post;
 	_delete_header = del;
+	_put_header = put;
 
 	// validateMethods();
 }
@@ -72,6 +73,10 @@ bool LocationConfigFile::isDeleteAllowed() const {
 	return _delete_header;
 }
 
+bool LocationConfigFile::isPutAllowed() const {
+	return _put_header;
+}
+
 bool LocationConfigFile::getAutoIndex() const {
 	return _autoindex;
 }
@@ -101,7 +106,8 @@ void LocationConfigFile::printLocation() const {
 	std::cout << "Allowed Methods: "
 				<< (_get_header ? "GET " : "")
 				<< (_post_header ? "POST " : "")
-				<< (_delete_header ? "DELETE" : "") << "\n";
+				<< (_delete_header ? "DELETE " : "")
+				<< (_put_header ? "PUT" : "") << "\n";
 	std::cout << "Autoindex: " << (_autoindex ? "on" : "off") << "\n";
 	if (!_root.empty()) {
 		std::cout << "_root: " << _root << "\n";

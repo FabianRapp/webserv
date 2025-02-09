@@ -267,11 +267,11 @@ bool ConfigParser::isValidLocationPath(const std::string& path) const {
 
 template <typename T>
 void ConfigParser::validateMethods(const std::string& methods_str, T& config_object) {
-	const std::set<std::string> valid_methods = {"GET", "POST", "DELETE"};
+	const std::set<std::string> valid_methods = {"GET", "POST", "DELETE", "PUT"};
 
 	std::istringstream iss(methods_str);
 	std::string method;
-	bool get = false, post = false, del = false;
+	bool get = false, post = false, del = false, put = false;
 
 	while (iss >> method) {
 		if (valid_methods.find(method) == valid_methods.end()) {
@@ -281,13 +281,14 @@ void ConfigParser::validateMethods(const std::string& methods_str, T& config_obj
 		if (method == "GET") get = true;
 		else if (method == "POST") post = true;
 		else if (method == "DELETE") del = true;
+		else if (method == "PUT") put = true;
 	}
 
-	if (!get && !post && !del) {
+	if (!get && !post && !del && !put) {
 		throw std::runtime_error("allowed_methods must contain at least one valid method");
 	}
 
-	config_object.setMethods(get, post, del);
+	config_object.setMethods(get, post, del, put);
 }
 
 template <typename T>
@@ -390,7 +391,7 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			// Add each server name to the ServerConfigFile object
 			for (const auto& name : server_names) {
 				std::cout << "SERVER NAME : " << "|" << name << "|" << std::endl;
-				validateServerName(name);
+				// validateServerName(name);
 				current_server.addServerName(name); // Use addServerName from ServerConfigFile
 			}
 		} else if (line.find("cgi_path ") == 0) {
