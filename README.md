@@ -35,3 +35,21 @@ telnet?
 ----------------
 CGI:
 You need to test with files containing errors to see if the error handling works properly. You can use a script containing an infinite loop or an error; you are free to do whatever tests you want within the limits of acceptability that remain at your discretion. The group being evaluated should help you with this.
+
+
+
+------------------
+
+server_name validation.
+request_body_size should be in location also.
+add PUT method to allowed_methods for both.
+
+
+bool CGIManager::isCGI(const std::string& path, const LocationConfigFile& location_config) {
+	finish validating .py | .php | .bla
+
+TODO:
+1. CHUNKS.
+2. ERROR handleling.
+3. FRONT-END for the evaluation to have every test avaialbe.
+4. Implement PUT.

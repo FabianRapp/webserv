@@ -10,6 +10,20 @@
 volatile
 sig_atomic_t	exit_ = 0;
 
+void printHelloWebServer() {
+std::cout << FT_ANSI_CYAN_BOLD << R"(
+  (`\ .-') /`   ('-. .-. .-')          .-')      ('-.  _  .-')        (`-.      ('-.  _  .-')
+   `.( OO ),' _(  OO)\  ( OO )        ( OO ).  _(  OO)( \( -O )     _(OO  )_  _(  OO)( \( -O )
+,--./  .--.  (,------.;-----.\       (_)---\_)(,------.,------. ,--(_/   ,. \(,------.,------.
+|      |  |   |  .---'| .-.  |       /    _ |  |  .---'|   /`. '\   \   /(__/ |  .---'|   /`. '
+|  |   |  |,  |  |    | '-' /_)      \  :` `.  |  |    |  /  | | \   \ /   /  |  |    |  /  | |
+|  |.'.|  |_)(|  '--. | .-. `.        '..`''.)(|  '--. |  |_.' |  \   '   /, (|  '--. |  |_.' |
+|         |   |  .--' | |  \  |      .-._)   \ |  .--' |  .  '.'   \     /__) |  .--' |  .  '.'
+|   ,'.   |   |  `---.| '--'  /      \       / |  `---.|  |\  \     \   /     |  `---.|  |\  \
+'--'   '--'   `------'`------'        `-----'  `------'`--' '--'     `-'      `------'`--' '--'
+)" << FT_ANSI_RESET << std::endl;
+}
+
 void	sig_int(int) {
 	exit_ = 1;
 }
@@ -62,8 +76,8 @@ void	webserv(int ac, char **av) {
 int	main(int ac, char *av[]) {
 	signal(SIGINT, sig_int);
 	signal(SIGTSTP, sig_int);
-
-	//todo: remove this, just for testing
+	//todo: might need to move it somewhere else
+	printHelloWebServer();
 
 start:
 	try {

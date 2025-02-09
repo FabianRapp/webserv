@@ -33,6 +33,39 @@ std::vector<std::string> ConfigParser::splitByWhitespace(const std::string& str)
 	return tokens;
 }
 
+void ConfigParser::validateServerName(const std::string& name) {
+	if (name.empty()) {
+		throw std::runtime_error("Invalid server_name: Name cannot be empty.");
+	}
+
+	// Check first and last characters are alphanumeric
+	if (!std::isalnum(name.front()) || !std::isalnum(name.back())) {
+		throw std::runtime_error("Invalid server_name '" + name +
+			"': Must start/end with alphanumeric character");
+	}
+
+	bool previous_is_dot = false;
+	for (size_t i = 0; i < name.size(); ++i) {
+		const char c = name[i];
+
+		if (!std::isalnum(c) && c != '-' && c != '.') {
+			throw std::runtime_error("Invalid server_name '" + name +
+				"': Contains invalid character '" + std::string(1, c) + "'");
+		}
+		if (c == '.') {
+			if (previous_is_dot) {
+				throw std::runtime_error("Invalid server_name '" + name +
+					"': Consecutive dots detected");
+			}
+			previous_is_dot = true;
+		} else {
+			previous_is_dot = false;
+		}
+	}
+}
+
+
+
 void ConfigParser::parseFile(const std::string& config_file) {
 	std::ifstream file(config_file);
 	if (!file.is_open()) {
@@ -200,11 +233,11 @@ bool ConfigParser::isValidLocationPath(const std::string& path) const {
 
 template <typename T>
 void ConfigParser::validateMethods(const std::string& methods_str, T& config_object) {
-	const std::set<std::string> valid_methods = {"GET", "POST", "DELETE"};
+	const std::set<std::string> valid_methods = {"GET", "POST", "DELETE", "PUT"};
 
 	std::istringstream iss(methods_str);
 	std::string method;
-	bool get = false, post = false, del = false;
+	bool get = false, post = false, del = false, put = false;
 
 	while (iss >> method) {
 		if (valid_methods.find(method) == valid_methods.end()) {
@@ -214,13 +247,14 @@ void ConfigParser::validateMethods(const std::string& methods_str, T& config_obj
 		if (method == "GET") get = true;
 		else if (method == "POST") post = true;
 		else if (method == "DELETE") del = true;
+		else if (method == "PUT") put = true;
 	}
 
-	if (!get && !post && !del) {
+	if (!get && !post && !del && !put) {
 		throw std::runtime_error("allowed_methods must contain at least one valid method");
 	}
 
-	config_object.setMethods(get, post, del);
+	config_object.setMethods(get, post, del, put);
 }
 
 template <typename T>
@@ -318,9 +352,12 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			// Split the line into individual server names
 			std::vector<std::string> server_names = splitByWhitespace(server_names_line);
 
+
+
 			// Add each server name to the ServerConfigFile object
 			for (const auto& name : server_names) {
 				std::cout << "SERVER NAME : " << "|" << name << "|" << std::endl;
+				validateServerName(name);
 				current_server.addServerName(name); // Use addServerName from ServerConfigFile
 			}
 		} else if (line.find("cgi_path ") == 0) {
@@ -371,8 +408,8 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 
 
 			// Validate and set client body size
-			validateClientBodySize(size_value);
-			current_server.setRequestBodySize(std::stoi(size_value));
+			validateClientBodySize(size_value, current_server);
+			validateClientBodySize(size_value, current_server.setDefaultLocation());
 
 		} else if (line.find("index ") == 0) {
 			std::string index_value = trimWhiteSpace(line.substr(6)); // Extract index file name
@@ -595,6 +632,16 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 
 			validateRoot(root_value, "root", false); // false indicates this is a location block
 			current_location.setRoot(root_value);
+		} else if (line.find("request_body_size ") == 0) {
+			std::string size_value = trimWhiteSpace(line.substr(17)); // Extract the value after "request_body_size "
+			// std::cout << "REAL SIZE HERE: " << size_value << std::endl;
+			// Remove trailing semicolon if present
+			if (!size_value.empty() && size_value.back() == ';') {
+				size_value.pop_back();
+			}
+
+			// Validate and set client body size
+			validateClientBodySize(size_value, current_location);
 
 		} else if (line.find("index ") == 0) {
 			std::string index_value = trimWhiteSpace(line.substr(6)); // Extract index file name
@@ -612,32 +659,32 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 	}
 }
 
-void ConfigParser::validateClientBodySize(const std::string& value) {
-	// Debug: Print the raw value
-	// std::cout << "Raw request_body_size value: " << value << std::endl;
-
-	// Check if the value starts with a '-' (negative number)
+template <typename T>
+void ConfigParser::validateClientBodySize(const std::string& value, T& config_object) {
+	// Ensure the value is numeric and non-negative
 	if (!value.empty() && value[0] == '-') {
 		throw std::runtime_error("Invalid request_body_size value: " + value + ". Negative values are not allowed.");
 	}
 
-	// Ensure the value is numeric
 	for (char ch : value) {
 		if (!std::isdigit(ch)) {
 			throw std::runtime_error("Invalid request_body_size value: " + value + ". Must be a non-negative integer.");
 		}
 	}
 
-	// Convert to integer and check range
+	// Convert to integer and validate range
 	int size = std::stoi(value);
-
-	// Check for maximum allowed size (e.g., 1 GB = 1073741824 bytes)
 	const int MAX_SIZE = 1073741824; // 1 GB
+
 	if (size > MAX_SIZE) {
-		throw std::runtime_error("Invalid request_body_size value: " + value + ". Maximum allowed is " +
-			std::to_string(MAX_SIZE) + " bytes.");
+		throw std::runtime_error("Invalid request_body_size value: " + value +
+									". Maximum allowed is " + std::to_string(MAX_SIZE) + " bytes.");
 	}
+
+	// Set the validated size in the config object
+	config_object.setRequestBodySize(size);
 }
+
 
 
 

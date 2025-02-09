@@ -50,6 +50,7 @@ public:
 
 	CGIManager(void) = delete;
 	CGIManager(Client* client, const LocationConfigFile& location_config, Response* response, std::string path, const Request& request);
+	void printCgiRunning();
 	~CGIManager(void);
 
 	bool	execute();

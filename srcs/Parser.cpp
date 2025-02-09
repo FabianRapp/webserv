@@ -601,7 +601,7 @@ void Parser::parse(void) {
 		}
 		//todo: if we update to make request_body_size a part of a location config
 		//instead of a serve config change this below according
-		int allowed_body_size = get_config().getRequestBodySize();
+		int allowed_body_size = get_location_config().getRequestBodySize();
 		bool body_too_large = false;
 		bool invalid_body_size = false;
 		try {
