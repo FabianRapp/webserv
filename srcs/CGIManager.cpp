@@ -317,50 +317,59 @@ bool	CGIManager::execute() {
 	return (false);
 }
 
-bool CGIManager::isCGI(const std::string& path, const LocationConfigFile& location_config) {
 
-			std::cout << "CGI EXTENSIONS: " << std::endl;
-		// std::cout << "Response: " << _response->getConfig().getCgiExtensions() << std::endl;
-		// for (const auto& [ext, interp] : _response->getConfig().getCgiExtensions()) {
-		// 	std::cout << ext << " => " << interp << std::endl;
-		// }
+
+bool CGIManager::isCGI(const std::string& path, const LocationConfigFile& location_config) {
 	size_t last_dot = path.find_last_of('.');
 	if (last_dot == std::string::npos)
 		return false;
+
 	std::string extension = path.substr(last_dot);
-	return (extension == ".py" || extension == ".php");
+
+	// Get configured CGI extensions from location config
+	const auto& cgi_extensions = location_config.getCgiExtensions();
+
+	// Check if extension exists in CGI map
+	return cgi_extensions.find(extension) != cgi_extensions.end();
 }
 
 std::string CGIManager::getInterpreter(const std::string& path) {
 	size_t last_dot = path.find_last_of('.');
-	if (last_dot != std::string::npos) {
-		std::string extension = path.substr(last_dot);
-		std::string interpreter;
+	if (last_dot == std::string::npos) {
+		// Handle missing extension error
+		return "";
+	}
 
-		if (extension == ".py") {
-			interpreter = "/usr/bin/python3";
-		} else if (extension == ".php") {
-			//todo: try to check if the interpreter is available, because it might be in different location on different machines
-			interpreter = "/usr/bin/php";
-			// interpreter = "/usr/local/bin/php";
-		} else {
-			// "Unsupported CGI type: " + extension
-			_client->response->load_status_code_response(500, "Internal Server Error");
-			_mode = CGI_MODE::FINISHED;
+	std::string extension = path.substr(last_dot);
+	const auto& cgi_map = _location_cofig.getCgiExtensions();
+
+	if (auto it = cgi_map.find(extension); it != cgi_map.end()) {
+		const std::string& interpreter = it->second;
+
+		// Runtime executable check
+		if (access(interpreter.c_str(), X_OK) != 0) {
+			_client->response->load_status_code_response(500, "CGI interpreter not executable");
 			return "";
 		}
-		if (access(interpreter.c_str(), X_OK) == -1) {
-			//"Interpreter not found or not executable: " + interpreter
-			_client->response->load_status_code_response(500, "Internal Server Error");
-			_mode = CGI_MODE::FINISHED;
-			return "";
-		}
+			printCgiRunning();
 		return interpreter;
 	}
 
-	//"Internal error: No file extension found in path"
-	_client->response->load_status_code_response(500, "Internal Server Error");
-	_mode = CGI_MODE::FINISHED;
+	// Handle unconfigured extension
+	_client->response->load_status_code_response(500, "Unsupported CGI type");
 	return "";
 }
 
+
+void CGIManager::printCgiRunning() {
+std::cout << FT_ANSI_RED_BOLD << R"(
+  /$$$$$$   /$$$$$$  /$$$$$$       /$$$$$$$  /$$   /$$ /$$   /$$ /$$   /$$ /$$$$$$ /$$   /$$  /$$$$$$
+ /$$__  $$ /$$__  $$|_  $$_/      | $$__  $$| $$  | $$| $$$ | $$| $$$ | $$|_  $$_/| $$$ | $$ /$$__  $$
+| $$  \__/| $$  \__/  | $$        | $$  \ $$| $$  | $$| $$$$| $$| $$$$| $$  | $$  | $$$$| $$| $$  \__/
+| $$      | $$ /$$$$  | $$        | $$$$$$$/| $$  | $$| $$ $$ $$| $$ $$ $$  | $$  | $$ $$ $$| $$ /$$$$
+| $$      | $$|_  $$  | $$        | $$__  $$| $$  | $$| $$  $$$$| $$  $$$$  | $$  | $$  $$$$| $$|_  $$
+| $$    $$| $$  \ $$  | $$        | $$  \ $$| $$  | $$| $$\  $$$| $$\  $$$  | $$  | $$\  $$$| $$  \ $$
+|  $$$$$$/|  $$$$$$/ /$$$$$$      | $$  | $$|  $$$$$$/| $$ \  $$| $$ \  $$ /$$$$$$| $$ \  $$|  $$$$$$/
+ \______/  \______/ |______/      |__/  |__/ \______/ |__/  \__/|__/  \__/|______/|__/  \__/ \______/
+)" << FT_ANSI_RESET << std::endl;
+}

@@ -100,8 +100,8 @@ void	Client::execute(void) {
 		set_close();
 		return ;
 	}
-	std::cout << FT_ANSI_GREEN << name << " (idx " << this->data_idx << "): ";
-	std::cout << FT_ANSI_RESET;
+	// std::cout << FT_ANSI_GREEN << name << " (idx " << this->data_idx << "): ";
+	// std::cout << FT_ANSI_RESET;
 	switch (this->mode) {
 		case (ClientMode::RECEIVING): {
 			std::cout << "receiving\n";
@@ -123,16 +123,16 @@ void	Client::execute(void) {
 			break ;
 		}
 		case (ClientMode::SENDING): {
-			std::cout << "sending\n";
+			// std::cout << "sending\n";
 			_send_response();
 			break ;
 		}
 		case (ClientMode::READING_FD):
-			std::cout << "read fd\n";
+			// std::cout << "read fd\n";
 			// do nothing
 			break ;
 		case (ClientMode::WRITING_FD): {
-			std::cout << "write fd\n";
+			// std::cout << "write fd\n";
 			// do nothing
 			break ;
 		}
