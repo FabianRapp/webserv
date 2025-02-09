@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>PUTIN WEBSITE</title>
+</head>
+<body>
+	<h1>PUTIN WEBSITE</h1>
+	<form id="putForm">
+		<input type="text" name="filename" placeholder="File name" required> </br></br>
+		<textarea name="content" placeholder="File content" required></textarea> </br></br>
+		<button type="submit">Create File</button>
+	</form>
+
+	<script>
+	document.getElementById('putForm').addEventListener('submit', async (e) => {
+		e.preventDefault();
+
+		const formData = {
+			filename: e.target.filename.value + '.txt', // Add .txt extension
+			content: e.target.content.value
+		};
+
+		try {
+			const response = await fetch('/create-file', {
+				method: 'PUT',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify(formData)
+			});
+
+			if (response.ok) {
+				console.log('File created successfully');
+				console.log(response)
+			} else {
+				console.error('File creation failed');
+			}
+		} catch (error) {
+			console.error('Network error:', error);
+		}
+	});
+	</script>
+</body>
+</html>

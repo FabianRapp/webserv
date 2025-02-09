@@ -35,8 +35,10 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		//"CONTENT_TYPE=application/x-www-form-urlencoded",
 		"SCRIPT_NAME=" + path,
 	};
+	std::string	env_var;
+	env_var = "REQUEST_METHOD=" + to_string(request._type);
+	envCGI_storage.push_back(env_var);
 	for (const auto& [type, value] : request._headers) {
-		std::string	env_var;
 		if (type == HeaderType::CONTENT_LENGTH
 			|| type == HeaderType::CONTENT_TYPE
 		){

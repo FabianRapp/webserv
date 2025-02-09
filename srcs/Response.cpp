@@ -221,6 +221,7 @@ bool	Response::_has_index(std::vector<std::string>& files, std::string& index_fi
 	// _location_config;//LocationConfigFile*
 	//default return
 	const std::string&	index_name = _location_config.getIndexFile();
+	std::cout << "index name: " << index_name << std::endl;
 	for (const auto& file : files) {
 		if (file == index_name) {
 			index_file = _path + index_name;
@@ -232,6 +233,7 @@ bool	Response::_has_index(std::vector<std::string>& files, std::string& index_fi
 }
 
 void	Response::_handle_get(void) {
+	std::cout << "path: " << _path << std::endl;
 	if (std::filesystem::is_directory(_path)) {
 	 	if (_request._uri.back() != '/') {
 			std::cout << "MOVED\n";
@@ -637,11 +639,9 @@ std::string	Response::getExpandedTarget(void) {
 	else
 	{
 		expandedPath = _config.getRoot() + _request._uri;
-
 	}
 
 	std::cout << "RESPONSE PATH SETTED TO |" << expandedPath << "|\n";
-
 	if (std::filesystem::exists(expandedPath)) {
 		std::cout << "File exists: " << expandedPath << std::endl;
 	} else if (_request.getMethod() == MethodType::GET) {

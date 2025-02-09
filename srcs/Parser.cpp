@@ -588,6 +588,10 @@ void Parser::parse(void) {
 			(void)e;
 			_request._finished = false;
 			return ;
+		} catch (const StringArray::NotTerminated& e) {
+			(void)e;
+			_request._finished = false;
+			return ;
 		}
 		FT_ASSERT(array.size());
 		std::cout << array;
