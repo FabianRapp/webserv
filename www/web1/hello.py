@@ -9,4 +9,4 @@ import sys
 body = sys.stdin.read()
 
 # print(f"Hello, {body}!")
-print("Yes, this is Python running!")
+print(body)

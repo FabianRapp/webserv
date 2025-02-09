@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Loader</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            gap: 10px;
+            font-family: Arial, sans-serif;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        function loadFile(file) {
+            window.location.href = file;
+        }
+    </script>
+</head>
+<body>
+	<h1>WebServer Home Page</h1>
+	<button onclick="loadFile('/testingFiles/get_testing.html')">Go to "Get Method Testing" Page</button>
+	<button onclick="loadFile('/testingFiles/post_testing.html')">Go to "Post Method Testing" Page</button>
+    <button onclick="loadFile('file3.html')">Load File 3</button>
+    <button onclick="loadFile('file4.html')">Load File 4</button>
+</body>
+</html>
