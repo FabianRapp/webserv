@@ -17,6 +17,7 @@ private:
 	bool _get_header = false;
 	bool _post_header = false;
 	bool _delete_header = false;
+	bool _put_header = false;
 	bool _autoindex = false;
 	int _request_body_size = -1;
 	std::map<std::string, std::string> _cgi_map;
@@ -31,11 +32,12 @@ public:
 
 	// setters
 	void setPort(int port);
+	void setMethods(bool get, bool post, bool del, bool put);
 	// void setServerNames(const std::string& server_names);
 	void addServerName(const std::string& _server_names);
 	void setRoot(const std::string& root);
 	void setIndexFile(const std::string index_file);
-	void setMethods(bool get, bool post, bool del);
+
 	void setAutoIndex(bool autoindex);
 	// void addErrorPage(int err_code, const std::string& path);
 	void addErrorPage(int err_code, const std::string& path);
@@ -57,6 +59,7 @@ public:
 	bool isGetAllowed() const;
 	bool isPostAllowed() const;
 	bool isDeleteAllowed() const;
+	bool isPutAllowed() const;
 	const std::string& getRoot() const;
 	// const std::map<int, std::string>& getErrorPages() const;
 	bool getAutoIndex() const;

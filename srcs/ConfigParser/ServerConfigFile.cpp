@@ -37,10 +37,11 @@ void ServerConfigFile::addServerName(const std::string& serverName) {
 
 }
 
-void ServerConfigFile::setMethods(bool get, bool post, bool del) {
+void ServerConfigFile::setMethods(bool get, bool post, bool del, bool put) {
 	_get_header = get;
 	_post_header = post;
 	_delete_header = del;
+	_put_header = put;
 
 	// validateMethods();
 }
@@ -134,6 +135,10 @@ bool ServerConfigFile::isPostAllowed() const {
 
 bool ServerConfigFile::isDeleteAllowed() const {
 	return _delete_header;
+}
+
+bool ServerConfigFile::isPutAllowed() const {
+	return _put_header;
 }
 
 bool ServerConfigFile::getAutoIndex() const {
