@@ -38,66 +38,32 @@ void ConfigParser::validateServerName(const std::string& name) {
 		throw std::runtime_error("Invalid server_name: Name cannot be empty.");
 	}
 
+	// Check first and last characters are alphanumeric
+	if (!std::isalnum(name.front()) || !std::isalnum(name.back())) {
+		throw std::runtime_error("Invalid server_name '" + name +
+			"': Must start/end with alphanumeric character");
+	}
 
-	bool has_dot = false;
-	for (char c : name) {
+	bool previous_is_dot = false;
+	for (size_t i = 0; i < name.size(); ++i) {
+		const char c = name[i];
+
 		if (!std::isalnum(c) && c != '-' && c != '.') {
 			throw std::runtime_error("Invalid server_name '" + name +
 				"': Contains invalid character '" + std::string(1, c) + "'");
 		}
-		if (c == '.') has_dot = true;
-	}
-
-
-	if (name.front() == '-' || name.front() == '.' ||
-		name.back() == '-' || name.back() == '.') {
-		throw std::runtime_error("Invalid server_name '" + name +
-			"': Cannot start/end with '-' or '.'");
-	}
-
-	size_t segment_start = 0;
-	for (size_t i = 0; i < name.size(); ++i) {
-		// Check for consecutive dots
-		if (name[i] == '.' && i > 0 && name[i-1] == '.') {
-			throw std::runtime_error("Invalid server_name '" + name +
-				"': Consecutive dots detected");
-		}
-
-		// Check segment rules at each dot
-		if (name[i] == '.') {
-			const std::string segment = name.substr(segment_start, i - segment_start);
-
-			// Empty segment (like "example..com")
-			if (segment.empty()) {
+		if (c == '.') {
+			if (previous_is_dot) {
 				throw std::runtime_error("Invalid server_name '" + name +
-					"': Empty segment between dots");
+					"': Consecutive dots detected");
 			}
-
-			// Check hyphen placement in segment
-			if (segment.front() == '-' || segment.back() == '-') {
-				throw std::runtime_error("Invalid server_name '" + name +
-					"': Segment '" + segment + "' cannot start/end with hyphen");
-			}
-
-			segment_start = i + 1;
+			previous_is_dot = true;
+		} else {
+			previous_is_dot = false;
 		}
-	}
-
-	const std::string last_segment = name.substr(segment_start);
-	if (last_segment.empty()) {
-		throw std::runtime_error("Invalid server_name '" + name +
-			"': Name cannot end with a dot");
-	}
-	if (last_segment.front() == '-' || last_segment.back() == '-') {
-		throw std::runtime_error("Invalid server_name '" + name +
-			"': Last segment '" + last_segment + "' cannot start/end with hyphen");
-	}
-
-	if (!has_dot) {
-		throw std::runtime_error("Invalid server_name '" + name +
-			"': Must contain at least one dot (e.g., 'example.com')");
 	}
 }
+
 
 
 void ConfigParser::parseFile(const std::string& config_file) {
@@ -391,7 +357,7 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			// Add each server name to the ServerConfigFile object
 			for (const auto& name : server_names) {
 				std::cout << "SERVER NAME : " << "|" << name << "|" << std::endl;
-				// validateServerName(name);
+				validateServerName(name);
 				current_server.addServerName(name); // Use addServerName from ServerConfigFile
 			}
 		} else if (line.find("cgi_path ") == 0) {
