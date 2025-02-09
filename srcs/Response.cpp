@@ -609,37 +609,21 @@ void Response::setAllowedMethods() {
 	}
 }
 
-std::string getResource(const std::string& uri) {
-	size_t pos = uri.find_last_of('/');
-	if (pos == std::string::npos) {
-		return uri;
-	}
-	return uri.substr(pos);
-}
-
 std::string	Response::getExpandedTarget(void) {
 	std::string expandedPath;
-	std::string resource = getResource(_request._uri);
 	_location_config.printLocation();
-
 	std::cout << "\n";
 
 	std::cout << "--- Config.getRoot() " << _config.getRoot() + "\n";
 	std::cout << "--- LocationConfig() " << _location_config.getRoot() + "\n";
 	std::cout << "--- request._uri " << _request._uri + "\n";
-	std::cout << "--- resource " << resource  + "\n";
 
 	std::cout << "\n";
 
-	if (_location_config.getRoot() != "/" && _location_config.getRoot() != resource)
-	{
-		expandedPath = _config.getRoot() + _location_config.getRoot() + resource;
-		std::cout << "ME\n";
-	}
-	else
-	{
-		expandedPath = _config.getRoot() + _request._uri;
-	}
+
+	expandedPath = _config.getRoot() + _location_config.getRoot();
+	size_t	loc_path_len = _location_config.getPath().length();
+	expandedPath += _request._uri.substr(loc_path_len, _request._uri.length() - loc_path_len);
 
 	std::cout << "RESPONSE PATH SETTED TO |" << expandedPath << "|\n";
 	if (std::filesystem::exists(expandedPath)) {
