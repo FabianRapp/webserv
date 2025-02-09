@@ -47,3 +47,9 @@ add PUT method to allowed_methods for both.
 
 bool CGIManager::isCGI(const std::string& path, const LocationConfigFile& location_config) {
 	finish validating .py | .php | .bla
+
+TODO:
+1. CHUNKS.
+2. ERROR handleling.
+3. FRONT-END for the evaluation to have every test avaialbe.
+4. Implement PUT.
