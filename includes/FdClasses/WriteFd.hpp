@@ -3,9 +3,10 @@
 #include "BaseFd.hpp"
 #include  <functional>
 
+class Response;
 class WriteFd: public BaseFd {
 public:
-	WriteFd(DataManager& data, const std::string_view& src, int fd, Client& client,
+	WriteFd(DataManager& data, Response& response, const std::string_view& src, int fd, Client& client,
 			std::function<void()> completion_callback);
 
 
@@ -21,5 +22,6 @@ protected:
 	std::function<void()>				completion_callback;
 	Client*								client;
 	Server*								server;
+	Response&							response;
 };
 

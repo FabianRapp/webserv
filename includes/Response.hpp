@@ -77,6 +77,7 @@ class Response {
 	void	_append_content_type(const std::string& path);
 	void	_handle405(void);
 public:
+	bool	in_error_handling;
 		Response () = delete;
 		Response(const ServerConfigFile& configFile, const LocationConfigFile& locationConfig,
 			const Request& request,Client& client, ClientMode& client_mode);
@@ -100,6 +101,7 @@ public:
 		std::string& getTarget();
 		const ServerConfigFile& getConfig() const;
 		void	execute(void);
+	
 
 
 		void	appendToStatusLine(std::string content);

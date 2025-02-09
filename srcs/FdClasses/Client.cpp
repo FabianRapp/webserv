@@ -157,7 +157,7 @@ void	Client::_send_response(void) {
 	}
 	_last_availability = std::chrono::steady_clock::now();
 
-	const int send_flags = 0;//todo: research flags
+	const int send_flags = MSG_DONTWAIT;
 	//std::cout << "sending:\n" << _send_data.response << "\n";
 	ssize_t send_bytes = send(
 		fd,

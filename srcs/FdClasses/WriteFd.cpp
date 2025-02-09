@@ -1,14 +1,16 @@
 #include "../../includes/FdClasses/WriteFd.hpp"
 #include "../../includes/Manager.hpp"
+#include <Response.hpp>
 
-WriteFd::WriteFd(DataManager& data, const std::string_view& src, int fd, Client& client,
+WriteFd::WriteFd(DataManager& data, Response& response, const std::string_view& src, int fd, Client& client,
 		std::function<void()> completion_callback):
 	BaseFd(data, POLLOUT, "Writer"),
 	src(src),
 	completion_callback(std::move(completion_callback)),
 	pos(0),
 	client(&client),
-	server(client.server)
+	server(client.server),
+	response(response)
 {
 	std::cout << "writer constructor: src size: " << src.size() << std::endl;
 	this->fd = fd;
@@ -19,7 +21,6 @@ WriteFd::~WriteFd(void) {
 }
 
 void	WriteFd::execute(void) {
-	//todo: idk about this POLLHUP for write fd
 	if (is_ready(POLLHUP) && !is_ready(POLLIN)) {
 		std::cout << FT_ANSI_RED "write POLLHUP\n" FT_ANSI_RESET;
 		data.set_close(data_idx);

@@ -32,7 +32,8 @@ Response::Response(const ServerConfigFile& configFile, const LocationConfigFile&
 	_mode(ResponseMode::NORMAL),
 	_cgi_manager(nullptr),
 	_first_iter(true),
-	_dir(nullptr)
+	_dir(nullptr),
+	in_error_handling(false)
 {
 	setAllowedMethods();
 }
@@ -41,6 +42,7 @@ Response::~Response(void) {
 	if (_dir) {
 		closedir(_dir);
 	}
+	delete _cgi_manager;
 }
 
 // call this from client in case of early destruction
@@ -69,6 +71,7 @@ void	Response::read_fd(int read_fd, ssize_t byte_count) {
 	ClientMode	next_mode = _client_mode;
 	_client_mode = ClientMode::READING_FD;
 	_reader = _server->data.new_read_fd(
+		*this,
 		_body,
 		read_fd,
 		*_client,
@@ -92,6 +95,7 @@ void	Response::write_fd(int write_fd) {
 	ClientMode	next_mode = _client_mode;
 	_client_mode = ClientMode::WRITING_FD;
 	_writer = _server->data.new_write_fd(
+		*this,
 		write_fd,
 		_fd_write_data,
 		*_client,
@@ -418,6 +422,9 @@ void	Response::_handle_put(void) {
 //don't use this if the response needs any custom data besides the status
 //this response the respose
 void	Response::load_status_code_response(int code, const std::string& status) {
+	if (code == 500) {
+		in_error_handling = true;
+	}
 	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back like cgi manager
 	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + " " + status + "\r\n"
 		+ "Content-Type: text/html\r\n";
@@ -432,6 +439,9 @@ void	Response::load_status_code_response(int code, const std::string& status) {
 }
 
 void	Response::load_status_code_body(int code) {
+	if (code == 500) {
+		in_error_handling = true;
+	}
 	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
 	_response_str += "Content-Type: text/html\r\n";
 	struct stat stats;

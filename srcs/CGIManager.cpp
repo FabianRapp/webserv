@@ -38,6 +38,8 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 	std::string	env_var;
 	env_var = "REQUEST_METHOD=" + to_string(request._type);
 	envCGI_storage.push_back(env_var);
+	envCGI_storage.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
+	envCGI_storage.push_back(std::string("PATH_INFO=") + "");
 	for (const auto& [type, value] : request._headers) {
 		if (type == HeaderType::CONTENT_LENGTH
 			|| type == HeaderType::CONTENT_TYPE
@@ -319,8 +321,6 @@ bool	CGIManager::execute() {
 	return (false);
 }
 
-
-
 bool CGIManager::isCGI(const std::string& path, const LocationConfigFile& location_config) {
 	size_t last_dot = path.find_last_of('.');
 	if (last_dot == std::string::npos)
@@ -338,7 +338,6 @@ bool CGIManager::isCGI(const std::string& path, const LocationConfigFile& locati
 std::string CGIManager::getInterpreter(const std::string& path) {
 	size_t last_dot = path.find_last_of('.');
 	if (last_dot == std::string::npos) {
-		// Handle missing extension error
 		return "";
 	}
 
@@ -350,15 +349,11 @@ std::string CGIManager::getInterpreter(const std::string& path) {
 
 		// Runtime executable check
 		if (access(interpreter.c_str(), X_OK) != 0) {
-			_client->response->load_status_code_response(500, "CGI interpreter not executable");
 			return "";
 		}
 			printCgiRunning();
 		return interpreter;
 	}
-
-	// Handle unconfigured extension
-	_client->response->load_status_code_response(500, "Unsupported CGI type");
 	return "";
 }
 

@@ -3,10 +3,12 @@
 #include "BaseFd.hpp"
 #include  <functional>
 
+class Response;
+
 // appends the dat to the given target_buffer
 class ReadFd: public BaseFd {
 public:
-	ReadFd(DataManager& data, std::string& target_buffer, int fd, Client& client,
+	ReadFd(DataManager& data, Response& response, std::string& target_buffer, int fd, Client& client,
 			ssize_t byte_count, std::function<void()> completion_callback);
 
 	~ReadFd(void);
@@ -22,6 +24,7 @@ protected:
 	std::function<void()>				completion_callback;
 	Client*								client;
 	Server*								server;
+	Response&							response;
 
 
 	//debug: remove later

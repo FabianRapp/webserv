@@ -1,13 +1,15 @@
 #include "../../includes/FdClasses/ReadFd.hpp"
 #include "../../includes/Manager.hpp"
+#include <Response.hpp>
 
-ReadFd::ReadFd(DataManager& data, std::string& target_buffer, int fd, Client& client,
+ReadFd::ReadFd(DataManager& data, Response& response, std::string& target_buffer, int fd, Client& client,
 		ssize_t byte_count, std::function<void()> completion_callback):
 	BaseFd(data, POLLIN, "ReadFd"),
 	target_buf(target_buffer),
 	completion_callback(std::move(completion_callback)),
 	client(&client),
 	server(client.server),
+	response(response),
 	debug_fd(open("read_data_debug", O_CREAT | O_TRUNC | O_WRONLY, 0777))
 {
 	FT_ASSERT(debug_fd >= 0);
@@ -44,6 +46,14 @@ void	ReadFd::execute(void) {
 	}
 	ssize_t read_ret = read(fd, buffer, read_size);
 	if (read_ret < 0) {
+		data.set_close(data_idx);
+		completion_callback();
+		if (response.in_error_handling) {
+			//hardcode a 500 error response without opening a file
+		} else {
+			//load 500 error code
+			//without fucking up the states of client, response, cgimanager and readfd
+		}
 		//todo: err
 		FT_ASSERT(0);
 	}
