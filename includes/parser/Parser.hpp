@@ -31,6 +31,8 @@ class Parser {
 		void	_select_server_config(void);
 		void	_select_location_config(void);
 		void	_select_config(void);
+
+		bool	_invalid_headers(void);
 	public:
 
 		Parser(std::string& input, const std::vector<ServerConfigFile>& configs);

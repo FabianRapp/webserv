@@ -13,6 +13,7 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
+#include <unistd.h>
 #include <string>
 #include "FdClasses/Server.hpp"
 #include "FdClasses/ReadFd.hpp"
@@ -67,14 +68,15 @@ class Response {
 	std::string					_auto_index_body(std::vector<std::string>& files);
 	void						_handle_auto_index(std::vector<std::string>& files);
 	void	_handle_post(void);
+	void	_handle_put(void);
 	void	_handle_delete(void);
 	void	_handle_get(void);
 	void	_handle_get_file(void);
 	bool	_has_index(std::vector<std::string>& files, std::string& index_file);
-	void	_handle_post_file(void);
+	void	_handle_put_file(bool post);
 	void	_append_content_type(const std::string& path);
-
-	public:
+	void	_handle405(void);
+public:
 		Response () = delete;
 		Response(const ServerConfigFile& configFile, const LocationConfigFile& locationConfig,
 			const Request& request,Client& client, ClientMode& client_mode);
