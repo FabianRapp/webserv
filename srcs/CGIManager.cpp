@@ -46,6 +46,7 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		}
 		envCGI_storage.push_back(env_var);
 	}
+
 // envCGI_storage = {
 // 	// The HTTP method used for the request (e.g., GET, POST, PUT, DELETE).
 // 	static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),

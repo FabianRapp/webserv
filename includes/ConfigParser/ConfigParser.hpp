@@ -49,6 +49,8 @@ private:
 
 	std::vector<std::string> splitByWhitespace(const std::string& str) const;
 
+	void validateServerName(const std::string& name);
+
 public:
 	ConfigParser();
 	explicit ConfigParser(const std::string& config_file);
