@@ -171,6 +171,7 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		_mode = CGI_MODE::FINISHED;
 		return ;
 	}
+
 	if (access(path.c_str(), R_OK) == -1) {
 		_client->response->load_status_code_response(500, "Internal Server Error");
 		_mode = CGI_MODE::FINISHED;
@@ -218,18 +219,21 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 
 		if (dup2(inputPipe[0], STDIN_FILENO) < 0) {
 			_child_dup_fail();
+			return ;
 		}
 		ft_close(inputPipe[0]);
 		inputPipe[0] = -1;
 
 		if (dup2(outputPipe[1], STDOUT_FILENO) < 0) {
 			_child_dup_fail();
+			return ;
 		}
 		ft_close(outputPipe[1]);
 		outputPipe[1] = -1;
 
-		execve(args[0], args, (char**)(envCGI.data()));
+		//execve(args[0], args, (char**)(envCGI.data()));
 		_child_exec_fail();
+		return ;
 	} else { // Parent process
 		_main_manager.cgi_lifetimes.add(_pid);
 		ft_close(inputPipe[0]);
@@ -243,12 +247,14 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 }
 
 void	CGIManager::_child_dup_fail(void) {
-	exit(1);
+	exit_ = true;
+	//exit(1);
 }
 
 void	CGIManager::_child_exec_fail(void) {
+	exit_ = true;
 	//todo: execve(cgi to read 500 code);
-	exit(1);
+	//exit(1);
 }
 
 void	CGIManager::_init_reading(void) {
@@ -295,6 +301,9 @@ CGIManager::~CGIManager(void) {
 
 // returns true when done
 bool	CGIManager::execute() {
+	if (exit_) {
+		return (false);
+	}
 	bool	debug = true;
 	if (debug) {
 		std::cout << "cgi::execute: " << std::endl;;

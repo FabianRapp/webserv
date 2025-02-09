@@ -19,7 +19,7 @@ Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 	if (fd < 0) {
 		int err = errno;
 		errno = 0;
-		throw(ServerError("server: socket: " + std::string(strerror(err))));
+		throw (ServerError("server: socket: " + std::string(strerror(err))));
 		return ;
 	}
 
@@ -28,13 +28,13 @@ Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 		int err = errno;
 		errno = 0;
 		ft_close(fd);
-		throw(ServerError("server: setsockopt: " + std::string(strerror(err))));
+		throw (ServerError("server: setsockopt: " + std::string(strerror(err))));
 	}
 	_set_non_blocking();
 	if (fd < 0) {
 		int err = errno;
 		errno = 0;
-		throw(ServerError("server: set non blocking: " + std::string(strerror(err))));
+		throw (ServerError("server: set non blocking: " + std::string(strerror(err))));
 		return ;
 	}
 
@@ -46,20 +46,18 @@ Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 
 	if (bind(fd, server_addr_ptr, server_addr_len) < 0) {
 		ft_close(fd);
-		throw(ServerError("server: bind: " + std::string(strerror(errno))));
+		throw (ServerError("server: bind: " + std::string(strerror(errno))));
 		return ;
 	}
 	if (listen(fd, REQUEST_QUE_SIZE) < 0) {
 		ft_close(fd);
-		throw(ServerError("server: listen: " + std::string(strerror(errno))));
+		throw (ServerError("server: listen: " + std::string(strerror(errno))));
 		return ;
 	}
 	std::cout << "Started server on port " << configs[0].getPort() << "...\n";
 }
 
 Server::~Server(void) {
-	//set all clients to close
-	//don't call 'close()' here
 }
 
 void	Server::execute(void) {

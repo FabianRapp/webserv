@@ -39,12 +39,6 @@ void	webserv(int ac, char **av) {
 	}
 	all_configs = manager.config_parser->getServers();
 	std::cout << "config count: " << all_configs.size() << std::endl;
-	//todo: dont use std::sort sice it changes order
-	//sort(all_configs.begin(), all_configs.end(),
-	//	[](ServerConfigFile&a, ServerConfigFile&b) {
-	//		return (a.getPort() - b.getPort());
-	//	}
-	//);
 
 	std::vector<ServerConfigFile>	matching_ports;
 	while (all_configs.size()) {

@@ -218,12 +218,7 @@ void	Response::_handle_get_moved(void) {
 	load_status_code_body(301);
 }
 
-//todo:
-//if index file is found returns true and puts it's path in index_file
 bool	Response::_has_index(std::vector<std::string>& files, std::string& index_file) {
-	// _config;//const ServerConfigFile&
-	// _location_config;//LocationConfigFile*
-	//default return
 	const std::string&	index_name = _location_config.getIndexFile();
 	std::cout << "index name: " << index_name << std::endl;
 	for (const auto& file : files) {
@@ -477,8 +472,6 @@ void	Response::_handle_delete(void) {
 				break;
 			case (ENOTEMPTY):
 				load_status_code_response(409, "Conflict");
-				// todo ideally somhow add this to the html out, idk how tho:
-				// "Cannot delete a non-empty directory"
 				break ;
 			case (EBADF):
 			case (EROFS):

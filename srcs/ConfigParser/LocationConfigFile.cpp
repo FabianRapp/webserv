@@ -127,8 +127,6 @@ const std::map<std::string, std::string>& LocationConfigFile::getCgiExtensions()
 // 	}
 // }
 
-
-//todo: delete this later. Debugging utility
 void LocationConfigFile::printLocation() const {
 	std::cout << "Location Path: " << _path << "\n";
 

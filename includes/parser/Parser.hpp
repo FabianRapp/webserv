@@ -39,7 +39,7 @@ class Parser {
 		~Parser() = default;
 
 		void	parse(void);
-		void	parse_first_line(const RequestArray& array);
+		bool	parse_first_line(const RequestArray& array);
 		void	parse_headers(const RequestArray& array);
 		void	parse_body(std::string& input);
 		void	parser_unchunked(std::string& input);

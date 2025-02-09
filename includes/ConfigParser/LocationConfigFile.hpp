@@ -43,7 +43,6 @@ public:
 
 	// void validateMethods() const;
 
-	//todo: might need to delete this before eval.
 	void printLocation() const;
 
 };

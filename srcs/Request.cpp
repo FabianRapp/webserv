@@ -106,9 +106,9 @@ void Request::set_status_code(int code) {
 	};
 
 	if (codes.find(code) == codes.end()) {
-		//todo: this has to be impossible
 		std::cerr << "unsupported status code: " << code << std::endl;
-		FT_ASSERT(0);
+		FT_ASSERT(0);//todo: comment this line later
+		code = 500;
 	}
 	_status_code.first = code;
 	_status_code.second = codes.at(code);

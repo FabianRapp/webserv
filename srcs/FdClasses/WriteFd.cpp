@@ -4,7 +4,7 @@
 
 WriteFd::WriteFd(DataManager& data, Response& response, const std::string_view& src, int fd, Client& client,
 		std::function<void()> completion_callback):
-	BaseFd(data, POLLOUT, "Writer"),
+	BaseFd(data, POLLOUT, "WriteFd"),
 	src(src),
 	completion_callback(std::move(completion_callback)),
 	pos(0),
@@ -33,9 +33,12 @@ void	WriteFd::execute(void) {
 	std::cout << "exec write fd\n";
 	ssize_t write_ret = write(fd, src.data() + pos, src.size() - pos);
 	if (write_ret < 0) {
-		//todo: internal server error: 500
-		std::cout << "fd: " << fd << std::endl;
-		FT_ASSERT(0);
+		std::cerr << FT_ANSI_RED "Error: fd: " << name
+			<< ": write failed\n" FT_ANSI_RESET;
+		data.set_close(data_idx);
+		completion_callback();
+		response.load_status_code_response(500, "Internal Server Error");
+		return ;
 	}
 	//std::cout << "written: |" << src.substr(0, static_cast<size_t>(write_ret)) << "|\n";
 	pos += static_cast<size_t>(write_ret);

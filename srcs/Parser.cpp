@@ -134,76 +134,6 @@ std::string	cleanBody(const std::string& input) {
 
 	return (cleanBody);
 }
-/*
-void printRequestArray(const RequestArray& arr) {
-	std::cout << "string arr:\n";
-	for (size_t i = 0; i < arr.size(); ++i) {
-		std::cout << "Line " << i + 1 << ": ";
-		for (const auto& word : arr[i]) {
-			std::cout << word << " ";
-		}
-		std::cout << std::endl;
-	}
-}
-*/
-/*
-//splits a string into the individual words and puts it inside a vector. Like in a char **.
-std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
-	std::vector<std::string> tokens;
-	size_t start = 0;
-	size_t end = str.find(delimiter);
-
-	while (end != std::string::npos) {
-		std::string token = str.substr(start, end - start);
-		if (end != start) {
-			tokens.push_back(token);
-		}
-		if (str.find(delimiter, start) != std::string::npos) {
-			tokens.push_back(delimiter);
-		}
-		start = end + delimiter.length();
-		end = str.find(delimiter, start);
-	}
-
-	return tokens;
-}
-*/
-
-/*
-// Function to split the input string into arrays (lines and words) and stop at stopDl
-// Dl = delimiter
-RequestArray splitIntoArrays(const String& input, const String& lineDl, const String& stopDl) {
-	String str;
-	RequestArray result;
-	size_t start = 0, end = 0;
-
-	std::cout << "input: " << input << "\n";
-	end = input.find(stopDl);
-	if (end == std::string::npos) {
-		std::cout << "could not find stopDl" << std::endl;
-		return result;
-	}
-
-	str = input.substr(start, end);
-
-	while ((end = str.find(lineDl, start)) != std::string::npos) {
-		String line = str.substr(start, end - start);
-		Line lineV = split(line, " ");
-		result.push_back(lineV);
-
-		start = end + lineDl.length();
-	}
-
-	if (start < str.length()) {
-		String lastLine = str.substr(start);
-		Line lastLineV = split(lastLine, " ");
-		result.push_back(lastLineV);
-	}
-
-	return result;
-}
-*/
-
 
 //Note, I think 405 not allwed might be easier to implement in Response,
 // a this point we dont have yet parsed the allowed methods
@@ -353,18 +283,19 @@ void Parser::insertHeader(const std::string& key, const std::string& value) {
 	// std::cout << "key: " << key << " value: " << value << std::endl;
 }
 
-void	Parser::parse_first_line(const RequestArray& array) {
+bool	Parser::parse_first_line(const RequestArray& array) {
 	if (array[0].size() > 3) {
 		_request.set_status_code(400);
 		_request._finished = true;
+		return (false);
 	} else if (array[0].size() != 3) {
-		//todo:
-		//first line is incomplete
+		return (false);
 	} else {
 		setRequestMethod(array[0][0]);
 		setUri(array[0][1]);
 		setVersion(array[0][2]);
 	}
+	return (true);
 }
 
 void	Parser::parse_headers(const RequestArray& array) {
@@ -601,8 +532,7 @@ void Parser::parse(void) {
 		FT_ASSERT(array.size());
 		std::cout << array;
 
-		parse_first_line(array);
-		if (_request._finished) {
+		if (!parse_first_line(array)) {
 			return ;
 		}
 		parse_headers(array);
@@ -618,8 +548,6 @@ void Parser::parse(void) {
 		if (_config_index == -1) {
 			_select_config();
 		}
-		//todo: if we update to make request_body_size a part of a location config
-		//instead of a serve config change this below according
 		int allowed_body_size = get_location_config().getRequestBodySize();
 		bool body_too_large = false;
 		bool invalid_body_size = false;

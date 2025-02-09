@@ -67,19 +67,12 @@ void	Client::_receive_request(void) {
 	if (_parser.is_finished() == true)
 	{
 		int errorCode;
-		if ((errorCode = _parser.getErrorCode()))
-		{
+		if ((errorCode = _parser.getErrorCode())) {
 			//todo:
 			std::cout << "Parser had Error but handling is not yet implemented\n";
 			// build also response based on the error code
-		}
-		else
-		{
+		} else {
 			_request = _parser.get_request();
-			////to avoid issues later on removes the last '/'
-			//if (_request._uri.length() > 1 && _request._uri.back() == '/') {
-			//	_request._uri.pop_back();
-			//}
 		}
 		mode = ClientMode::BUILD_RESPONSE;
 		_send_data.pos = 0;

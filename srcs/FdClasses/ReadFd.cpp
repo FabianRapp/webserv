@@ -48,14 +48,15 @@ void	ReadFd::execute(void) {
 	if (read_ret < 0) {
 		data.set_close(data_idx);
 		completion_callback();
+		//todo: err
 		if (response.in_error_handling) {
 			//hardcode a 500 error response without opening a file
 		} else {
 			//load 500 error code
 			//without fucking up the states of client, response, cgimanager and readfd
 		}
-		//todo: err
 		FT_ASSERT(0);
+		return ;
 	}
 	buffer[read_ret] = 0;//not needed, only for debugging
 

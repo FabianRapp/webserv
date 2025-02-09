@@ -140,6 +140,9 @@ void	DataManager::execute_all(void) {
 		if (user->name != "Server") {
 			//std::cout << "Manager: execec " << user->name << "\n";
 		}
+		if (exit_) {
+			break ;
+		}
 		user->execute();
 	}
 }
