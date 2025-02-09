@@ -282,6 +282,8 @@ void Parser::setRequestMethod(const std::string& method) {
 		_request._type = MethodType::PUT;
 	} else if (method == "DELETE") {
 		_request._type = MethodType::DELETE;
+	} else if (method == "PUT") {
+		_request._type = MethodType::PUT;
 	} else {
 		_request._type = MethodType::INVALID;
 	}

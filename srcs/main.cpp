@@ -38,6 +38,7 @@ void	webserv(int ac, char **av) {
 		manager.config_parser = new ConfigParser(av[1]);
 	}
 	all_configs = manager.config_parser->getServers();
+	std::cout << "config count: " << all_configs.size() << std::endl;
 	//todo: dont use std::sort sice it changes order
 	//sort(all_configs.begin(), all_configs.end(),
 	//	[](ServerConfigFile&a, ServerConfigFile&b) {
@@ -63,7 +64,7 @@ void	webserv(int ac, char **av) {
 
 	delete manager.config_parser;
 	manager.config_parser = nullptr;
-
+	std::cout << "entering main loop\n";
 	while (!exit_) {
 		//usleep(100000);
 		manager.run_poll();

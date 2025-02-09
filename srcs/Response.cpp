@@ -305,12 +305,17 @@ void	Response::_append_content_type(const std::string& path) {
 	}
 }
 
-void	Response::_handle_post_file(void) {
-	int flags;
-	//flags = O_WRONLY | O_CREAT | O_APPEND | O_EXCL;
-	//^^^^^^^^^^^^^^^flags to only post successfully if the fiel does not exist
-	flags = O_WRONLY | O_CREAT | O_TRUNC;
-	//^^^^^^^^^^^^^^^flags to post successfully even if the file exists(overwrite)
+void	Response::_handle_put_file(bool post) {
+	int	flags;
+	int	put_status = 204;
+	if (!access(_path.c_str(), F_OK)) {
+		put_status = 201;
+	}
+	if (post) {
+		flags = O_WRONLY | O_CREAT | O_APPEND | O_EXCL;
+	} else {
+		flags = O_WRONLY | O_CREAT | O_APPEND | O_TRUNC;
+	}
 	int	post_fd = open(_path.c_str(), flags, 0644);
 	if (post_fd < 0) {
 		std::cout << "Error: POST: failed open(): " << strerror(errno) << std::endl;
@@ -348,7 +353,14 @@ void	Response::_handle_post_file(void) {
 		errno = 0;
 		return ;
 	}
-	std::cout << "body size; " << _request._body.size() << std::endl ;
+	if (put_status == 204) {
+		_response_str = std::string("HTTP/1.1 204 Created\r\n");
+	} else if (put_status == 201) {
+		_response_str = std::string("HTTP/1.1 201 No Content\r\n");
+	} else {
+		FT_ASSERT(0 && "put_stus unknown value");
+	}
+	std::cout << "request body size: " << _request._body.size() << std::endl ;
 	_fd_write_data = std::string_view(_request._body);
 	write_fd(post_fd);
 	_mode = ResponseMode::FINISH_UP;
@@ -384,11 +396,23 @@ void	Response::_handle_post(void) {
 			_mode = ResponseMode::FINISH_UP;
 		}
 	} else {
-		_handle_post_file();
-
+		//todo: do we handle it as put or give an error?
+		_handle_put_file();
 	}
 }
 
+void	Response::_handle_put(void) {
+	std::cout << "handle_post\n";
+	if (CGIManager::isCGI(_request._uri, _location_config)) {
+		load_status_code_response(403, "Forbidden");
+		return ;
+	}
+	if (std::filesystem::is_directory(_path)) {
+		load_status_code_response(403, "Forbidden");
+		return ;
+	}
+	_handle_put_file();
+}
 //don't use this if the response needs any custom data besides the status
 //this response the respose
 void	Response::load_status_code_response(int code, const std::string& status) {
@@ -465,6 +489,23 @@ bool	Response::isMethodAllowed(MethodType method) {
 	return std::find(_allowedMethods.begin(), _allowedMethods.end(), method) != _allowedMethods.end();
 }
 
+// method not allowed
+void	Response::_handle405(void) {
+	_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
+	_response_str += "Allow:";
+	if (!_allowedMethods.empty()) {
+		_response_str += " ";
+		for (auto it = _allowedMethods.cbegin(); it != _allowedMethods.cend(); it++) {
+			_response_str += to_string(*it);
+			if (it != _allowedMethods.cend() - 1) {
+				_response_str += ", ";
+			}
+		}
+	}
+	_response_str += "\r\n";
+	load_status_code_body(405);
+}
+
 void	Response::execute(void) {
 	// check if the status was changed from 200 by something outside the Response class
 	int	status_code = _request._status_code.first;
@@ -475,9 +516,6 @@ void	Response::execute(void) {
 	}
 	if (_first_iter) {
 		_first_iter = false;
-
-
-
 		_path = getExpandedTarget();
 		//return if a status code file was requested
 		if (_mode != ResponseMode::NORMAL) {
@@ -487,29 +525,26 @@ void	Response::execute(void) {
 	if (_mode == ResponseMode::NORMAL) {
 		if (isMethodAllowed(_request._type))
 		{
-			switch (_request._type)
-			{
+			switch (_request._type) {
 				case (MethodType::GET): {
 					_handle_get();
 					break ;
 				} case (MethodType::POST): {
 					_handle_post();
 					break ;
+				} case (MethodType::PUT): {
+					_handle_put();
+					break ;
 				} case (MethodType::DELETE): {
 					_handle_delete();
 					break ;
 				} default: {
-					_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
-					load_status_code_body(405);
+					_handle405();
 					return ;
 				}
 			}
-		}
-		else
-		{
-			std::cout << "ERROR IN EXECUTE\n";
-			_response_str = "HTTP/1.1 405 Method Not Allowed\r\n";
-			load_status_code_body(405);
+		} else {
+			_handle405();
 			return ;
 		}
 	} else if (_mode == ResponseMode::FINISH_UP) {
@@ -558,16 +593,16 @@ void	Response::appendToBody(std::string content) {
 }
 
 void Response::setAllowedMethods() {
-	if (_location_config.isGetAllowed())
-	{
+	if (_location_config.isGetAllowed()) {
 		_allowedMethods.push_back(MethodType::GET);
 	}
-	if (_location_config.isPostAllowed())
-	{
+	if (_location_config.isPostAllowed()) {
 		_allowedMethods.push_back(MethodType::POST);
 	}
-	if (_location_config.isPostAllowed())
-	{
+	if (_location_config.isPutAllowed()) {
+		_allowedMethods.push_back(MethodType::PUT);
+	}
+	if (_location_config.isPostAllowed()) {
 		_allowedMethods.push_back(MethodType::DELETE);
 	}
 }
@@ -613,10 +648,7 @@ std::string	Response::getExpandedTarget(void) {
 		std::cout << "File does not exist: " << expandedPath << std::endl;
 		load_status_code_response(404, "Not Found");
 		return ("");
-		//return (_config.getRoot() + "/404.html");
-		// throw std::runtime_error("File does not exist: " + expandedPath);
 	}
-\
 	return (expandedPath);
 }
 
