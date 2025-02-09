@@ -558,11 +558,21 @@ void	Parser::parse_body(std::string& input) {
 	}
 }
 
+
+// call after headers are parsed
+bool	Parser::_invalid_headers(void) {
+	// don't accept expect header
+	if (_request._headers.find(HeaderType::EXPECT) != _request._headers.end()) {
+		_request._finished = true;
+		_request.set_status_code(417);
+		return (true);
+	}
+	return (false);
+}
+
 // to do:
 // 1. finish the checking for the end of the body
 // 2. do more checking for chunked and unchunked bodies in multiple reads
-
-
 void Parser::parse(void) {
 	// std::cout << "from parser:" <<std::endl << "|" << input << "|" << std::endl;
 	//std::cout << "Parsing started\n";
@@ -591,6 +601,9 @@ void Parser::parse(void) {
 	}
 
 	if (_request._areHeadersParsed) {
+		if (_invalid_headers()) {
+			return ;
+		}
 		if (_config_index == -1) {
 			_select_config();
 		}
