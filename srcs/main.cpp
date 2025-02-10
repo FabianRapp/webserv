@@ -10,40 +10,6 @@
 volatile
 sig_atomic_t	exit_ = 0;
 
-#define LOGGING 1
-#define LOGGING_MAKSIM (1 && LOGGING)
-#define LOGGING_ADRIAN (0 && LOGGING)
-#define LOGGING_FABIAN (0 && LOGGING)
-
-
-#define LOG(content) \
-	do {\
-		if (!exit_ && LOGGING) { \
-			std::cerr << content; \
-		} \
-	} while(0)
-
-#define LOG_MAKSIM(content) \
-	do {\
-		if (!exit_ && LOGGING_MAKSIM) { \
-			std::cerr << content; \
-		} \
-	} while(0)
-// LOG_MAKSIM("HELLO\n");
-#define LOG_ADRIAN(content) \
-	do {\
-		if (!exit_ && LOGGING_ADRIAN) { \
-			std::cerr << content; \
-		} \
-	} while(0)
-
-#define LOG_FABIAN(content) \
-	do {\
-		if (!exit_ && LOGGING_FABIAN) { \
-			std::cerr << content; \
-		} \
-	} while(0)
-
 
 void printHelloWebServer() {
 std::cout << FT_ANSI_CYAN_BOLD << R"(
@@ -73,7 +39,7 @@ void	webserv(int ac, char **av) {
 		manager.config_parser = new ConfigParser(av[1]);
 	}
 	all_configs = manager.config_parser->getServers();
-	std::cout << "config count: " << all_configs.size() << std::endl;
+	LOG("config count: " << all_configs.size() << std::endl);
 
 	std::vector<ServerConfigFile>	matching_ports;
 	while (all_configs.size()) {
@@ -93,7 +59,7 @@ void	webserv(int ac, char **av) {
 
 	delete manager.config_parser;
 	manager.config_parser = nullptr;
-	std::cout << "entering main loop\n";
+	LOG("entering main loop\n");
 	while (!exit_) {
 		//usleep(100000);
 		manager.run_poll();
@@ -103,11 +69,14 @@ void	webserv(int ac, char **av) {
 	}
 }
 
-int	main(int ac, char *av[]) {
+void	init(void) {
+	printHelloWebServer();
 	signal(SIGINT, sig_int);
 	signal(SIGTSTP, sig_int);
-	//todo: might need to move it somewhere else
-	printHelloWebServer();
+}
+
+int	main(int ac, char *av[]) {
+	init();
 
 start:
 	try {

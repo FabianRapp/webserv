@@ -1,5 +1,6 @@
 #pragma once
 
+#include "main.hpp"
 #include "general_includes.hpp"
 #include "parser/Parser.hpp"
 #include "utils.hpp"
