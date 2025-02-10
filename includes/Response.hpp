@@ -63,7 +63,7 @@ class Response {
 		DIR*					_dir;
 
 
-	void						_handle_get_moved(void);
+	void						_handle_get_moved(const std::string& new_loc);
 	std::vector<std::string>	_get_dir(void);
 	std::string					_auto_index_body(std::vector<std::string>& files);
 	void						_handle_auto_index(std::vector<std::string>& files);
@@ -76,6 +76,8 @@ class Response {
 	void	_handle_put_file(bool post);
 	void	_append_content_type(const std::string& path);
 	void	_handle405(void);
+
+	void	_finish_up(void);
 public:
 	bool	in_error_handling;
 		Response () = delete;

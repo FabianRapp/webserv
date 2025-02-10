@@ -209,11 +209,10 @@ void	Response::_handle_get_file(void) {
 	_append_content_type(_path);
 }
 
-void	Response::_handle_get_moved(void) {
-	std::string new_location = _request._uri + "/";
+void	Response::_handle_get_moved(const std::string& new_loc) {
 	_response_str =
 		"HTTP/1.1 301 Moved Permanently\r\n"
-		"Location: " + new_location + "\r\n"
+		"Location: " + new_loc + "\r\n"
 	;
 	load_status_code_body(301);
 }
@@ -236,7 +235,7 @@ void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
 	 	if (_request._uri.back() != '/') {
 			std::cout << "MOVED\n";
-			_handle_get_moved();
+			_handle_get_moved(_request._uri + "/");
 			return ;
 		}
 		std::vector<std::string>	files = _get_dir();
@@ -371,7 +370,7 @@ void	Response::_handle_post(void) {
 	std::cout << "handle_post\n";
 	if (std::filesystem::is_directory(_path)) {
 	 	if (_request._uri.back() != '/') {
-			_handle_get_moved();
+			_handle_get_moved(_request._uri + "/");
 			return ;
 		}
 		std::vector<std::string>	files = _get_dir();
@@ -511,6 +510,21 @@ void	Response::_handle405(void) {
 	load_status_code_body(405);
 }
 
+void	Response::_finish_up(void) {
+	_response_str +=
+		"Connection: close\r\n"
+		"Content-Length: " + std::to_string(_body.length()) + "\r\n"
+			"\r\n"
+		+ _body
+	;
+	_client_mode = ClientMode::SENDING;
+	//for debugging: saves the body as file
+	int debug_body_fd = open("body", O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	FT_ASSERT(debug_body_fd >  0);
+	write(debug_body_fd, _body.c_str(), _body.length());
+	close(debug_body_fd);
+}
+
 void	Response::execute(void) {
 	// check if the status was changed from 200 by something outside the Response class
 	int	status_code = _request._status_code.first;
@@ -527,9 +541,12 @@ void	Response::execute(void) {
 			return ;
 		}
 	}
+
 	if (_mode == ResponseMode::NORMAL) {
-		if (isMethodAllowed(_request._type))
-		{
+		if (_location_config.getIsRedir()) {
+			_handle_get_moved(_path);
+			return ;
+		} else if (isMethodAllowed(_request._type)) {
 			switch (_request._type) {
 				case (MethodType::GET): {
 					_handle_get();
@@ -556,18 +573,7 @@ void	Response::execute(void) {
 		/* for potential file reads:
 		 * can not be done in same function call as initial if statement!
 		*/
-		_response_str +=
-			"Connection: close\r\n"
-			"Content-Length: " + std::to_string(_body.length()) + "\r\n"
-				"\r\n"
-			+ _body
-		;
-		_client_mode = ClientMode::SENDING;
-		//for debugging: saves the body as file
-		int debug_body_fd = open("body", O_WRONLY | O_CREAT | O_TRUNC, 0777);
-		FT_ASSERT(debug_body_fd >  0);
-		write(debug_body_fd, _body.c_str(), _body.length());
-		close(debug_body_fd);
+		_finish_up();
 	} else {
 		FT_ASSERT(0);
 	}
@@ -617,16 +623,21 @@ std::string	Response::getExpandedTarget(void) {
 	_location_config.printLocation();
 	std::cout << "\n";
 
-	std::cout << "--- Config.getRoot() " << _config.getRoot() + "\n";
-	std::cout << "--- LocationConfig() " << _location_config.getRoot() + "\n";
+	std::cout << "--- _config.getRoot() " << _config.getRoot() + "\n";
+	std::cout << "--- _location_config.getRoot() " << _location_config.getRoot() + "\n";
+	std::cout << "--- _location_config.getPath() " << _location_config.getPath() + "\n";
+	std::cout << "--- _location_config.getRedirection()" << _location_config.getRedirection() + "\n";
 	std::cout << "--- request._uri " << _request._uri + "\n";
 
 	std::cout << "\n";
 
-
-	expandedPath = _config.getRoot() + _location_config.getRoot();
 	size_t	loc_path_len = _location_config.getPath().length();
-	expandedPath += _request._uri.substr(loc_path_len, _request._uri.length() - loc_path_len);
+	if (!_location_config.getIsRedir()) {
+		expandedPath = _config.getRoot() + _location_config.getRoot();
+		expandedPath += _request._uri.substr(loc_path_len, _request._uri.length() - loc_path_len);
+	} else {
+		return (_location_config.getRedirection() + _request._uri.substr(loc_path_len, _request._uri.length() - loc_path_len));
+	}
 
 	std::cout << "RESPONSE PATH SETTED TO |" << expandedPath << "|\n";
 	if (std::filesystem::exists(expandedPath)) {

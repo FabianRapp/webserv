@@ -614,7 +614,7 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 		} else if (line.find("cgi_path ") == 0) {
 			handleCgiPath(line, current_location);
 		} else if (line.find("redirection ") == 0) {
-			std::string redir_str = trimWhiteSpace(line.substr(12)); // Extract the value after "allowed_methods "
+			std::string redir_str = trimWhiteSpace(line.substr(12)); // Extract the value after "redirection "
 
 			if (!redir_str.empty() && redir_str.back() == ';') {
 				redir_str.pop_back();
