@@ -3,9 +3,41 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>WEB1 INDEX FILE</title>
+	<title>PUT TESTING WEBSITE</title>
 </head>
 <body>
-	<h1>WEB1 INDEX FILE</h1>
+	<h1>PUT TESTING WEBSITE</h1>
+	<form id="putForm">
+		<input type="text" name="filename" placeholder="File name" required> </br></br>
+		<textarea name="content" placeholder="File content" required></textarea> </br></br>
+		<button type="submit">Create File</button>
+	</form>
+
+	<script>
+	document.getElementById('putForm').addEventListener('submit', async (e) => {
+		e.preventDefault();
+
+		const filename = e.target.filename.value; // Get the filename
+		const content = e.target.content.value; // Get the content
+
+		try {
+			// Use the filename provided by the user in the URL
+			const response = await fetch(`${filename}`, {
+				method: 'PUT',
+				headers: {'Content-Type': 'text/plain'}, // Set content type to plain text
+				body: content // Send the content as plain text
+			});
+
+			if (response.ok) {
+				console.log('File created successfully');
+				console.log(response);
+			} else {
+				console.error('File creation failed');
+			}
+		} catch (error) {
+			console.error('Network error:', error);
+		}
+	});
+	</script>
 </body>
 </html>

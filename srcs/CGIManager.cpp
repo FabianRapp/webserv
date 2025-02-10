@@ -231,7 +231,7 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		ft_close(outputPipe[1]);
 		outputPipe[1] = -1;
 
-		//execve(args[0], args, (char**)(envCGI.data()));
+		execve(args[0], args, (char**)(envCGI.data()));
 		_child_exec_fail();
 		return ;
 	} else { // Parent process
