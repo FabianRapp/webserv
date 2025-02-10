@@ -41,6 +41,7 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 	envCGI_storage.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
 	envCGI_storage.push_back(std::string("PATH_INFO=") + "");
 	for (const auto& [type, value] : request._headers) {
+		// std::cout << FT_ANSI_RED_UNDERLINE "TYPE: "<< to_string(type) << FT_ANSI_RESET << FT_ANSI_GREEN_UNDERLINE "VALUE: "  << value << FT_ANSI_RESET << std::endl;
 		if (type == HeaderType::CONTENT_LENGTH
 			|| type == HeaderType::CONTENT_TYPE
 		){
@@ -140,9 +141,14 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 	if (request._headers.find(HeaderType::COOKIE) != request._headers.end()) {
 
 		//std::cout << std::string(request._headers[HeaderType::HOST]);
-		std::string	request_cookies_val = "name=value; name2=value2; name3=value3";
+		//std::string	request_cookies_val = "name=value; name2=value2; name3=value3";
+		const std::string&	request_cookies_val = request._headers.at(HeaderType::COOKIE);
 		Line	key_vals(request_cookies_val, "; ");
+		int i = 0;
 		for (auto var : key_vals) {
+			if (i++ && !var.empty()) {
+				var = var.substr(1, var.size() - 1);
+			}
 			/*todo: verification
 			if (cookie_data_structure.find(var)) {
 			*/
@@ -154,6 +160,8 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 
 
 	for (std::string& var : envCGI_storage) {
+		std::cout << "\n";
+		std::cout << FT_ANSI_YELLOW_BOLD_UNDERLINE << "ENV VAR: " << var << FT_ANSI_RESET << std::endl;
 		envCGI.push_back(var.c_str());
 	}
 	envCGI.push_back(nullptr);
