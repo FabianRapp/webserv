@@ -30,6 +30,10 @@ void LocationConfigFile::setIndexFile(const std::string index_file) {
 	_index_file = index_file;
 }
 
+void LocationConfigFile::setRedirection(const std::string redirection) {
+	_redireciton = redirection;
+}
+
 void LocationConfigFile::setRequestBodySize(int size) {
 	_request_body_size = size;
 }
@@ -105,12 +109,17 @@ bool LocationConfigFile::getAutoIndex() const {
 	return _autoindex;
 }
 
+
 const std::string& LocationConfigFile::getRoot() const{
 	return _root;
 }
 
 const std::string& LocationConfigFile::getIndexFile() const {
 	return _index_file;
+}
+
+const std::string& LocationConfigFile::getRedirection() const {
+	return _redireciton;
 }
 
 int LocationConfigFile::getRequestBodySize() const {
@@ -141,6 +150,11 @@ void LocationConfigFile::printLocation() const {
 	if (!_root.empty()) {
 		std::cout << "Root: " << _root << "\n";
 	}
+
+
+		std::cout << "Redirection: " << _redireciton << "\n";
+
+
 
 	std::cout << "Index File: " << _index_file << "\n";
 

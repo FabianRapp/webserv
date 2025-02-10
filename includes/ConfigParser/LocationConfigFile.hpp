@@ -18,6 +18,7 @@ private:
 	std::map<std::string, std::string> _cgi_map;
 	std::string _root = "";
 	std::string _index_file = "index.html";
+	std::string _redireciton = "";
 
 public:
 	LocationConfigFile();
@@ -27,6 +28,7 @@ public:
 	void setAutoIndex(bool autoindex);
 	void setRoot(const std::string root);
 	void setIndexFile(const std::string index_file);
+	void setRedirection(const std::string redirection);
 	void setRequestBodySize(int size);
 	void addCgiExtension(const std::string& ext, const std::string& path_to_binary);
 
@@ -38,6 +40,7 @@ public:
 	bool getAutoIndex() const;
 	const std::string& getRoot() const;
 	const std::string& getIndexFile() const;
+	const std::string& getRedirection() const;
 	int getRequestBodySize() const;
 	const std::map<std::string, std::string>& getCgiExtensions() const;
 

@@ -5,6 +5,9 @@
 //validateMethods
 #include <set>
 #include <sstream>
+
+///remove me:
+#include <colors.h>
 // #include <algorithm>
 template void ConfigParser::validateMethods(const std::string&, ServerConfigFile&);
 template void ConfigParser::validateMethods(const std::string&, LocationConfigFile&);
@@ -612,6 +615,13 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 
 		} else if (line.find("cgi_path ") == 0) {
 			handleCgiPath(line, current_location);
+		} else if (line.find("redirection ") == 0) {
+			std::string redir_str = trimWhiteSpace(line.substr(12)); // Extract the value after "allowed_methods "
+
+			if (!redir_str.empty() && redir_str.back() == ';') {
+				redir_str.pop_back();
+			}
+			current_location.setRedirection(redir_str);
 		} else if (line.find("autoindex ") == 0) {
 			std::string value = trimWhiteSpace(line.substr(10)); // Extract value after "autoindex "
 

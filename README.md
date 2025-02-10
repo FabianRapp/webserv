@@ -53,3 +53,8 @@ TODO:
 2. ERROR handleling.
 3. FRONT-END for the evaluation to have every test avaialbe.
 4. Implement PUT.
+
+
+TODO:
+1. PUT file name (do we care if we have different test);
+2. ERROR codes gives wierd files? Something is handleing like it should
