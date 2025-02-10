@@ -8,5 +8,5 @@ import sys
 # Read input from stdin
 body = sys.stdin.read()
 
-# print(f"Hello, {body}!")
-print(body)
+print(f"Hello, {body}!")
+# print(body)
