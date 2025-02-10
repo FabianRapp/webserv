@@ -379,8 +379,6 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			validateMethods(methods_str, current_server);
 			validateMethods(methods_str, current_server.setDefaultLocation());
 
-			std::cout << "METHODSDSDS: " << methods_str << std::endl;
-
 		} else if (line.find("root ") == 0) {
 			std::string root_value = trimWhiteSpace(line.substr(5)); // Extract the value after "root "
 
@@ -621,6 +619,7 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			if (!redir_str.empty() && redir_str.back() == ';') {
 				redir_str.pop_back();
 			}
+			current_location.setIsRedir(true);
 			current_location.setRedirection(redir_str);
 		} else if (line.find("autoindex ") == 0) {
 			std::string value = trimWhiteSpace(line.substr(10)); // Extract value after "autoindex "

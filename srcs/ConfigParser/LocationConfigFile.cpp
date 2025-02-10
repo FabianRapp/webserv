@@ -22,6 +22,10 @@ void LocationConfigFile::setAutoIndex(bool autoindex) {
 	_autoindex = autoindex;
 }
 
+void LocationConfigFile::setIsRedir(bool isredir) {
+	_isRedir = isredir;
+}
+
 void LocationConfigFile::setRoot(const std::string root) {
 	_root = root;
 }
@@ -109,6 +113,9 @@ bool LocationConfigFile::getAutoIndex() const {
 	return _autoindex;
 }
 
+bool LocationConfigFile::getIsRedir() const {
+	return _isRedir;
+}
 
 const std::string& LocationConfigFile::getRoot() const{
 	return _root;
@@ -150,12 +157,8 @@ void LocationConfigFile::printLocation() const {
 	if (!_root.empty()) {
 		std::cout << "Root: " << _root << "\n";
 	}
-
-
-		std::cout << "Redirection: " << _redireciton << "\n";
-
-
-
+	std::cout << "Redirection: " << _redireciton << "\n";
+	std::cout << "IS REDIRECTION FLAG ON: " << _isRedir << "\n";
 	std::cout << "Index File: " << _index_file << "\n";
 
 	if (_request_body_size != -1) {

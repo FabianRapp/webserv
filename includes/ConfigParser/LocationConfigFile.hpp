@@ -15,6 +15,7 @@ private:
 	bool _put_header = false;
 	bool _autoindex = false;
 	int _request_body_size = -1;
+	bool _isRedir = false;
 	std::map<std::string, std::string> _cgi_map;
 	std::string _root = "";
 	std::string _index_file = "index.html";
@@ -26,6 +27,7 @@ public:
 	void setPath(const std::string& path);
 	void setMethods(bool get, bool post, bool del, bool put);
 	void setAutoIndex(bool autoindex);
+	void setIsRedir(bool isredir);
 	void setRoot(const std::string root);
 	void setIndexFile(const std::string index_file);
 	void setRedirection(const std::string redirection);
@@ -38,6 +40,7 @@ public:
 	bool isDeleteAllowed() const;
 	bool isPutAllowed() const;
 	bool getAutoIndex() const;
+	bool getIsRedir() const;
 	const std::string& getRoot() const;
 	const std::string& getIndexFile() const;
 	const std::string& getRedirection() const;
