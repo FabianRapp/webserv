@@ -2,6 +2,8 @@
 #include "../../includes/Manager.hpp"
 #include <Response.hpp>
 
+//todo: remove debug fd
+
 ReadFd::ReadFd(DataManager& data, Response& response, std::string& target_buffer, int fd, Client& client,
 		ssize_t byte_count, std::function<void()> completion_callback):
 	BaseFd(data, POLLIN, "ReadFd"),
@@ -28,7 +30,7 @@ void	ReadFd::execute(void) {
 	char	buffer[1024 * 1024 * 100]; // 100mb read buffer
 
 	if (is_ready(POLLHUP) && !is_ready(POLLIN)) {
-		std::cout << FT_ANSI_RED "readfd POLLHUP\n" FT_ANSI_RESET;
+		LOG_FABIAN(FT_ANSI_RED "readfd POLLHUP\n" FT_ANSI_RESET);
 		data.set_close(data_idx);
 		completion_callback();
 		return ;
@@ -36,11 +38,11 @@ void	ReadFd::execute(void) {
 	if (!is_ready(POLLIN)) {
 		return ;
 	}
-	//std::cout << "exec read fd\n";
+	LOG_FABIAN3("exec read fd\n");
 	size_t	read_size;
 	if (left_over_bytes > 0 ) {
-		read_size = sizeof buffer - 1 < static_cast<size_t>(left_over_bytes)
-		? sizeof buffer - 1: static_cast<size_t>(left_over_bytes);
+		read_size = sizeof buffer < static_cast<size_t>(left_over_bytes)
+		? sizeof buffer : static_cast<size_t>(left_over_bytes);
 	} else {
 		read_size = sizeof buffer;
 	}
@@ -48,24 +50,12 @@ void	ReadFd::execute(void) {
 	if (read_ret < 0) {
 		data.set_close(data_idx);
 		completion_callback();
-		//todo: err
-		if (response.in_error_handling) {
-			//hardcode a 500 error response without opening a file
-		} else {
-			//load 500 error code
-			//without fucking up the states of client, response, cgimanager and readfd
-		}
-		FT_ASSERT(0);
+		response.load_status_code_response(500, "Internal Server Error");
 		return ;
 	}
-	buffer[read_ret] = 0;//not needed, only for debugging
 
 	left_over_bytes -= read_ret;
 	target_buf.append(buffer, static_cast<size_t>(read_ret));
-	//std::cout << "buffer: " << target_buf << "\n";
-	//std::cout << "read_size: " << read_size << "\n";
-	//std::cout << "read_ret: " << read_ret << "\n";
-	//std::cout << "left_over_bytes: " << left_over_bytes << "\n";
 	if (left_over_bytes == 0 || read_ret == 0) {
 		write(debug_fd, target_buf.c_str(), static_cast<size_t>(target_buf.size()));
 		data.set_close(data_idx);
