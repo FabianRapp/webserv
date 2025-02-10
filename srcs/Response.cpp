@@ -513,6 +513,8 @@ void	Response::_handle405(void) {
 void	Response::_finish_up(void) {
 	_response_str +=
 		"Connection: close\r\n"
+		"Set-Cookie: theme=dark; Max-Age=3600\r\n"
+		"Set-Cookie: name=hi123; Max-Age=3600\r\n"
 		"Content-Length: " + std::to_string(_body.length()) + "\r\n"
 			"\r\n"
 		+ _body

@@ -66,6 +66,13 @@ void	Client::_receive_request(void) {
 	//std::cout << "Request STATUS = " << _parser.is_finished() << std::endl;
 	if (_parser.is_finished() == true)
 	{
+		{
+			//todo: remove this later
+			int	debug_fd = open("request.txt", O_WRONLY | O_TRUNC | O_APPEND | O_CREAT, 0644);
+			FT_ASSERT(debug_fd > 0);
+			write(debug_fd, input.c_str(), input.size());
+			close(debug_fd);
+		}
 		int errorCode;
 		if ((errorCode = _parser.getErrorCode())) {
 			//todo:
