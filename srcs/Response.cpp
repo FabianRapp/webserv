@@ -602,7 +602,7 @@ void Response::setAllowedMethods() {
 	if (_location_config.isPutAllowed()) {
 		_allowedMethods.push_back(MethodType::PUT);
 	}
-	if (_location_config.isPostAllowed()) {
+	if (_location_config.isDeleteAllowed()) {
 		_allowedMethods.push_back(MethodType::DELETE);
 	}
 }
