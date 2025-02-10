@@ -104,6 +104,8 @@ public:
 		const ServerConfigFile& getConfig() const;
 		void	execute(void);
 	
+		//todo:
+		void	overwrite_response_str(const std::string& new_response);
 
 
 		void	appendToStatusLine(std::string content);

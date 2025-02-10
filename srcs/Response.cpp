@@ -212,9 +212,11 @@ void	Response::_handle_get_file(void) {
 void	Response::_handle_get_moved(const std::string& new_loc) {
 	_response_str =
 		"HTTP/1.1 301 Moved Permanently\r\n"
+		//"HTTP/1.1 302 Moved Temporarily\r\n"
 		"Location: " + new_loc + "\r\n"
 	;
 	load_status_code_body(301);
+	//load_status_code_body(302);
 }
 
 bool	Response::_has_index(std::vector<std::string>& files, std::string& index_file) {
@@ -547,6 +549,7 @@ void	Response::execute(void) {
 	if (_mode == ResponseMode::NORMAL) {
 		if (_location_config.getIsRedir()) {
 			_handle_get_moved(_path);
+			_mode = ResponseMode::FINISH_UP;
 			return ;
 		} else if (isMethodAllowed(_request._type)) {
 			switch (_request._type) {
@@ -638,7 +641,9 @@ std::string	Response::getExpandedTarget(void) {
 		expandedPath = _config.getRoot() + _location_config.getRoot();
 		expandedPath += _request._uri.substr(loc_path_len, _request._uri.length() - loc_path_len);
 	} else {
-		return (_location_config.getRedirection() + _request._uri.substr(loc_path_len, _request._uri.length() - loc_path_len));
+		return (_location_config.getRedirection()
+			+ _request._uri.substr(
+				loc_path_len, _request._uri.length() - loc_path_len));
 	}
 
 	std::cout << "RESPONSE PATH SETTED TO |" << expandedPath << "|\n";

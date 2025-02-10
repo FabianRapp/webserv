@@ -39,7 +39,7 @@ Client::~Client(void) {
 
 void	Client::_receive_request(void) {
 	if (!is_ready(POLLIN)) {
-		std::cout << "not ready\n";
+		LOG_FABIAN3("not ready\n");
 		auto now = std::chrono::steady_clock::now();
 		auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_availability).count();
 		if (elapsed_ms > 2000) {
@@ -104,7 +104,7 @@ void	Client::execute(void) {
 	//std::cout << FT_ANSI_RESET;
 	switch (this->mode) {
 		case (ClientMode::RECEIVING): {
-			std::cout << "receiving\n";
+			LOG_FABIAN3("receiving\n");
 			_receive_request();
 			break ;
 		}

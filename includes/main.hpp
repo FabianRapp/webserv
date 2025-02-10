@@ -19,6 +19,11 @@ extern volatile sig_atomic_t	exit_;
 #define LOGGING_FABIAN (1 && LOGGING)
 #endif //LOGGING_FABIAN
 
+//for more logging, mostly disabled
+#ifndef LOGGING_FABIAN3
+#define LOGGING_FABIAN3 (1 && LOGGING_FABIAN)
+#endif //LOGGING_FABIAN
+
 #ifndef LOG
 #define LOG(content) \
 	do {\
@@ -51,6 +56,16 @@ extern volatile sig_atomic_t	exit_;
 #define LOG_FABIAN(content) \
 	do {\
 		if (!exit_ && LOGGING_FABIAN) { \
+			std::cerr << content; \
+		} \
+	} while(0)
+#endif //LOG_FABIAN
+
+
+#ifndef LOG_FABIAN3
+#define LOG_FABIAN3(content) \
+	do {\
+		if (!exit_ && LOGGING_FABIAN3) { \
 			std::cerr << content; \
 		} \
 	} while(0)
