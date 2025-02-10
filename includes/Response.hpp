@@ -63,7 +63,7 @@ class Response {
 		DIR*					_dir;
 
 
-	void						_handle_get_moved(const std::string& new_loc);
+	void						_handle_get_moved(const std::string& new_loc, int status);
 	std::vector<std::string>	_get_dir(void);
 	std::string					_auto_index_body(std::vector<std::string>& files);
 	void						_handle_auto_index(std::vector<std::string>& files);
@@ -91,6 +91,9 @@ public:
 		CGIManager*&	get_cgi_manger(void);
 
 		void			load_status_code_response(int code, const std::string& status);
+		void			load_status_code_response(int code, const std::string& status,
+							std::vector<std::string> extra_headers);
+
 		void			load_status_code_body(int code);
 
 		void			set_mode(ResponseMode mode);
@@ -104,7 +107,6 @@ public:
 		const ServerConfigFile& getConfig() const;
 		void	execute(void);
 	
-		//todo:
 		void	overwrite_response_str(const std::string& new_response);
 
 

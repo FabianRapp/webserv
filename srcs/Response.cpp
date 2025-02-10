@@ -209,14 +209,23 @@ void	Response::_handle_get_file(void) {
 	_append_content_type(_path);
 }
 
-void	Response::_handle_get_moved(const std::string& new_loc) {
-	_response_str =
-		"HTTP/1.1 301 Moved Permanently\r\n"
-		//"HTTP/1.1 302 Moved Temporarily\r\n"
-		"Location: " + new_loc + "\r\n"
-	;
-	load_status_code_body(301);
-	//load_status_code_body(302);
+//status has to be either 301 (Moved Permanently) or 302(302 Moved Temporarily)
+void	Response::_handle_get_moved(const std::string& new_loc, int status) {
+	if (status == 301) {
+		_response_str =
+			"HTTP/1.1 301 Moved Permanently\r\n"
+			"Location: " + new_loc + "\r\n"
+		;
+		load_status_code_body(301);
+	} else if (status == 302) {
+		_response_str =
+			"HTTP/1.1 302 Moved Temporarily\r\n"
+			"Location: " + new_loc + "\r\n"
+		;
+		load_status_code_body(302);
+	} else {
+		FT_ASSERT(0);
+	}
 }
 
 bool	Response::_has_index(std::vector<std::string>& files, std::string& index_file) {
@@ -237,7 +246,7 @@ void	Response::_handle_get(void) {
 	if (std::filesystem::is_directory(_path)) {
 	 	if (_request._uri.back() != '/') {
 			std::cout << "MOVED\n";
-			_handle_get_moved(_request._uri + "/");
+			_handle_get_moved(_request._uri + "/", 301);
 			return ;
 		}
 		std::vector<std::string>	files = _get_dir();
@@ -372,7 +381,7 @@ void	Response::_handle_post(void) {
 	std::cout << "handle_post\n";
 	if (std::filesystem::is_directory(_path)) {
 	 	if (_request._uri.back() != '/') {
-			_handle_get_moved(_request._uri + "/");
+			_handle_get_moved(_request._uri + "/", 301);
 			return ;
 		}
 		std::vector<std::string>	files = _get_dir();
@@ -415,15 +424,21 @@ void	Response::_handle_put(void) {
 	}
 	_handle_put_file(false);
 }
+
 //don't use this if the response needs any custom data besides the status
 //this response the respose
-void	Response::load_status_code_response(int code, const std::string& status) {
+void	Response::load_status_code_response(int code, const std::string& status,
+			std::vector<std::string> extra_headers)
+{
 	if (code == 500) {
 		in_error_handling = true;
 	}
 	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back like cgi manager
 	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + " " + status + "\r\n"
 		+ "Content-Type: text/html\r\n";
+	for (const auto& header: extra_headers) {
+		_response_str += header;
+	}
 	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
 
 	struct stat stats;
@@ -433,6 +448,49 @@ void	Response::load_status_code_response(int code, const std::string& status) {
 	read_fd(file_fd, stats.st_size);
 	_mode = ResponseMode::FINISH_UP;
 }
+
+//todo: use this logic for other status code loaders
+//don't use this if the response needs any custom data besides the status
+//this response the respose
+void	Response::load_status_code_response(int code, const std::string& status) {
+	if (in_error_handling) {
+		_response_str = std::string("HTTP/1.1 500 Internal Server Error\r\n"
+			"Content-Type: text/html\r\n");
+		FT_ASSERT(code == 500);
+		_body =
+			"<!DOCTYPE html>"
+			"<head>"
+			"    <title>500 Internal Server Error</title>"
+			"</head>"
+			"<body>"
+			"    <h1>500 Internal Server Error</h1>"
+			"</body>"
+			"</html>";
+		_mode = ResponseMode::FINISH_UP;
+		return ;
+	}
+	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + " " + status + "\r\n"
+		+ "Content-Type: text/html\r\n";
+	if (code == 500) {
+		in_error_handling = true;
+	}
+	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back like cgi manager
+	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
+
+	struct stat stats;
+	if (stat(stat_code_path.c_str(), &stats) == -1) {
+		load_status_code_response(500, "Internal Server Error");
+		return ;
+	}
+	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
+	if (file_fd < 0) {
+		load_status_code_response(500, "Internal Server Error");
+		return ;
+	}
+	read_fd(file_fd, stats.st_size);
+	_mode = ResponseMode::FINISH_UP;
+}
+
 
 void	Response::load_status_code_body(int code) {
 	if (code == 500) {
@@ -529,12 +587,16 @@ void	Response::_finish_up(void) {
 	close(debug_body_fd);
 }
 
+void	Response::overwrite_response_str(const std::string& new_response) {
+	_response_str = new_response;
+}
+
 void	Response::execute(void) {
 	// check if the status was changed from 200 by something outside the Response class
 	int	status_code = _request._status_code.first;
 	const std::string&	status_str = _request._status_code.second;
 	if (status_code != 200) {
-		load_status_code_response(status_code, status_str);
+		load_status_code_response(status_code, status_str, _request.additional_response_headers);
 		return ;
 	}
 	if (_first_iter) {
@@ -548,7 +610,7 @@ void	Response::execute(void) {
 
 	if (_mode == ResponseMode::NORMAL) {
 		if (_location_config.getIsRedir()) {
-			_handle_get_moved(_path);
+			_handle_get_moved(_path, 301);
 			_mode = ResponseMode::FINISH_UP;
 			return ;
 		} else if (isMethodAllowed(_request._type)) {

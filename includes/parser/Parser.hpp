@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <ServerConfigFile.hpp>
 #include <LocationConfigFile.hpp>
+#include "../main.hpp"
 
 #include "StringArray.hpp"
 
@@ -26,6 +27,7 @@ class Parser {
 		const std::vector<ServerConfigFile>&	_server_configs;
 		int										_config_index;//-1 indicates condigs were not set
 		int										_location_index;// -1 indicates default location or not set
+		int										_body_size;
 
 
 		void	_select_server_config(void);
@@ -57,7 +59,6 @@ class Parser {
 
 		// Utils
 		// std::string	cleanBody(const std::string& input);
-		int			getErrorCode();
 		void		checkForChunks(std::vector<std::string>& bodyVector);
 		void		addTokens(const std::string& str, const std::string& delimiter);
 		void		insertHeader(const std::string& key, const std::string& value);
@@ -66,5 +67,5 @@ class Parser {
 		// std::vector<std::string> split(const std::string& str, char delimiter);
 		bool		ends_with(const std::string& str, const std::string& suffix);
 		bool		is_finished(void);
-		Request		get_request(void) const;
+		Request&&	move_request(void);
 };

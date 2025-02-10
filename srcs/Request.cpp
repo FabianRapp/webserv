@@ -24,15 +24,75 @@ Request::Request()
 	set_status_code(200);
 }
 
-Request::Request(const Request& old)
-:	_finished(old._finished),
+Request::Request(const Request& old):
+	_finished(old._finished),
 	_areHeadersParsed(old._areHeadersParsed),
 	_type(old._type),
 	_uri(old._uri),
 	_version(old._version),
+	_headers(old._headers),
 	_body(old._body),
-	_startBodyIdx(old._startBodyIdx)
+	_startBodyIdx(old._startBodyIdx),
+	_bodyTokens(old._bodyTokens),
+	_response_str(old._response_str),
+	_status_code(old._status_code),
+	additional_response_headers(old.additional_response_headers)
 {
+}
+
+Request::Request(Request&& old):
+	_finished(std::move(old._finished)),
+	_areHeadersParsed(std::move(old._areHeadersParsed)),
+	_type(std::move(old._type)),
+	_uri(std::move(old._uri)),
+	_version(std::move(old._version)),
+	_headers(std::move(old._headers)),
+	_body(std::move(old._body)),
+	_startBodyIdx(std::move(old._startBodyIdx)),
+	_bodyTokens(std::move(old._bodyTokens)),
+	_response_str(std::move(old._response_str)),
+	_status_code(std::move(old._status_code)),
+	additional_response_headers(std::move(old.additional_response_headers))
+{
+}
+
+Request	Request::operator=(const Request& old) {
+	if (this == &old) {
+		return (*this);
+	}
+	_finished = old._finished;
+	_areHeadersParsed = old._areHeadersParsed;
+	_type = old._type;
+	_uri = old._uri;
+	_version = old._version;
+	_headers = old._headers;
+	_body = old._body;
+	_startBodyIdx = old._startBodyIdx;
+	_bodyTokens = old._bodyTokens;
+	_response_str = old._response_str;
+	_status_code = old._status_code;
+	additional_response_headers = old.additional_response_headers;
+	return (*this);
+}
+
+Request	Request::operator=(Request&& old) {
+	if (this == &old) {
+		return (*this);
+	}
+	_finished = std::move(old._finished);
+	_areHeadersParsed = std::move(old._areHeadersParsed);
+	_type = std::move(old._type);
+	_uri = std::move(old._uri);
+	_version = std::move(old._version);
+	_headers = std::move(old._headers);
+	_body = std::move(old._body);
+	_startBodyIdx = std::move(old._startBodyIdx);
+	_bodyTokens = std::move(old._bodyTokens);
+	_response_str = std::move(old._response_str);
+	_status_code = std::move(old._status_code);
+	additional_response_headers = std::move(old.additional_response_headers);
+
+	return (*this);
 }
 
 void Request::set_status_code(int code) {
@@ -114,17 +174,3 @@ void Request::set_status_code(int code) {
 	_status_code.second = codes.at(code);
 }
 
-Request	Request::operator=(const Request& old) {
-	if (this == &old) {
-		return (*this);
-	}
-	_finished = old._finished;
-	_areHeadersParsed = old._areHeadersParsed;
-	_type = old._type;
-	_uri = old._uri;
-	_version = old._version;
-	_body = old._body;
-	_startBodyIdx = old._startBodyIdx;
-
-	return (*this);
-}

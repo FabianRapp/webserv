@@ -4,8 +4,13 @@
 
 extern volatile sig_atomic_t	exit_;
 #ifndef LOGGING
-#define LOGGING 1
+#define LOGGING (1)
 #endif //LOGGING
+
+#ifndef LOGGING_PARSING
+#define LOGGING_PARSING (LOGGING && 1)
+#endif //LOGGING_PARSING
+
 
 #ifndef LOGGING_MAKSIM
 #define LOGGING_MAKSIM (1 && LOGGING)
@@ -21,7 +26,7 @@ extern volatile sig_atomic_t	exit_;
 
 //for more logging, mostly disabled
 #ifndef LOGGING_FABIAN3
-#define LOGGING_FABIAN3 (1 && LOGGING_FABIAN)
+#define LOGGING_FABIAN3 (0 && LOGGING_FABIAN)
 #endif //LOGGING_FABIAN
 
 #ifndef LOG
@@ -32,6 +37,15 @@ extern volatile sig_atomic_t	exit_;
 		} \
 	} while(0)
 #endif //LOG
+
+#ifndef LOG_PARSER
+#define LOG_PARSER(content) \
+	do {\
+		if (!exit_ && LOGGING_PARSING) { \
+			std::cerr << content; \
+		} \
+	} while(0)
+#endif //LOG_PARSER
 
 #ifndef LOG_MAKSIM
 #define LOG_MAKSIM(content) \

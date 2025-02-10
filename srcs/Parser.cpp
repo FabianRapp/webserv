@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <main.hpp>
 
 // 1. No Content-Length or Transfer-Encoding in HTTP/1.1
 // Connection Closure:
@@ -25,7 +26,8 @@ Parser::Parser(std::string& input, const std::vector<ServerConfigFile>& configs)
 	_max_request_body_size(-1),
 	_server_configs(configs),
 	_config_index(-1),
-	_location_index(-1)
+	_location_index(-1),
+	_body_size(0)
 {
 }
 
@@ -126,82 +128,12 @@ std::string	cleanBody(const std::string& input) {
 	start = input.find("\r\n\r\n");
 	if (start == std::string::npos) {
 		std::cout << "could not find end of headers" << std::endl;
-		// handle error logic
 		return ("");
 	}
 
 	cleanBody = input.substr(start + 4);
 
 	return (cleanBody);
-}
-
-//Note, I think 405 not allwed might be easier to implement in Response,
-// a this point we dont have yet parsed the allowed methods
-// either we move all that logic here of throw that specific error later
-int Parser::getErrorCode() {
-
-
-	// if (_request._type == MethodType::INVALID)
-	// {
-		// Either 405 not allowed or 501 not implemented
-		// return 501;
-	// }
-
-
-	// Not Found (404)
-	// The requested resource does not exist on the server
-	// if (isPathExisting(_request._uri))
-	// {
-	// 	// 404 not found
-	// return 404;
-	// }
-
-
-	// Forbidden (403)
-	// The user does not have permission to access the requested resource
-	// if (isPathAllowed(_request._uri))
-	// {
-	// 	// 403 forbidden
-	// 	return 403;
-	// }
-
-
-	// Payload Too Large (413)
-	// The request body exceeds the allowed size limit
-	// if (isRequestTooLarge())
-	// {
-	// 	return 413;
-	// }
-
-
-	// (415) Unsupported Media Type
-	// This happens when the Content-Type of the request is not supported by the server.
-	// if (isMediaTypeAllowed())
-	// {
-		// return 415
-	// }
-
-
-	// Bad Request (400)
-	// Malformed syntax (e.g., missing brackets in JSON payload)
-	// Invalid query parameters (e.g., incorrect data type)
-	// Missing required headers or parameters
-
-	// in the next if block we can make more checks that will also result in a 400
-	// if (isInvalidHeader(_request._headers) || ...)
-	// {
-	// 	// 400 Bad request probably
-	// 	return 400;
-	// }
-
-
-	// We could implement the next errors for general errors in the parsing:
-	// Unprocessable Entity (422)
-	// The server understands the request, but the content is invalid (e.g., failing validation rules)
-
-	// Internal Server Error (500)
-	// The server encounters an unexpected condition (often due to a bug or misconfiguration)
-	return 0;
 }
 
 void Parser::set_max_request_body_size(int max_request_body_size) {
@@ -277,6 +209,9 @@ HeaderType	setType(const std::string& str) {
 
 void Parser::insertHeader(const std::string& key, const std::string& value) {
 	HeaderType keyType = setType(key);
+	if (keyType == HeaderType::INVALID) {
+		return ;
+	}
 	_request._headers.insert({keyType, value});
 
 	// std::cout << "Header:" << std::endl;
@@ -470,29 +405,36 @@ void	Parser::parse_body(std::string& input) {
 
 	// handle also errors when body here is empty
 	// this can go wrong if the full body is not already included in the input variable
+	LOG_PARSER("parsing body\n");
 	std::string body = cleanBody(input);
+	if (body == "") {
+		if (_body_size == 0) {
+			LOG_PARSER("NO BODY\n");
+			_request._finished = true;
+		} else {
+			LOG_PARSER("body not finished\n");
+		}
+		return ;
+	}
 
-	if (_request._headers.find(HeaderType::CONTENT_LENGTH) != _request._headers.end())
-	{
-		std::cout << "parsing unchunked:" << std::endl;
+	if (_request._headers.find(HeaderType::CONTENT_LENGTH) != _request._headers.end()) {
+		LOG("parsing unchunked:" << std::endl);
 		parser_unchunked(body);
-	}
-	else if (_request._headers.find(HeaderType::TRANSFER_ENCODING) != _request._headers.end())
-	{
-		// this will later have to actually check what is the actual value of TRANSFER_ENCODING
-		std::cout << "parsing chunked:" << std::endl;
-		parser_chunked(body);
-	}
-	else
-	{
-		std::cout << "NO BODY\n";
-		// note by fabi: updated: there is simply no body I think
+	} else if (_request._headers.find(HeaderType::TRANSFER_ENCODING) != _request._headers.end()) {
+		if (_request._headers[HeaderType::TRANSFER_ENCODING] == "chunked") {
+			LOG("parsing chunked:" << std::endl);
+			parser_chunked(body);
+		} else {
+			LOG("unsupported encoding\n");
+			_request.set_status_code(406);
+			_request.additional_response_headers.push_back("Vary: Accept-Encoding");
+			_request._finished = true;
+			return ;
+		}
+	} else {
+		LOG("NO BODY\n");
 		_request._finished = true;
 		return ;
-
-		//std::cout << "error parsing body" << std::endl;
-		// handle logic for errors
-		// if there is no content lenght it can be an error,
 	}
 }
 
@@ -548,60 +490,37 @@ void Parser::parse(void) {
 		if (_config_index == -1) {
 			_select_config();
 		}
-		int allowed_body_size = get_location_config().getRequestBodySize();
-		bool body_too_large = false;
-		bool invalid_body_size = false;
-		try {
-			int actual_body_size = std::stoi(_request._headers[HeaderType::CONTENT_LENGTH]);
-			body_too_large = allowed_body_size != -1 && actual_body_size > allowed_body_size;
-			invalid_body_size = actual_body_size < 0;
-		} catch (const std::invalid_argument&) {
-			invalid_body_size = true;
-		} catch (const std::out_of_range&) {
-			invalid_body_size = true;
-		}
+		if (_request._headers.find(HeaderType::CONTENT_LENGTH) != _request._headers.end()) {
+			int allowed_body_size = get_location_config().getRequestBodySize();
+			bool body_too_large = false;
+			bool invalid_body_size = false;
+			try {
+				_body_size = std::stoi(_request._headers[HeaderType::CONTENT_LENGTH]);
+				body_too_large = allowed_body_size != -1 && _body_size > allowed_body_size;
+				invalid_body_size = _body_size < 0;
+			} catch (const std::invalid_argument&) {
+				invalid_body_size = true;
+			} catch (const std::out_of_range&) {
+				invalid_body_size = true;
+			}
 
-		if (body_too_large) {
-			_request.set_status_code(400);
-			_request._finished = true;
-			return ;
-		} else if (invalid_body_size) {
-			_request.set_status_code(500);
-			_request._finished = true;
-			return ;
+			if (body_too_large) {
+				LOG_PARSER("body too large\n");
+				_request.set_status_code(400);
+				_request._finished = true;
+				return ;
+			} else if (invalid_body_size) {
+				LOG_PARSER("invalid body size\a");
+				_request.set_status_code(500);
+				_request._finished = true;
+				return ;
+			}
 		}
 		parse_body(_input);
 	}
 
 	//_request.displayRequest();
 }
-
-// void	Parser::parse_first_line(std::string input) {
-
-// 	std::string first_line = extract_first_line(input);
-// 	vector line = split(first_line, ' ');
-// 	// this could be later a series of other checks
-// 	if (line.size() != 3)
-// 		throw std::exception();
-
-// 	setRequestMethod(line[0]);
-// 	setUri(line[1]);
-// 	setVersion(line[2]);
-
-// 	// std::cout << "size = " << line[0] << std::endl;
-
-// 	print_vector_with_delimiter(line);
-// }
-
-/*
-std::string Parser::extract_first_line(const std::string& line) {
-	size_t pos = line.find("\r\n");
-	if (pos != std::string::npos) {
-		return line.substr(0, pos);
-	}
-	return line;
-}
-*/
 
 void print_vector_with_delimiter(const std::vector<std::string>& vec) {
 	for (size_t i = 0; i < vec.size(); ++i) {
@@ -628,8 +547,9 @@ bool	Parser::is_finished(void) {
 	return (_request._finished);
 }
 
-Request	Parser::get_request(void) const {
-	return (_request);
+Request&&	Parser::move_request(void) {
+	LOG_PARSER("header size when calling get_request: " << _request._headers.size() << std::endl);
+	return (std::move(_request));
 }
 
 

@@ -17,8 +17,6 @@
 #include <unordered_map>
 #include <vector>
 
-using HeadersMap = std::unordered_map<HeaderType, std::string>;
-
 class Request {
 	public:
 		bool								_finished;
@@ -26,16 +24,19 @@ class Request {
 		MethodType							_type;
 		std::string							_uri;
 		std::string							_version;
-		HeadersMap							_headers;
+		std::unordered_map<HeaderType, std::string>	_headers;
 		std::string							_body;
 		size_t								_startBodyIdx;
 		std::vector<std::string>			_bodyTokens;
 		std::string							_response_str;
 		std::pair<int, std::string>			_status_code;
+		std::vector<std::string>			additional_response_headers;
 
 		Request();
 		Request(const Request& old);
+		Request(Request&& old);
 		Request	operator=(const Request& old);
+		Request	operator=(Request&& old);
 		~Request() = default;
 
 		MethodType getMethod() const {

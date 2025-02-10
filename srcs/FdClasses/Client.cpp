@@ -73,14 +73,7 @@ void	Client::_receive_request(void) {
 			write(debug_fd, input.c_str(), input.size());
 			close(debug_fd);
 		}
-		int errorCode;
-		if ((errorCode = _parser.getErrorCode())) {
-			//todo:
-			std::cout << "Parser had Error but handling is not yet implemented\n";
-			// build also response based on the error code
-		} else {
-			_request = _parser.get_request();
-		}
+		_request = _parser.move_request();
 		mode = ClientMode::BUILD_RESPONSE;
 		_send_data.pos = 0;
 		_send_data.response = "";
