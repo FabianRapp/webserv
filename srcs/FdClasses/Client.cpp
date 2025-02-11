@@ -93,8 +93,6 @@ void	Client::execute(void) {
 		set_close();
 		return ;
 	}
-	//std::cout << FT_ANSI_GREEN << name << " (idx " << this->data_idx << "): ";
-	//std::cout << FT_ANSI_RESET;
 	switch (this->mode) {
 		case (ClientMode::RECEIVING): {
 			LOG_FABIAN3("receiving\n");

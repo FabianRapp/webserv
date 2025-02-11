@@ -33,7 +33,7 @@ Response::Response(const ServerConfigFile& configFile, const LocationConfigFile&
 	_cgi_manager(nullptr),
 	_first_iter(true),
 	_dir(nullptr),
-	in_error_handling(false)
+	_in_error_handling(false)
 {
 	setAllowedMethods();
 }
@@ -134,7 +134,7 @@ std::vector<std::string>	Response::_get_dir(void) {
 		return (std::vector<std::string>());
 	}
 	std::vector<std::string>	files;
-	//FT_ASSERT(errno == 0); todo: this somehow triggers with 'operation timed out'
+	//FT_ASSERT(errno == 0); //todo: this somehow triggers with 'operation timed out'
 	//where does that come from
 	//let's come back to this when the genral error handling is better
 	errno = 0;
@@ -430,30 +430,7 @@ void	Response::_handle_put(void) {
 void	Response::load_status_code_response(int code, const std::string& status,
 			std::vector<std::string> extra_headers)
 {
-	if (code == 500) {
-		in_error_handling = true;
-	}
-	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back like cgi manager
-	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + " " + status + "\r\n"
-		+ "Content-Type: text/html\r\n";
-	for (const auto& header: extra_headers) {
-		_response_str += header;
-	}
-	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
-
-	struct stat stats;
-	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
-	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
-	FT_ASSERT(file_fd > 0); //todo: errno check if fd < 0
-	read_fd(file_fd, stats.st_size);
-	_mode = ResponseMode::FINISH_UP;
-}
-
-//todo: use this logic for other status code loaders
-//don't use this if the response needs any custom data besides the status
-//this response the respose
-void	Response::load_status_code_response(int code, const std::string& status) {
-	if (in_error_handling) {
+	if (_in_error_handling) {
 		_response_str = std::string("HTTP/1.1 500 Internal Server Error\r\n"
 			"Content-Type: text/html\r\n");
 		FT_ASSERT(code == 500);
@@ -472,9 +449,53 @@ void	Response::load_status_code_response(int code, const std::string& status) {
 	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + " " + status + "\r\n"
 		+ "Content-Type: text/html\r\n";
 	if (code == 500) {
-		// volatile char *a = 0;
-		// *a;
-		in_error_handling = true;
+		_in_error_handling = true;
+	}
+	for (const auto& header: extra_headers) {
+		_response_str += header;
+	}
+	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back like cgi manager
+	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
+
+	struct stat stats;
+	if (stat(stat_code_path.c_str(), &stats) == -1) {
+		load_status_code_response(500, "Internal Server Error");
+		return ;
+	}
+	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
+	if (file_fd < 0) {
+		load_status_code_response(500, "Internal Server Error");
+		return ;
+	}
+	read_fd(file_fd, stats.st_size);
+	_mode = ResponseMode::FINISH_UP;
+
+}
+
+//todo: use this logic for other status code loaders
+//don't use this if the response needs any custom data besides the status
+//this response the respose
+void	Response::load_status_code_response(int code, const std::string& status) {
+	if (_in_error_handling) {
+		_response_str = std::string("HTTP/1.1 500 Internal Server Error\r\n"
+			"Content-Type: text/html\r\n");
+		FT_ASSERT(code == 500);
+		_body =
+			"<!DOCTYPE html>"
+			"<head>"
+			"    <title>500 Internal Server Error</title>"
+			"</head>"
+			"<body>"
+			"    <h1>500 Internal Server Error</h1>"
+			"</body>"
+			"</html>";
+		_mode = ResponseMode::FINISH_UP;
+		return ;
+	}
+	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + " " + status + "\r\n"
+		+ "Content-Type: text/html\r\n";
+	if (code == 500) {
+		_in_error_handling = true;
 	}
 	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back like cgi manager
 	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
@@ -497,8 +518,12 @@ void	Response::load_status_code_response(int code, const std::string& status) {
 
 
 void	Response::load_status_code_body(int code) {
+	if (_in_error_handling) {
+		load_status_code_response(500, "Internal Server Error");
+		return ;
+	}
 	if (code == 500) {
-		in_error_handling = true;
+		_in_error_handling = true;
 	}
 	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
 	_response_str += "Content-Type: text/html\r\n";
