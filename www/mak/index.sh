@@ -6,24 +6,16 @@
 
 # fi
 
-
-if [ "$mode" != "dark" ]; then
-	mode="bright"
+if [ "$theme" != "dark" ]; then
+	theme="bright"
 	aaa="green"
 fi
 
-if [ "$mode" == "dark" ]; then
+if [ "$theme" == "dark" ]; then
 	aaa="red"
 fi
 
-
-echo $mode
-# Print required HTTP headers
-echo "Content-Type: text/html"
-echo
-
-# HTML output with environment variables
-cat <<EOF
+body=$(cat <<EOF
 <html>
 <head>
     <title>Environment Variables</title>
@@ -36,13 +28,24 @@ cat <<EOF
 <body>
     <h1>Environment Variables</h1>
     <pre>
-EOF
-
-# List all environment variables
-printenv
-
-cat <<EOF
+$(printenv)
     </pre>
 </body>
 </html>
 EOF
+)
+
+echo -e "HTTP/1.1 200 OK\r"
+echo -e "Content-Type: text/html\r"
+echo -e "Content-Length: ${#body}"
+echo -e "Set-Cookie: theme=dark; Max-Age=30\r"
+
+echo -e "\r\n\r"
+
+echo -e "$body"
+
+#echo $theme
+# Print required HTTP headers
+#echo
+
+# HTML output with environment variables
