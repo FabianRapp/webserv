@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Data (GET Method - Plain Text)</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <h1>Test List Directory</h1>
+
+    <button id="fetchButton">List Directory</button>
+
+    <script>
+        document.getElementById('fetchButton').addEventListener('click', function() {
+            // Hardcoded URL to fetch from
+            const url = '../pages/';  // Replace with your specific URL
+
+            fetch(url)
+                .then(response => {
+                    console.log('Response status:', response.status);  // Log the status code
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    window.location.href = '/testingFiles/';  // Replace with your desired redirect URL
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('responseData').textContent = 'An error occurred: ' + error.message;
+                });
+        });
+    </script>
+        <footer>
+            Created by: Maksim Volkmann, Fabian Rapp, Adrian Hernandez
+        </footer>
+</body>
+</html>

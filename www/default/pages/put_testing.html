@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PUT Request</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <h1>Test PUT Request</h1>
+
+    <label for="fileName">File Name:</label>
+    <input type="text" id="fileName" placeholder="Enter file name" required>
+
+    <br><br>
+
+    <label for="fileContent">File Content:</label>
+
+    <textarea id="fileContent" rows="6" cols="40" placeholder="Enter file content"></textarea>
+
+    <br><br>
+
+    <button onclick="sendPutRequest()">Send PUT Request</button>
+
+    <script>
+        function sendPutRequest() {
+            const fileName = document.getElementById("fileName").value;
+            const fileContent = document.getElementById("fileContent").value;
+
+            if (!fileName) {
+                alert("Please enter a file name.");
+                return;
+            }
+
+            fetch(`/texts/${fileName}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "text/plain"
+                },
+                body: fileContent
+            })
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById("response").textContent = "Response: " + data;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById("response").textContent = "Error: " + error;
+            });
+        }
+    </script>
+        <footer>
+            Created by: Maksim Volkmann, Fabian Rapp, Adrian Hernandez
+        </footer>
+</body>
+</html>

@@ -646,6 +646,7 @@ std::string	Response::getExpandedTarget(void) {
 		std::cout << "File exists: " << expandedPath << std::endl;
 	} else if (_request.getMethod() == MethodType::GET) {
 		std::cout << "File does not exist: " << expandedPath << std::endl;
+		// This might need to make a get to the 404 for some cases 
 		load_status_code_response(404, "Not Found");
 		return ("");
 	}

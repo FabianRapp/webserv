@@ -1,0 +1,80 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Data (GET Method - Plain Text)</title>
+</head>
+<body>
+    <h1>Fetch Data from a Specific URL (GET Method - Plain Text)</h1>
+
+    <button id="fetchButton">Fetch Data</button>
+
+    <h3>Response Data:</h3>
+    <pre id="responseData"></pre>
+
+    <script>
+        document.getElementById('fetchButton').addEventListener('click', function() {
+            // URL to fetch from (hardcoded)
+            const url = '/dadasdsad.html';  // Replace with your specific URL
+
+            // Perform GET request (GET is the default for fetch)
+            fetch(url)
+                .then(response => response.text())  // Parsing response as plain text
+                .then(data => {
+                    // Displaying the fetched data in the <pre> tag
+                    document.getElementById('responseData').textContent = data;
+                })
+                .catch(error => {
+                    // Handle any errors
+                    document.getElementById('responseData').textContent = 'Error fetching data: ' + error;
+                });
+        });
+    </script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Data (GET Method - Plain Text)</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <h1>Default Error</h1>
+
+    <button id="fetchButton">Fetch Data</button>
+
+    <script>
+        document.getElementById('fetchButton').addEventListener('click', function() {
+            // URL to fetch from (hardcoded)
+            const url = '/dadasdsad.html';  // Replace with your specific URL
+
+            // Perform GET request (GET is the default for fetch)
+            fetch(url)
+                .then(response => {
+                    console.log('Response status:', response.status);  // This will show the status code
+                    if (response.status === 404) {
+                        document.getElementById('responseData').textContent = 'Error: 404 - Not Found';
+                        throw new Error('404 - Not Found');
+                    }
+                    return response.text();  // Parsing response as plain text if not 404
+                })
+                .then(data => {
+                    // Displaying the fetched data in the <pre> tag
+                    document.getElementById('responseData').textContent = data;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('responseData').textContent = 'An error occurred: ' + error.message;
+                });
+        });
+    </script>
+    <footer>
+       Created by: Maksim Volkmann, Fabian Rapp, Adrian Hernandez
+    </footer>
+</body>
+</html>
+
