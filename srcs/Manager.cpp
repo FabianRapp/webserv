@@ -1,9 +1,19 @@
 #include "../includes/Manager.hpp"
 #include "../includes/ConfigParser/ServerConfigFile.hpp"
 
-DataManager::DataManager(void): config_parser(nullptr), _total_entrys(0), _count(0),
-	cgi_lifetimes(std::chrono::seconds(3)),
-	_consecutive_poll_fails(0)
+
+//maksim delete
+// DataManager::DataManager(void): config_parser(nullptr), _total_entrys(0), _count(0),
+// 	cgi_lifetimes(std::chrono::seconds(3)),
+// 	_consecutive_poll_fails(0)
+// {}
+
+DataManager::DataManager(void):
+		config_parser(nullptr),
+		cgi_lifetimes(std::chrono::seconds(3)),
+		_total_entrys(0),
+		_count(0),
+		_consecutive_poll_fails(0)
 {}
 
 DataManager::~DataManager(void) {

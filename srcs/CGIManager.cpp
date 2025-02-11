@@ -20,8 +20,9 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 	_client(client),
 	_response(response),
 	_main_manager(client->data),
-	_mode(CGI_MODE::INIT_WRITING),
-	_location_cofig(location_config)
+	_location_cofig(location_config),
+	_mode(CGI_MODE::INIT_WRITING)
+
 {
 	int	 old_errno = errno;
 	inputPipe[0] = -1;

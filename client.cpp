@@ -33,7 +33,7 @@ int	main(void) {
 	//	usleep(1000);
 	//}
 	const char				*hostname = "localhost";
-	const int16_t			port = 8080;
+	const int16_t			port = 99;
 	//const char				*hostname = "google.com";
 	//const int16_t			port = 80;
 	const struct hostent	*server = gethostbyname(hostname);
@@ -55,7 +55,7 @@ int	main(void) {
 		.sin_addr = {0},
 		.sin_zero = {0},
 	};
-	memcpy(&server_addr.sin_addr.s_addr, server->h_addr, server->h_length);
+	memcpy(&server_addr.sin_addr.s_addr, server->h_addr, static_cast<size_t>(server->h_length));
 	char				buffer[100000];
 	if (connect(fd, (struct sockaddr *)&server_addr, sizeof server_addr) < 0) {
 		std::cerr << "Error: connect error: " << strerror(errno) << '\n';
@@ -68,7 +68,7 @@ int	main(void) {
 		std::string("POST /here_is_delete_allowed/delete_me.txt HTTP/1.1\r\n")
 		+ "Host: has_delete.com\r\n"
 		+ "Connection: close\r\n"
-		+ "Content-Length: " + std::to_string(body.size()) + "\r\n" 
+		+ "Content-Length: " + std::to_string(body.size()) + "\r\n"
 		+ "\r\n"
 		+ body
 	;
@@ -81,7 +81,7 @@ int	main(void) {
 	//	return (1);
 	//}
 	std::cout << "requst send..\n";
-	int received;
+	ssize_t received;
 
 	/* why does this block if the server does not close the connection? */
 	while ((received = recv(fd, buffer, sizeof(buffer) - 1, 0)) > 0) {

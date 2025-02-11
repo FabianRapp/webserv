@@ -6,11 +6,13 @@
 
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT, "Client"),
+		response(nullptr),
 	mode(ClientMode::RECEIVING),
+
 	_send_data({"", 0}),
-	_last_availability(std::chrono::steady_clock::now()),
 	_parser(input, parent_server->configs),
-	response(nullptr)
+	_last_availability(std::chrono::steady_clock::now())
+
 {
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));

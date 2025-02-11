@@ -44,7 +44,7 @@ public:
 					ssize_t byte_count, std::function<void()> callback);
 	WriteFd*	new_write_fd(Response& response, int fd, const std::string_view& input_data, Client& client,
 					   std::function<void()> callback);
-	CgiTimeouts	cgi_lifetimes;
+	// CgiTimeouts	cgi_lifetimes;
 
 
 	void	set_close(size_t idx);
@@ -62,6 +62,7 @@ public:
 	void	execute_all(void);
 
 	ConfigParser	*config_parser;
+		CgiTimeouts	cgi_lifetimes;
 	size_t		get_total_count(void) const;
 private:
 	size_t	_total_entrys;

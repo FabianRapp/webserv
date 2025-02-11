@@ -6,8 +6,9 @@ WriteFd::WriteFd(DataManager& data, Response& response, const std::string_view& 
 		std::function<void()> completion_callback):
 	BaseFd(data, POLLOUT, "WriteFd"),
 	src(src),
+		pos(0),
 	completion_callback(std::move(completion_callback)),
-	pos(0),
+
 	client(&client),
 	server(client.server),
 	response(response)

@@ -332,7 +332,7 @@ void Parser::addTokens(const std::string& str, const std::string& delimiter) {
 }
 
 void	Parser::checkForChunks(std::vector<std::string>& bodyVector) {
-	size_t		chunkSize;
+	// size_t		chunkSize;
 	std::string	chunk;
 
 	// std::cout << "ENTERED FOR CHECKS" << std::endl;

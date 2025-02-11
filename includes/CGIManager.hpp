@@ -22,8 +22,8 @@ private:
 	Response*			_response;
 	DataManager&		_main_manager;
 	const std::string_view	_input;
-	WriteFd*			_writer;
-	ReadFd*				_reader;
+	// WriteFd*			_writer;
+	// ReadFd*				_reader;
 	pid_t				_pid;
 	const LocationConfigFile&	_location_cofig;
 	enum class CGI_MODE {
