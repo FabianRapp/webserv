@@ -2,6 +2,22 @@
 
 # CGI script to display all environment variables
 
+# if [ "$ID" == "" ]; then
+
+# fi
+
+
+if [ "$mode" != "dark" ]; then
+	mode="bright"
+	aaa="green"
+fi
+
+if [ "$mode" == "dark" ]; then
+	aaa="red"
+fi
+
+
+echo $mode
 # Print required HTTP headers
 echo "Content-Type: text/html"
 echo
@@ -12,7 +28,7 @@ cat <<EOF
 <head>
     <title>Environment Variables</title>
     <style>
-        body { font-family: monospace; margin: 2em; }
+        body { font-family: monospace; margin: 2em; background-color: $aaa;}
         h1 { color: #333; }
         pre { background: #f5f5f5; padding: 1em; border-radius: 5px; }
     </style>

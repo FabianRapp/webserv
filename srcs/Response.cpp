@@ -579,6 +579,7 @@ void	Response::_finish_up(void) {
 		"Connection: close\r\n"
 		"Set-Cookie: theme=dark; Max-Age=30\r\n"
 		"Set-Cookie: name=hi123; Max-Age=30\r\n"
+		"Set-Cookie: mode=dark; Max-Age=30000\r\n"
 		"Set-Cookie: lasntame=kebab; Max-Age=30\r\n"
 		"Content-Length: " + std::to_string(_body.length()) + "\r\n"
 			"\r\n"
