@@ -37,8 +37,8 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		"SCRIPT_NAME=" + path,
 	};
 
-	std::cout << "_client address: " << std::string(inet_ntoa(_client->addr.sin_addr)) << std::endl;
-	std::cout << "_client port: " << std::to_string(ntohs(_client->addr.sin_port)) << std::endl;
+	LOG_MAKSIM("_client address: " << std::string(inet_ntoa(_client->addr.sin_addr)) << std::endl);
+	LOG_MAKSIM("_client port: " << std::to_string(ntohs(_client->addr.sin_port)) << std::endl);
 	// std::cout << "_client port: " << _client.sin_port << std::endl;
 
 	std::string	env_var;
@@ -47,8 +47,8 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 	envCGI_storage.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
 	// envCGI_storage.push_back(std::string("PATH_INFO=") + "");
 	for (const auto& [type, value] : request._headers) {
-		std::cout << "\n";
-		std::cout << FT_ANSI_RED_UNDERLINE << to_string(type) << ": " << FT_ANSI_RESET << FT_ANSI_GREEN_UNDERLINE << value << FT_ANSI_RESET << std::endl;
+		LOG_MAKSIM("\n");
+		LOG_MAKSIM(FT_ANSI_RED_UNDERLINE << to_string(type) << ": " << FT_ANSI_RESET << FT_ANSI_GREEN_UNDERLINE << value << FT_ANSI_RESET << std::endl);
 		if (type == HeaderType::CONTENT_LENGTH
 			|| type == HeaderType::CONTENT_TYPE
 
@@ -150,8 +150,8 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 
 
 	for (std::string& var : envCGI_storage) {
-		std::cout << "\n";
-		std::cout << FT_ANSI_YELLOW_BOLD_UNDERLINE << "ENV VAR: " << var << FT_ANSI_RESET << std::endl;
+		LOG_MAKSIM("\n");
+		LOG_MAKSIM(FT_ANSI_YELLOW_BOLD_UNDERLINE << "ENV VAR: " << var << FT_ANSI_RESET << std::endl);
 		envCGI.push_back(var.c_str());
 	}
 	envCGI.push_back(nullptr);
@@ -259,7 +259,7 @@ void	CGIManager::_init_reading(void) {
 	int	fd_to_read = outputPipe[0];
 	outputPipe[0] = -1;
 	//read_fd will make sure the cgi->execute does not get called unitil the data is read
-	_response->read_fd(fd_to_read, -1);
+	_response->read_fd(fd_to_read, -1, true);
 	_mode = CGI_MODE::FINISHED;
 }
 
@@ -358,7 +358,7 @@ std::string CGIManager::getInterpreter(const std::string& path) {
 		if (access(interpreter.c_str(), X_OK) != 0) {
 			return "";
 		}
-			printCgiRunning();
+			//printCgiRunning();
 		return interpreter;
 	}
 	return "";

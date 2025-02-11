@@ -66,21 +66,36 @@ void	Response::set_mode(ResponseMode mode) {
 // After calling this function the caller should return straight to Client::execute
 // without any more actions besides the following:
 // Assumes the given fd to be valid.
-void	Response::read_fd(int read_fd, ssize_t byte_count) {
+void	Response::read_fd(int read_fd, ssize_t byte_count, bool cgi_output) {
 	FT_ASSERT(read_fd > 0);
 	ClientMode	next_mode = _client_mode;
 	_client_mode = ClientMode::READING_FD;
-	_reader = _server->data.new_read_fd(
-		*this,
-		_body,
-		read_fd,
-		*_client,
-		byte_count,
-		[this, next_mode] () {
-			this->_client_mode = next_mode;
-			this->_reader = nullptr;
-		}
-	);
+	if (!cgi_output) {
+		_reader = _server->data.new_read_fd(
+			*this,
+			_body,
+			read_fd,
+			*_client,
+			byte_count,
+			[this, next_mode] () {
+				this->_client_mode = next_mode;
+				this->_reader = nullptr;
+			}
+		);
+	} else {
+		_response_str = "";
+		_reader = _server->data.new_read_fd(
+			*this,
+			_response_str,
+			read_fd,
+			*_client,
+			byte_count,
+			[this, next_mode] () {
+				this->_client_mode = next_mode;
+				this->_reader = nullptr;
+			}
+		);
+	}
 }
 
 // Use this to write to a pipe or a file.
@@ -202,7 +217,7 @@ void	Response::_handle_get_file(void) {
 	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
 	int	file_fd = open(_path.c_str(), O_CLOEXEC | O_RDONLY);
 	FT_ASSERT(file_fd >0); //todo: errno check if fd < 0
-	read_fd(file_fd, stats.st_size);
+	read_fd(file_fd, stats.st_size, false);
 
 	_mode = ResponseMode::FINISH_UP;
 	_response_str = std::string("HTTP/1.1 200 OK\r\n");
@@ -277,13 +292,10 @@ void	Response::_handle_get(void) {
 			_cgi_manager = new CGIManager(_client, _location_config, this, _path, _request);
 		}
 		if (_cgi_manager->execute()) {
-			_response_str =
-				std::string("HTTP/1.1 200 OK\r\n")
-				+ "Content-Type: text/html\r\n"
-			;
 			delete _cgi_manager;
 			_cgi_manager = nullptr;
-			_mode = ResponseMode::FINISH_UP;
+			//indicate client can delete resposne obj and send response
+			_client_mode = ClientMode::SENDING;
 		}
 	} else {
 		_handle_get_file();
@@ -398,13 +410,10 @@ void	Response::_handle_post(void) {
 			_cgi_manager = new CGIManager(_client, _location_config, this, _path, _request);
 		}
 		if (_cgi_manager->execute()) {
-			_response_str =
-				std::string("HTTP/1.1 200 OK\r\n")
-				+ "Content-Type: text/html\r\n"
-			;
 			delete _cgi_manager;
 			_cgi_manager = nullptr;
-			_mode = ResponseMode::FINISH_UP;
+			//indicate client can delete resposne obj and send response
+			_client_mode = ClientMode::SENDING;
 		}
 	} else {
 		//todo: do we handle it as put or give an error?
@@ -467,7 +476,7 @@ void	Response::load_status_code_response(int code, const std::string& status,
 		load_status_code_response(500, "Internal Server Error");
 		return ;
 	}
-	read_fd(file_fd, stats.st_size);
+	read_fd(file_fd, stats.st_size, false);
 	_mode = ResponseMode::FINISH_UP;
 
 }
@@ -512,7 +521,7 @@ void	Response::load_status_code_response(int code, const std::string& status) {
 		load_status_code_response(500, "Internal Server Error");
 		return ;
 	}
-	read_fd(file_fd, stats.st_size);
+	read_fd(file_fd, stats.st_size, false);
 	_mode = ResponseMode::FINISH_UP;
 }
 
@@ -531,7 +540,7 @@ void	Response::load_status_code_body(int code) {
 	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
 	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
 	FT_ASSERT(file_fd > 0); //todo: errno check if fd < 0
-	read_fd(file_fd, stats.st_size);
+	read_fd(file_fd, stats.st_size, false);
 	_mode = ResponseMode::FINISH_UP;
 }
 

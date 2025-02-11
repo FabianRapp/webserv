@@ -97,7 +97,7 @@ public:
 		void			load_status_code_body(int code);
 
 		void			set_mode(ResponseMode mode);
-		void			read_fd(int read_fd, ssize_t byte_count);
+		void			read_fd(int read_fd, ssize_t byte_count, bool cgi_output);
 		void			write_fd(int write_fd);
 		void			reset_body(void);
 		std::string&&	get_read_fd_data(void);
