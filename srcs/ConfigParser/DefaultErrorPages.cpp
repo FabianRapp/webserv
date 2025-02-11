@@ -1,4 +1,5 @@
 #include "../../includes/ConfigParser/DefaultErrorPages.hpp"
+#include <colors.h>
 
 DefaultErrorPages::DefaultErrorPages() {
 	// 1xx Informational Responses
@@ -108,6 +109,8 @@ void DefaultErrorPages::setErrorPageLink(int err_code, std::string link) {
 
 void DefaultErrorPages::printErrorPages() const {
 	for (const auto& [code, path] : _error_pages) {
-		std::cout << "Error Code " << code << ": " << path << "\n";
+		if( code == 404) {
+		std::cout << FT_ANSI_YELLOW << "Error Code " << code << ": " << path << FT_ANSI_RESET << "\n";
+		}
 	}
 }

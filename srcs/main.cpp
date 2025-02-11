@@ -40,7 +40,10 @@ void	webserv(int ac, char **av) {
 	}
 	all_configs = manager.config_parser->getServers();
 	LOG("config count: " << all_configs.size() << std::endl);
-
+	if (all_configs.size() == 0) {
+		LOG("No empty config, exiting..\n");
+		return ;
+	}
 	std::vector<ServerConfigFile>	matching_ports;
 	while (all_configs.size()) {
 		int	cur_port = all_configs[0].getPort();
@@ -83,13 +86,13 @@ start:
 		errno = 0;
 		webserv(ac, av);
 	} catch (const ConfigParseError& err) {
-		std::cerr << err.what() << "\n";
+		std::cerr << FT_ANSI_RED_BOLD << err.what() << FT_ANSI_RESET << std::endl;
 	} catch (const std::bad_alloc&) {
-		std::cerr << "Bad alloc!\nRestarting servers..\n";
+		std::cerr << FT_ANSI_RED_BOLD << "Bad alloc!\nRestarting servers.." << FT_ANSI_RESET << std::endl;
 		goto start;
 	} catch (const std::ios_base::failure& e) {
-		std::cerr << "Error: " << e.what() << std::endl;
-		std::cerr << "Restarting servers..\n";
+		std::cerr << FT_ANSI_RED_BOLD << "Error: " << e.what() << FT_ANSI_RESET << std::endl;
+		std::cerr << FT_ANSI_YELLOW_BOLD << "Restarting servers.." << FT_ANSI_RESET << std::endl;
 		goto start;
 	}
 	return (0);
