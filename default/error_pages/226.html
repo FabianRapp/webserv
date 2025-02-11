@@ -1,14 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>226 IM Used</title>
-    <link rel="stylesheet" href="./css/style.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>226 - IM Used</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		}
+
+		body {
+			background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+			height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #ffffff;
+		}
+
+		.container {
+			text-align: center;
+			padding: 2rem;
+		}
+
+		.error-code {
+			font-size: 8rem;
+			font-weight: bold;
+			color: #2ecc71;
+			text-shadow: 5px 5px 4px rgba(0, 0, 0, 0.3);
+			margin-bottom: 1rem;
+		}
+
+		.error-message {
+			font-size: 1.5rem;
+			margin-bottom: 2rem;
+			color: #cccccc;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+		}
+
+		.explanation {
+			max-width: 600px;
+			margin: 0 auto 2rem;
+			color: #999999;
+			line-height: 1.6;
+		}
+	</style>
 </head>
 <body>
-    <div class="container">
-        <img src="./img/226.jpg" alt="Error 226 Image">
-    </div>
+	<div class="container">
+		<div class="error-code">226</div>
+		<div class="error-message">IM Used</div>
+		<p class="explanation">
+			The server has fulfilled a GET request for the resource, and the response is a representation of the result of one or more instance manipulations applied to the current instance. This status is used to indicate transformations like compression or delta encoding.
+		</p>
+	</div>
 </body>
 </html>
