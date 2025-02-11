@@ -42,6 +42,7 @@ public:
 	Server*	server;
 	std::string	input;
 	Response*		response;
+	struct sockaddr_in		addr;
 private:
 
 	void			_receive_request(void);

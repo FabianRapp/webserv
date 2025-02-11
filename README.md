@@ -58,3 +58,15 @@ TODO:
 TODO:
 1. PUT file name (do we care if we have different test);
 2. ERROR codes gives wierd files? Something is handleing like it should
+
+
+
+TODO:
+1. change default error pages to have no images and no links.
+	a. server_name validation recheck (has_name.com) does not work for some reason.
+	b. condif error_pages does not work. We need to fix that. Parsing or logic in the DefaultErrorPages.hpp
+2. chunked need to be tested more. need to figure it out how.
+3. CGI remove headers from the body
+4. front-end presentation for eval.
+5. Compile warning.
+6. Prepare cool scripts using CGI (py, php, bash)

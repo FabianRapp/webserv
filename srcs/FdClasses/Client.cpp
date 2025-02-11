@@ -15,7 +15,7 @@ Client::Client(DataManager& data, Server* parent_server):
 	this->server = parent_server;
 	assert(server->is_ready(POLLIN));
 	errno = 0;
-	struct sockaddr_in		addr;
+
 	socklen_t				addr_len = static_cast<socklen_t>(sizeof addr);
 	struct sockaddr			*const addr_ptr =
 		reinterpret_cast<struct sockaddr *>(&addr);

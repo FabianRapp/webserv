@@ -472,6 +472,8 @@ void	Response::load_status_code_response(int code, const std::string& status) {
 	_response_str = std::string("HTTP/1.1 ") + std::to_string(code) + " " + status + "\r\n"
 		+ "Content-Type: text/html\r\n";
 	if (code == 500) {
+		// volatile char *a = 0;
+		// *a;
 		in_error_handling = true;
 	}
 	_client_mode = ClientMode::BUILD_RESPONSE; // in case this was called from other call back like cgi manager
@@ -479,11 +481,13 @@ void	Response::load_status_code_response(int code, const std::string& status) {
 
 	struct stat stats;
 	if (stat(stat_code_path.c_str(), &stats) == -1) {
+		LOG("stat on " << stat_code_path << " failed!\n");
 		load_status_code_response(500, "Internal Server Error");
 		return ;
 	}
 	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
 	if (file_fd < 0) {
+		LOG("open on " << stat_code_path << " failed!\n");
 		load_status_code_response(500, "Internal Server Error");
 		return ;
 	}

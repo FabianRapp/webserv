@@ -30,20 +30,28 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 	outputPipe[1] = -1;
 	errno = 0;
 	envCGI_storage = {
-		//"REQUEST_METHOD=" + to_string(request._type),
+		"REQUEST_METHOD=" + to_string(request._type),
+		"REMOTE_ADDR=" + std::string(inet_ntoa(_client->addr.sin_addr)),
 		//"CONTENT_LENGTH=" + std::to_string(request._body.size()),
 		//"CONTENT_TYPE=application/x-www-form-urlencoded",
 		"SCRIPT_NAME=" + path,
 	};
+
+	std::cout << "_client address: " << std::string(inet_ntoa(_client->addr.sin_addr)) << std::endl;
+	std::cout << "_client port: " << std::to_string(ntohs(_client->addr.sin_port)) << std::endl;
+	// std::cout << "_client port: " << _client.sin_port << std::endl;
+
 	std::string	env_var;
-	env_var = "REQUEST_METHOD=" + to_string(request._type);
-	envCGI_storage.push_back(env_var);
+	// env_var = "REQUEST_METHOD=" + to_string(request._type);
+	// envCGI_storage.push_back(env_var);
 	envCGI_storage.push_back(std::string("SERVER_PROTOCOL=HTTP/1.1"));
-	envCGI_storage.push_back(std::string("PATH_INFO=") + "");
+	// envCGI_storage.push_back(std::string("PATH_INFO=") + "");
 	for (const auto& [type, value] : request._headers) {
-		// std::cout << FT_ANSI_RED_UNDERLINE "TYPE: "<< to_string(type) << FT_ANSI_RESET << FT_ANSI_GREEN_UNDERLINE "VALUE: "  << value << FT_ANSI_RESET << std::endl;
+		std::cout << "\n";
+		std::cout << FT_ANSI_RED_UNDERLINE << to_string(type) << ": " << FT_ANSI_RESET << FT_ANSI_GREEN_UNDERLINE << value << FT_ANSI_RESET << std::endl;
 		if (type == HeaderType::CONTENT_LENGTH
 			|| type == HeaderType::CONTENT_TYPE
+
 		){
 			env_var = to_string(type) + "=" + value;
 		} else {
@@ -52,23 +60,18 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		envCGI_storage.push_back(env_var);
 	}
 
+
+// name = name + ": " + std::string(inet_ntoa(addr.sin_addr)) + "::" + std::to_string(ntohs(addr.sin_port));
 // envCGI_storage = {
-// 	// The HTTP method used for the request (e.g., GET, POST, PUT, DELETE).
-// 	static_cast<const char*>(("REQUEST_METHOD=" + to_string(request._type)).c_str()),
 
 
-// 	// The virtual path to the script being executed.
-// 	// static_cast<const char*>("SCRIPT_NAME=/cgi-bin/script.cgi"),
-// 	static_cast<const char*>((("SCRIPT_NAME=" + path).c_str())),
+
 
 // 	// The extra path information provided in the URL after the script name.
 // 	static_cast<const char*>("PATH_INFO=/extra/path/info"),
 
 // 	// The physical file system path corresponding to PATH_INFO.
 // 	static_cast<const char*>("PATH_TRANSLATED=/var/www/html/extra/path/info"),
-
-// 	// The full URI of the current request, including query strings.
-// 	static_cast<const char*>("REQUEST_URI=/cgi-bin/script.cgi?name=value"),
 
 // 	// The query string part of the URL (everything after the `?` in the URL).
 // 	static_cast<const char*>("QUERY_STRING=name=value"),
@@ -85,8 +88,7 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 // 	// The protocol and version used for the request (e.g., HTTP/1.1).
 // 	static_cast<const char*>("SERVER_PROTOCOL=HTTP/1.1"),
 
-// 	// The name and version of your web server software.
-// 	static_cast<const char*>("SERVER_SOFTWARE=CustomWebServer/1.0"),
+
 
 // 	// The CGI specification version supported by the server (e.g., CGI/1.1).
 // 	static_cast<const char*>("GATEWAY_INTERFACE=CGI/1.1"),
@@ -99,12 +101,6 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 
 // 	// The port number from which the client made the request.
 // 	static_cast<const char*>("REMOTE_PORT=54321"),
-
-// 	// If authentication is required, this specifies the authentication method used (e.g., Basic).
-// 	static_cast<const char*>("AUTH_TYPE=Basic"),
-
-// 	// If authentication is required, this specifies the authenticated username.
-// 	static_cast<const char*>("REMOTE_USER=username"),
 
 // 	// If RFC 931 identification is supported, this specifies the remote username for logging purposes.
 // 	static_cast<const char*>("REMOTE_IDENT=user_identification"),
@@ -123,12 +119,6 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 
 // 	// If SSL is enabled, this indicates whether HTTPS is being used ("on" or "off").
 // 	static_cast<const char*>("HTTPS=off"),  // Use "on" if HTTPS is enabled.
-
-// 	// If SSL is enabled, this specifies the protocol version used (e.g., TLSv1.3).
-// 	static_cast<const char*>("SSL_PROTOCOL=TLSv1.3"),  // Only relevant if HTTPS is on.
-
-// 	// If SSL is enabled, this specifies the cipher used for encryption.
-// 	static_cast<const char*>("SSL_CIPHER=AES256-GCM-SHA384"),  // Only relevant if HTTPS is on.
 
 // 	// Absolute path to your web server's document root directory.
 // 	static_cast<const char*>("DOCUMENT_ROOT=/var/www/html"),
