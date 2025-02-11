@@ -61,6 +61,7 @@ class Response {
 		std::string_view		_fd_write_data;
 		bool					_first_iter;
 		DIR*					_dir;
+		bool					_in_error_handling;
 
 
 	void						_handle_get_moved(const std::string& new_loc, int status);
@@ -79,7 +80,6 @@ class Response {
 
 	void	_finish_up(void);
 public:
-	bool	in_error_handling;
 		Response () = delete;
 		Response(const ServerConfigFile& configFile, const LocationConfigFile& locationConfig,
 			const Request& request,Client& client, ClientMode& client_mode);
