@@ -10,6 +10,7 @@
 #include <sys/poll.h>
 #include <arpa/inet.h>
 #include <unordered_map>
+#include <CookieManager.hpp>
 
 #ifndef REQUEST_QUE_SIZE
 # define REQUEST_QUE_SIZE 10
@@ -31,6 +32,7 @@ public:
 	//only set panic from manger(when detecting a server closing it sets it to panic)
 	//use start_panic instead
 	bool	panic;
+	CookieManager	cookie_manager;
 private:
 	std::unordered_map<unsigned long, std::string>	_codes;
 };

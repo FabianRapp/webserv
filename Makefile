@@ -41,6 +41,7 @@ SRCS := main.cpp \
 		StringArray.cpp \
 		CGIManager.cpp \
 		CgiTimeouts.cpp \
+		CookieManager.cpp \
 
 
 SRCS := $(SRCS:%=$(SRCS_DIR)%)

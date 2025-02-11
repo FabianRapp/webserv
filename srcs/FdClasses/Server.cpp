@@ -61,6 +61,7 @@ Server::~Server(void) {
 }
 
 void	Server::execute(void) {
+	cookie_manager.remove_expired_cookies();
 	//todo: implement a very basic rejection response if there are too many clients
 	if (!is_ready(POLLIN) || data.get_count() > 500) {
 		return ;

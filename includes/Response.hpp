@@ -86,7 +86,8 @@ public:
 		~Response();
 		Response operator=(const Response& old);
 
-		std::string&&	get_str_response(void);
+		std::string&&	move_str_response(void);
+		const std::string&	get_str_response(void) const;
 		WriteFd*&		get_writer(void);
 		CGIManager*&	get_cgi_manger(void);
 

@@ -16,6 +16,7 @@
 CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config,
 		Response* response, std::string path, const Request& request):
 	path(path),
+	_request(request),
 	request_body(request._body),
 	_client(client),
 	_response(response),
@@ -130,21 +131,23 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 
 
 	if (request._headers.find(HeaderType::COOKIE) != request._headers.end()) {
-
-		//std::cout << std::string(request._headers[HeaderType::HOST]);
-		//std::string	request_cookies_val = "name=value; name2=value2; name3=value3";
 		const std::string&	request_cookies_val = request._headers.at(HeaderType::COOKIE);
 		Line	key_vals(request_cookies_val, "; ");
-		int i = 0;
+		int i = 0;//i is to tix a bug in Line class
 		for (auto var : key_vals) {
 			if (i++ && !var.empty()) {
 				var = var.substr(1, var.size() - 1);
 			}
-			/*todo: verification
-			if (cookie_data_structure.find(var)) {
-			*/
+			size_t eq_pos = var.find("=");
+			if (eq_pos == std::string::npos) {
+				continue ;
+			}
+			std::string	var_name = var.substr(0, eq_pos);
+			if (_client->server->cookie_manager.valid_cookie(var_name, request)) {
 				envCGI_storage.push_back(var);
-			//}
+			} else {
+				LOG(FT_ANSI_RED "Cookie '" << var << "' was not accepted\n" FT_ANSI_RESET);
+			}
 		}
 	}
 
@@ -156,7 +159,6 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		envCGI.push_back(var.c_str());
 	}
 	envCGI.push_back(nullptr);
-
 
 	if (!isCGI(path, _location_cofig)) {
 		_client->response->load_status_code_response(500, "Internal Server Error");
@@ -281,9 +283,13 @@ void	CGIManager::_init_writing(void) {
 	_mode = CGI_MODE::INIT_READING;
 }
 
-CGIManager::~CGIManager(void) {
-	std::cout << "cgi manager destructor\n";
+void	CGIManager::_parse_output(void) {
+	Server*	server = _client->server;
+	server->cookie_manager.add_cookies(_response->get_str_response(), _request);
+	server->cookie_manager.print_cookies();
+}
 
+CGIManager::~CGIManager(void) {
 	if (outputPipe[0] != -1) {
 		ft_close(outputPipe[0]);
 	}
@@ -303,10 +309,9 @@ bool	CGIManager::execute() {
 	if (exit_) {
 		return (false);
 	}
-	bool	debug = true;
+	bool	debug = false;
 	if (debug) {
 		std::cout << "cgi::execute: " << std::endl;;
-
 	}
 	switch (_mode) {
 		case (CGI_MODE::PASS):
@@ -323,6 +328,7 @@ bool	CGIManager::execute() {
 			_init_reading();
 			break ;
 		case (CGI_MODE::FINISHED):
+			_parse_output();
 			if (debug) std::cout << "finished\n";
 			return (true);
 	}

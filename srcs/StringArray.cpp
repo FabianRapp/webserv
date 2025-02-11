@@ -127,7 +127,7 @@ std::ostream	&operator<<(std::ostream &output, const StringArray &arr) {
 }
 
 //too: catch line exceptions
-RequestArray::RequestArray(const String& input):
+RequestArray::RequestArray(String& input):
 	std::vector<Line>(),
 	_full_input(input)
 {
@@ -143,6 +143,12 @@ RequestArray::RequestArray(const String& input):
 		std::cout << "could not find stopDl" << std::endl;
 		throw (StringArray::NotTerminated());
 	}
+	//if (input.find("\r\n") != std::string::npos) {
+	//	ssize_t	end_first_line = static_cast<ssize_t>(input.find("\r\n"));
+	//	std::transform(input.begin() + end_first_line, input.begin() + static_cast<ssize_t>(end), input.begin(),
+	//		[](unsigned char c) { return (std::tolower(c));});
+
+	//}
 
 	str = input.substr(start, end);
 
