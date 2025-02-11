@@ -149,9 +149,6 @@ std::vector<std::string>	Response::_get_dir(void) {
 		return (std::vector<std::string>());
 	}
 	std::vector<std::string>	files;
-	//FT_ASSERT(errno == 0); //todo: this somehow triggers with 'operation timed out'
-	//where does that come from
-	//let's come back to this when the genral error handling is better
 	errno = 0;
 	struct dirent	*dir_data = readdir(_dir);
 	while (dir_data != NULL) {
@@ -213,10 +210,15 @@ void	Response::_handle_auto_index(std::vector<std::string>&files) {
 void	Response::_handle_get_file(void) {
 	struct stat stats;
 
-	std::cout << "B: " << _path << "\n";
-	FT_ASSERT(stat(_path.c_str(), &stats) != -1);
+	if (stat(_path.c_str(), &stats) == -1) {
+		load_status_code_response(500, "Internal Server Error");
+		return ;
+	}
 	int	file_fd = open(_path.c_str(), O_CLOEXEC | O_RDONLY);
-	FT_ASSERT(file_fd >0); //todo: errno check if fd < 0
+	if (file_fd < 0) {
+		load_status_code_response(500, "Internal Server Error");
+		return ;
+	}
 	read_fd(file_fd, stats.st_size, false);
 
 	_mode = ResponseMode::FINISH_UP;
@@ -477,7 +479,6 @@ void	Response::load_status_code_response(int code, const std::string& status,
 
 }
 
-//todo: use this logic for other status code loaders
 //don't use this if the response needs any custom data besides the status
 //this response the respose
 void	Response::load_status_code_response(int code, const std::string& status) {
@@ -521,7 +522,6 @@ void	Response::load_status_code_response(int code, const std::string& status) {
 	_mode = ResponseMode::FINISH_UP;
 }
 
-
 void	Response::load_status_code_body(int code) {
 	if (_in_error_handling) {
 		load_status_code_response(500, "Internal Server Error");
@@ -533,15 +533,20 @@ void	Response::load_status_code_body(int code) {
 	std::string stat_code_path = _config.getErrorPages().getErrorPageLink(code);
 	_response_str += "Content-Type: text/html\r\n";
 	struct stat stats;
-	FT_ASSERT(stat(stat_code_path.c_str(), &stats) != -1);
+	if (stat(stat_code_path.c_str(), &stats) == -1) {
+		load_status_code_response(500,"Internal Server Error");
+		return ;
+	}
 	int	file_fd = open(stat_code_path.c_str(), O_CLOEXEC | O_RDONLY);
-	FT_ASSERT(file_fd > 0); //todo: errno check if fd < 0
+	if (file_fd < 0) {
+		load_status_code_response(500,"Internal Server Error");
+		return ;
+	}
 	read_fd(file_fd, stats.st_size, false);
 	_mode = ResponseMode::FINISH_UP;
 }
 
-//todo: do we want delete to delte recursivly?
-//if so change to std::filesystem::remove_all(_path) for directories
+//change to std::filesystem::remove_all(_path) to remove directories recursivly
 //currently it gives a 409 for not empty directories
 void	Response::_handle_delete(void) {
 	if (std::remove(_path.c_str()) == 0) {

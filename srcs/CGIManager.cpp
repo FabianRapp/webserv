@@ -249,13 +249,10 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 
 void	CGIManager::_child_dup_fail(void) {
 	exit_ = true;
-	//exit(1);
 }
 
 void	CGIManager::_child_exec_fail(void) {
 	exit_ = true;
-	//todo: execve(cgi to read 500 code);
-	//exit(1);
 }
 
 void	CGIManager::_init_reading(void) {
