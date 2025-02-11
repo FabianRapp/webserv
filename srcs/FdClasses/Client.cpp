@@ -106,7 +106,7 @@ void	Client::execute(void) {
 			}
 			response->execute();
 			if (mode == ClientMode::SENDING) {
-				_send_data.response = response->get_str_response();
+				_send_data.response = response->move_str_response();
 				_send_data.pos = 0;
 				delete response;
 				response = nullptr;

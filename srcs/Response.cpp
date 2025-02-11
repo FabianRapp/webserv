@@ -245,11 +245,9 @@ void	Response::_handle_get_moved(const std::string& new_loc, int status) {
 
 bool	Response::_has_index(std::vector<std::string>& files, std::string& index_file) {
 	const std::string&	index_name = _location_config.getIndexFile();
-	std::cout << "index name: " << index_name << std::endl;
 	for (const auto& file : files) {
 		if (file == index_name) {
 			index_file = _path + index_name;
-			std::cout << index_file;
 			return (true);
 		}
 	}
@@ -257,10 +255,8 @@ bool	Response::_has_index(std::vector<std::string>& files, std::string& index_fi
 }
 
 void	Response::_handle_get(void) {
-	std::cout << "path: " << _path << std::endl;
 	if (std::filesystem::is_directory(_path)) {
 	 	if (_request._uri.back() != '/') {
-			std::cout << "MOVED\n";
 			_handle_get_moved(_request._uri + "/", 301);
 			return ;
 		}
@@ -755,8 +751,12 @@ std::string	Response::getExpandedTarget(void) {
 	return (expandedPath);
 }
 
-std::string&&	Response::get_str_response(void) {
+std::string&&	Response::move_str_response(void) {
 	return (std::move(_response_str));
+}
+
+const std::string&	Response::get_str_response(void) const {
+	return (_response_str);
 }
 
 CGIManager*&	Response::get_cgi_manger(void) {

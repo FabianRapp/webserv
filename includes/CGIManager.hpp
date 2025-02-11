@@ -15,6 +15,7 @@ class ReadFd;
 class CGIManager {
 private:
 	std::string path;
+	const Request&		_request;
 	const std::string& request_body;
 	std::vector<std::string> envCGI_storage;
 	std::vector<const char*> envCGI; // Use vector of char* for environment variables
@@ -36,6 +37,7 @@ private:
 	std::string getInterpreter(const std::string& path);
 	void		_init_reading(void);
 	void		_init_writing(void);
+	void		_parse_output(void);
 	void		_child_dup_fail(void);
 	void		_child_exec_fail(void);
 

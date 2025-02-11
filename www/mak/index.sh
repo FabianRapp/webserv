@@ -37,8 +37,11 @@ EOF
 
 echo -e "HTTP/1.1 200 OK\r"
 echo -e "Content-Type: text/html\r"
-echo -e "Content-Length: ${#body}"
-echo -e "Set-Cookie: theme=dark; Max-Age=30\r"
+echo -e "Content-Length: ${#body}\r"
+#echo -e "Set-Cookie: theme=dark; Max-Age=10\r"
+echo -e "Set-Cookie: theme=dark;\r"
+#echo -e "Set-Cookie: 1=a; Max-Age=50\r"
+#echo -e "Set-Cookie: 2=b; Max-Age=60\r"
 
 echo -e "\r\n\r"
 

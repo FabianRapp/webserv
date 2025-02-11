@@ -36,7 +36,7 @@ class RequestArray: public std::vector<Line> {
 	String				_full_input;
 public:
 	RequestArray(void) = default;
-	RequestArray(const String& input);
+	RequestArray(String& input);
 	RequestArray(const RequestArray& old);
 	~RequestArray(void) = default;
 	RequestArray	operator=(const RequestArray& old);
