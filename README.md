@@ -62,11 +62,16 @@ TODO:
 
 
 TODO:
-1. change default error pages to have no images and no links.
-	a. server_name validation recheck (has_name.com) does not work for some reason.
-	b. condif error_pages does not work. We need to fix that. Parsing or logic in the DefaultErrorPages.hpp
+<!-- 1. change default error pages to have no images and no links. -->
+	<!-- a. server_name validation recheck (has_name.com) does not work for some reason. -->
+	<!-- b. condif error_pages does not work. We need to fix that. Parsing or logic in the DefaultErrorPages.hpp -->
 2. chunked need to be tested more. need to figure it out how.
-3. CGI remove headers from the body
+
 4. front-end presentation for eval.
 5. Compile warning.
 6. Prepare cool scripts using CGI (py, php, bash)
+7. Cookies
+8. go throught evaluation sheet
+9. check for leaks (valgrind)
+10. try to brake the webserver somehow
+12. try to break config file
