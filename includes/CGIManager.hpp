@@ -12,6 +12,13 @@ class DataManager;
 class WriteFd;
 class ReadFd;
 
+class ChildError: public std::runtime_error{
+public:
+	ChildError(const std::string& msg): std::runtime_error(msg){}
+};
+
+
+
 class CGIManager {
 private:
 	std::string path;
@@ -38,8 +45,6 @@ private:
 	void		_init_reading(void);
 	void		_init_writing(void);
 	void		_parse_output(void);
-	void		_child_dup_fail(void);
-	void		_child_exec_fail(void);
 
 	//void	_write_fd(int write_fd, bool close_fd);
 	std::string	_cgiOutput;

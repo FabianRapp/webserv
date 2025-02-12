@@ -11,7 +11,6 @@ BaseFd::BaseFd(DataManager& data, short poll_events, const std::string& name):
 }
 
 BaseFd::~BaseFd(void) {
-	//data.set_close(data_idx);
 }
 
 //be very carefull with calling this outside of the object itself
@@ -28,7 +27,6 @@ void	BaseFd::_set_non_blocking(void) {
 	errno = 0;
 	//int	flags = O_NONBLOCK | FD_CLOEXEC | fcntl(fd, F_GETFL, 0);
 	int	flags = O_NONBLOCK | FD_CLOEXEC;
-	//int	flags = O_NONBLOCK;
 	fcntl(fd, F_SETFL, flags);
 	if (errno) {
 		std::cerr << "Error: fcntl: set non blocking: " << strerror(errno) << '\n';

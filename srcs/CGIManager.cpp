@@ -216,22 +216,19 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		outputPipe[0] = -1;
 
 		if (dup2(inputPipe[0], STDIN_FILENO) < 0) {
-			_child_dup_fail();
-			return ;
+			throw (ChildError("dup failed"));
 		}
 		ft_close(inputPipe[0]);
 		inputPipe[0] = -1;
 
 		if (dup2(outputPipe[1], STDOUT_FILENO) < 0) {
-			_child_dup_fail();
-			return ;
+			throw (ChildError("dup failed"));
 		}
 		ft_close(outputPipe[1]);
 		outputPipe[1] = -1;
 
 		execve(args[0], args, (char**)(envCGI.data()));
-		_child_exec_fail();
-		return ;
+		throw (ChildError("exceve failed"));
 	} else { // Parent process
 
 		LOG(FT_ANSI_GREEN "Created CGI child process with pid " << _pid
@@ -245,14 +242,6 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 
 	}
 	errno = old_errno;
-}
-
-void	CGIManager::_child_dup_fail(void) {
-	exit_ = true;
-}
-
-void	CGIManager::_child_exec_fail(void) {
-	exit_ = true;
 }
 
 void	CGIManager::_init_reading(void) {

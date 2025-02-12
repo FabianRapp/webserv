@@ -129,6 +129,8 @@ start:
 		std::cerr << FT_ANSI_RED_BOLD << "Error: " << e.what() << FT_ANSI_RESET << std::endl;
 		std::cerr << FT_ANSI_YELLOW_BOLD << "Restarting servers.." << FT_ANSI_RESET << std::endl;
 		goto start;
+	} catch (const ChildError&) {
+		return (1);
 	}
 	LOG("exiting..\n");
 	return (0);
