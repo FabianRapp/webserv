@@ -18,50 +18,36 @@ public:
 
 class ConfigParser {
 private:
-	std::vector<ServerConfigFile> _servers; // List of parsed servers
+
+	std::vector<ServerConfigFile> _servers;
 	void validateServerConfig(const ServerConfigFile& server) const;
-	// Helper methods
 	std::string trimWhiteSpace(const std::string& str) const;
+	std::string sanitizeLine(const std::string& line) const;
+	std::vector<std::string> splitByWhitespace(const std::string& str) const;
+	void validateServerName(const std::string& name);
+	void validatePort(const std::string& line, ServerConfigFile& current_server);
+	void validateRoot(const std::string& value, bool is_server_block);
 	bool isValidLocationPath(const std::string& path) const;
+	void validateCgiExtension(const std::string& ext);
+	void validateExecutablePath(const std::string& path);
 	void parseFile(const std::string& config_file);
 	void parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count);
 	void parseLocationBlock(std::ifstream& file, LocationConfigFile& current_location, int& bracket_count);
-
-	void validateCgiExtension(const std::string& ext);
-	void validateExecutablePath(const std::string& path);
-
-	//testing templates for validation. Need to recheck todo
 
 	template <typename T>
 	void validateMethods(const std::string& methods_str, T& config_object);
 
 	template <typename T>
-	void validateIndex(const std::string& value, T& config_object);
-
-	template <typename T>
 	void handleCgiPath(const std::string& line, T& config);
 
 	template <typename T>
-	void	validateAutoIndex(const std::string& value, T& config_object);
+	void validateIndex(const std::string& value, T& config_object);
 
 	template <typename T>
 	void validateClientBodySize(const std::string& value, T& config_object);
 
-
-
-	void validatePort(const std::string& line, ServerConfigFile& current_server);
-
-	// void validateRoot(const std::string& value, const std::string& directive_name);
-	void validateRoot(const std::string& value, const std::string& directive_name, bool is_server_block);
-
-	// void validateClientBodySize(const std::string& value);
-
-
-	std::string sanitizeLine(const std::string& line) const;
-
-	std::vector<std::string> splitByWhitespace(const std::string& str) const;
-
-	void validateServerName(const std::string& name);
+	template <typename T>
+	void validateAutoIndex(const std::string& value, T& config_object);
 
 public:
 	ConfigParser();
@@ -111,6 +97,7 @@ void ConfigParser::handleCgiPath(const std::string& line, T& config_object) {
 	validateExecutablePath(path);
 
 	config_object.addCgiExtension(ext, path);
+	std::cout << "ext: " << ext << "path: " << path << std::endl;
 }
 
 template <typename T>
@@ -122,7 +109,8 @@ void ConfigParser::validateIndex(const std::string& value, T& config_object) {
 	}
 
 	if (!std::regex_match(value, index_regex)) {
-		throw ConfigParseError("ERROR: Invalid index file name: " + value + ". File name must contain only letters, numbers, '_', '-', and optionally a single '.'");
+		throw ConfigParseError("ERROR: Invalid index file name: " + value
+			+ ". File name must contain only letters, numbers, '_', '-', and optionally a single '.'");
 	}
 
 	config_object.setIndexFile(value);
@@ -142,10 +130,11 @@ void ConfigParser::validateClientBodySize(const std::string& value, T& config_ob
 	}
 
 	int size = std::stoi(value);
-	const int MAX_SIZE = 1024 * 1024 * 1024; // 1 GB
+	const int MAX_SIZE = 1024 * 1024 * 1024;
 
 	if (size > MAX_SIZE) {
-		throw (ConfigParseError("ERROR: Invalid request_body_size value: " + value + ". Maximum allowed is " + std::to_string(MAX_SIZE) + " bytes."));
+		throw (ConfigParseError("ERROR: Invalid request_body_size value: " + value
+			+ ". Maximum allowed is " + std::to_string(MAX_SIZE) + " bytes."));
 	}
 	config_object.setRequestBodySize(size);
 }

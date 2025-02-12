@@ -49,7 +49,7 @@ void	webserv(int ac, char **av) {
 		int	cur_port = all_configs[0].getPort();
 		for (size_t i = 0; i < all_configs.size(); ) {
 			if (all_configs[i].getPort() == cur_port) {
-				all_configs[i].printServer();
+				// all_configs[i].printServer();
 				matching_ports.push_back(all_configs[i]);
 				all_configs.erase(all_configs.begin() + static_cast<ssize_t>(i));
 			} else {

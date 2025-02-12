@@ -47,8 +47,6 @@ public:
 	int getRequestBodySize() const;
 	const std::map<std::string, std::string>& getCgiExtensions() const;
 
-	// void validateMethods() const;
-
 	void printLocation() const;
 
 };

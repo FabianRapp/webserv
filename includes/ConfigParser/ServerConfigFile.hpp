@@ -21,7 +21,6 @@ private:
 	bool _autoindex = false;
 	int _request_body_size = -1;
 	std::map<std::string, std::string> _cgi_map;
-	// std::map<int, std::string> _error_pages;
 	std::string _index_file = "index.html";
 	DefaultErrorPages _error_pages;
 	std::vector<LocationConfigFile> _locations;
@@ -32,28 +31,18 @@ public:
 
 	// setters
 	void setPort(int port);
-	void setMethods(bool get, bool post, bool del, bool put);
-	// void setServerNames(const std::string& server_names);
 	void addServerName(const std::string& _server_names);
+	void setMethods(bool get, bool post, bool del, bool put);
+	void setAutoIndex(bool autoindex);
 	void setRoot(const std::string& root);
 	void setIndexFile(const std::string index_file);
-
-	void setAutoIndex(bool autoindex);
-	// void addErrorPage(int err_code, const std::string& path);
 	void addErrorPage(int err_code, const std::string& path);
 	void addLocation(const LocationConfigFile& location);
 	void setRequestBodySize(int size);
 	void addCgiExtension(const std::string& ext, const std::string& path_to_binary);
-
-
 	const LocationConfigFile&	getDefaultLocation(void) const;
 
-	// In ServerConfigFile class declaration (header)
-
-	// LocationConfigFile& getDefaultLocation() { return _defaultLocation; }
-	// const LocationConfigFile& getDefaultLocation() const { return _defaultLocation; }
-
-	// const std::vector<std::string>& getServerNames() const;
+	// getters
 	int getPort() const;
 	const std::vector<std::string>& getServerNames() const;
 	bool isGetAllowed() const;
@@ -61,17 +50,15 @@ public:
 	bool isDeleteAllowed() const;
 	bool isPutAllowed() const;
 	const std::string& getRoot() const;
-	// const std::map<int, std::string>& getErrorPages() const;
 	bool getAutoIndex() const;
 	const DefaultErrorPages& getErrorPages() const;
 	const std::vector<LocationConfigFile>& getLocations() const;
 	int getRequestBodySize() const;
 	const std::map<std::string, std::string>& getCgiExtensions() const;
 
-	LocationConfigFile& setDefaultLocation();
-
 	void printServer() const;
 
+	LocationConfigFile& setDefaultLocation();
 };
 
 #endif

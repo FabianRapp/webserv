@@ -15,22 +15,10 @@ std::string	toggle_path(std::string path) {
 	}
 }
 
+// setters
 void ServerConfigFile::setPort(int port) {
 	_port = port;
 }
-
-// void ServerConfigFile::setServerNames(const std::string& server_names) {
-// 	Line	names(server_names, " ");
-// 	_server_names = names;
-
-// 	for (auto& name : _server_names) {
-// 		std::transform(name.begin(), name.end(), name.begin(),
-// 			[](unsigned char c) {
-// 				return (std::tolower(c));
-// 			}
-// 		);
-// 	}
-// }
 
 void ServerConfigFile::addServerName(const std::string& serverName) {
 	_server_names.push_back(serverName);
@@ -42,8 +30,6 @@ void ServerConfigFile::setMethods(bool get, bool post, bool del, bool put) {
 	_post_header = post;
 	_delete_header = del;
 	_put_header = put;
-
-	// validateMethods();
 }
 
 void ServerConfigFile::setAutoIndex(bool autoindex) {
@@ -58,18 +44,14 @@ void ServerConfigFile::setIndexFile(const std::string index_file) {
 	_index_file = index_file;
 }
 
-// void ServerConfigFile::addErrorPage(int error_code, const std::string& path) {
-// 	_error_pages[error_code] = path;
-// }
-
 void ServerConfigFile::addErrorPage(int err_code, const std::string& path) {
 	// Check if the file exists
 	//todo: need to add full path to the file.
 	if (std::filesystem::exists(path)) {
 		_error_pages.setErrorPageLink(err_code, path); // Replace default error page link
-		std::cout << "Replaced default error page for code " << err_code << " with " << path << "\n";
+		std::cout << "Replaced default error page for code 333- " << err_code << " with " << path << "\n";
 	} else {
-		std::cerr << "Error: File does not exist at path: " << path << "\n";
+		std::cerr << "Error: File does not exist at path: 444- " << path << "\n";
 	}
 }
 
@@ -82,40 +64,14 @@ void ServerConfigFile::setRequestBodySize(int size) {
 }
 
 void ServerConfigFile::addCgiExtension(const std::string& ext, const std::string& path_to_binary) {
-	// Validate extension format
-	if (ext.empty() || ext[0] != '.') {
-		throw std::invalid_argument("CGI extension must start with '.'");
-	}
-
-	// Validate allowed characters in extension
-	const std::string allowed_chars = "abcdefghijklmnopqrstuvwxyz_";
-	if (ext.substr(1).find_first_not_of(allowed_chars) != std::string::npos) {
-		throw std::invalid_argument("Invalid CGI extension: " + ext + " !");
-	}
-
-	// Validate binary path format
-	if (path_to_binary.empty() || path_to_binary[0] != '/' ||
-		path_to_binary.find("..") != std::string::npos) {
-		throw std::invalid_argument("Invalid CGI binary path: " + path_to_binary);
-	}
-
-	// Validate binary is executable
-	if (access(path_to_binary.c_str(), X_OK) != 0) {
-		throw std::runtime_error("CGI binary not executable: " + path_to_binary);
-	}
 
 	_cgi_map[ext] = path_to_binary;
 }
 
-
-// Getters
+// getters
 int ServerConfigFile::getPort() const {
 	return _port;
 }
-
-// const std::vector<std::string>& ServerConfigFile::getServerNames() const {
-// 	return _server_names;
-// }
 
 const LocationConfigFile&	ServerConfigFile::getDefaultLocation(void) const {
 	return _defaultLocation;
@@ -149,10 +105,6 @@ const std::string& ServerConfigFile::getRoot() const {
 	return _root;
 }
 
-// const std::map<int, std::string>& ServerConfigFile::getErrorPages() const {
-// 	return _error_pages;
-// }
-
 const DefaultErrorPages& ServerConfigFile::getErrorPages() const {
 	return _error_pages;
 }
@@ -162,7 +114,6 @@ const std::vector<LocationConfigFile>& ServerConfigFile::getLocations() const {
 }
 
 int ServerConfigFile::getRequestBodySize() const {
-	// std::cout << "ServerConfigFile::getRequestBodySize(): " <<  _request_body_size << std::endl;
 	return _request_body_size;
 }
 

@@ -78,3 +78,9 @@ TODO:
 
 13. Try chmod on server files and make sure nothing crashes
 14. filesystem::filesystem_error in posix_fstat filename too long
+15. delete things when we write to the file. response and resquest and mb other files.
+
+maksim:
+1. user error-page parsing
+2. double everything in config file. need to check it somehow.
+3. front-end things and CGI.

@@ -13,15 +13,15 @@ extern volatile sig_atomic_t	exit_;
 
 
 #ifndef LOGGING_MAKSIM
-#define LOGGING_MAKSIM (0 && LOGGING)
+#define LOGGING_MAKSIM (1 && LOGGING)
 #endif //LOGGING_MAKSIM
 
 #ifndef LOGGING_ADRIAN
-#define LOGGING_ADRIAN (1 && LOGGING)
+#define LOGGING_ADRIAN (0 && LOGGING)
 #endif //LOGGING_ADRIAN
 
 #ifndef LOGGING_FABIAN
-#define LOGGING_FABIAN (1 && LOGGING)
+#define LOGGING_FABIAN (0 && LOGGING)
 #endif //LOGGING_FABIAN
 
 //for more logging, mostly disabled
