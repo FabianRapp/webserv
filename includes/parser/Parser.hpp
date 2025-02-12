@@ -14,6 +14,7 @@
 #include <ServerConfigFile.hpp>
 #include <LocationConfigFile.hpp>
 #include "../main.hpp"
+#include <cstring>
 
 #include "StringArray.hpp"
 

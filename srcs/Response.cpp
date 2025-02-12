@@ -620,7 +620,8 @@ void	Response::_finish_up(void) {
 	//for debugging: saves the body as file
 	int debug_body_fd = open("body", O_WRONLY | O_CREAT | O_TRUNC, 0777);
 	FT_ASSERT(debug_body_fd >  0);
-	write(debug_body_fd, _body.c_str(), _body.length());
+	ssize_t v = write(debug_body_fd, _body.c_str(), _body.length());
+	(void)v;
 	close(debug_body_fd);
 }
 

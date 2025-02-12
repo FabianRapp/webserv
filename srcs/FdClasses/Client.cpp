@@ -71,7 +71,8 @@ void	Client::_receive_request(void) {
 			//todo: remove this later
 			int	debug_fd = open("request.txt", O_WRONLY | O_TRUNC | O_APPEND | O_CREAT, 0644);
 			FT_ASSERT(debug_fd > 0);
-			write(debug_fd, input.c_str(), input.size());
+			ssize_t v = write(debug_fd, input.c_str(), input.size());
+			(void)v;
 			close(debug_fd);
 		}
 		_request = _parser.move_request();
@@ -157,7 +158,8 @@ void	Client::_send_response(void) {
 		{
 			//remove this later
 			int dbg_fd= open("response.txt", O_WRONLY |O_CLOEXEC| O_TRUNC | O_CREAT, 0777);
-			write(dbg_fd, _send_data.response.c_str(), _send_data.response.size());
+			ssize_t	v = write(dbg_fd, _send_data.response.c_str(), _send_data.response.size());
+			(void)v;
 			ft_close(dbg_fd);
 			if (errno) {
 				LOG(strerror(errno) << std::endl);
