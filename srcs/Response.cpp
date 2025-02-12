@@ -742,6 +742,12 @@ std::string	Response::getExpandedTarget(void) {
 		return (expandedPath);
 	}
 
+	if (expandedPath.length() > FILENAME_MAX || expandedPath.length() > PATH_MAX) {
+		LOG(FT_ANSI_RED "404: File does not exist: " << expandedPath
+			<< std::endl << FT_ANSI_RESET);
+		load_status_code_response(404, "Not Found");
+		return ("");
+	}
 	LOG("Request URI: " << _request._uri << "\n");
 	LOG("System path for response: " << expandedPath << "\n");
 	if (!std::filesystem::exists(expandedPath) && _request.getMethod() == MethodType::GET) {
