@@ -1,1 +1,0 @@
-print("Helooooooooo from cgi ")
