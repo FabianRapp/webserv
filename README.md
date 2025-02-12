@@ -75,3 +75,6 @@ TODO:
 9. check for leaks (valgrind)
 10. try to brake the webserver somehow
 12. try to break config file
+
+13. Try chmod on server files and make sure nothing crashes
+14. filesystem::filesystem_error in posix_fstat filename too long
