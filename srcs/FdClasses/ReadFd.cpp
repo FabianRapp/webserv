@@ -52,7 +52,11 @@ void	ReadFd::execute(void) {
 		response.load_status_code_response(500, "Internal Server Error");
 		return ;
 	}
-
+	if (read_ret) {
+		size_t	max_loged_chars = 10;
+		std::string	log_chars(buffer, std::min(static_cast<size_t>(read_ret), max_loged_chars));
+		LOG(FT_ANSI_BLUE "Read by " << name << ": " << log_chars << "..\n" FT_ANSI_RESET);
+	}
 	left_over_bytes -= read_ret;
 	target_buf.append(buffer, static_cast<size_t>(read_ret));
 	if (left_over_bytes == 0 || read_ret == 0) {

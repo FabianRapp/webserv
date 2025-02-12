@@ -5,7 +5,7 @@
 #include "../../includes/macros.h"
 
 Client::Client(DataManager& data, Server* parent_server):
-	BaseFd(data, POLLIN | POLLOUT, "Client"),
+	BaseFd(data, POLLIN | POLLOUT, "ClientHandler"),
 		response(nullptr),
 	mode(ClientMode::RECEIVING),
 
@@ -59,6 +59,9 @@ void	Client::_receive_request(void) {
 		set_close();
 		return ;
 	}
+	size_t	max_loged_chars = 10;
+	std::string	log_chars(buffer, std::min(static_cast<size_t>(bytes_read), max_loged_chars));
+	LOG(FT_ANSI_BLUE "Received by " << name << ": " << log_chars << "..\n" FT_ANSI_RESET);
 	this->input.append(buffer, static_cast<size_t>(bytes_read));
 
 	this->parse();
@@ -166,6 +169,7 @@ void	Client::_send_response(void) {
 		set_close();
 		return ;
 	}
+	LOG(FT_ANSI_BLUE "Send by " << name << ": " << _send_data.response.substr(_send_data.pos, 10) << "..\n" FT_ANSI_RESET);
 	_send_data.pos += static_cast<size_t>(send_bytes);
 	if (_send_data.pos == _send_data.response.size()) {
 		mode = ClientMode::RECEIVING;

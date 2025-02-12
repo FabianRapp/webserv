@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseFd.hpp"
+#include <algorithm>
 #include  <functional>
 
 class Response;
