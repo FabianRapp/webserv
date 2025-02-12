@@ -48,8 +48,8 @@ class Parser {
 		void	parser_chunked(std::string& input);
 		void	parse_chunk(std::string& input);
 
-		const ServerConfigFile&	get_config(void) const;
-		const LocationConfigFile&	get_location_config(void) const;
+		const ServerConfigFile&	get_config(void);
+		const LocationConfigFile&	get_location_config(void);
 
 		// Setters
 		void set_max_request_body_size(int max_request_body_size);
