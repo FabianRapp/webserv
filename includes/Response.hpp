@@ -99,7 +99,7 @@ public:
 
 		void			set_mode(ResponseMode mode);
 		void			read_fd(int read_fd, ssize_t byte_count, bool cgi_output);
-		void			write_fd(int write_fd);
+		void			write_fd(int write_fd, const std::string& fd_name);
 		void			reset_body(void);
 		std::string&&	get_read_fd_data(void);
 		void			set_fd_write_data(const std::string_view data);

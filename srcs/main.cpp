@@ -28,6 +28,29 @@ void	sig_int(int) {
 	exit_ = 1;
 }
 
+bool	port_conflict(std::vector<ServerConfigFile>& matching_ports, int ac, char **av) {
+	if (matching_ports.size() > 1) {
+		LOG(FT_ANSI_RED_BOLD_UNDERLINE "Warning: Multiple serverconfigs on "
+			"the same port!\n" FT_ANSI_RESET);
+		LOG(FT_ANSI_RED "Do you want to continue running multiple servers on the same"
+			" port[y/Y] or do you want to exit (any other input)?\n"
+			FT_ANSI_RESET);
+		LOG(FT_ANSI_WHITE_BOLD "Input: " FT_ANSI_RESET);
+		if (ac >= 3 && std::string(av[2]) == "-y") {
+			LOG("y (auto yes)\n");
+			return (false);
+		}
+		std::string	line;
+		std::getline(std::cin, line);
+		if (line != "y" && line != "Y") {
+			LOG(FT_ANSI_RED "Error: Servers in config have the same ports!\n");
+			return (true);
+		}
+		LOG("For automatic 'y' run the webserv with './webserv <config> -y'.\n");
+	}
+	return (false);
+}
+
 void	webserv(int ac, char **av) {
 	DataManager		manager;
 
@@ -38,7 +61,7 @@ void	webserv(int ac, char **av) {
 		manager.config_parser = new ConfigParser(av[1]);
 	}
 	all_configs = manager.config_parser->getServers();
-	LOG("config count: " << all_configs.size() << std::endl);
+	LOG("Config count: " << all_configs.size() << std::endl);
 	if (all_configs.size() == 0) {
 		LOG("No config, exiting..\n");
 		return ;
@@ -48,12 +71,15 @@ void	webserv(int ac, char **av) {
 		int	cur_port = all_configs[0].getPort();
 		for (size_t i = 0; i < all_configs.size(); ) {
 			if (all_configs[i].getPort() == cur_port) {
-				all_configs[i].printServer();
+				//all_configs[i].printServer();
 				matching_ports.push_back(all_configs[i]);
 				all_configs.erase(all_configs.begin() + static_cast<ssize_t>(i));
 			} else {
 				i++;
 			}
+		}
+		if (port_conflict(matching_ports, ac, av)) {
+			return ;
 		}
 		manager.new_server(matching_ports);
 		matching_ports.clear();
@@ -61,13 +87,23 @@ void	webserv(int ac, char **av) {
 
 	delete manager.config_parser;
 	manager.config_parser = nullptr;
-	LOG("entering main loop\n");
+
+	if (!manager.get_current_count()) {
+		LOG(FT_ANSI_RED_BOLD "Warning: Every server launch failed\n" FT_ANSI_RESET);
+		return ;
+	}
+	LOG(FT_ANSI_GREEN "Entering main loop with " FT_ANSI_RESET
+		FT_ANSI_GREEN_UNDERLINE << manager.get_current_count() << FT_ANSI_RESET
+		FT_ANSI_GREEN " socket(s) for the server(s).\n" FT_ANSI_RESET);
 	while (!exit_) {
 		//usleep(100000);
 		manager.run_poll();
 		manager.execute_all();
 		manager.process_closures();
 		manager.cgi_lifetimes.handle_timeouts();
+	}
+	if (std::cerr.fail()) {
+		std::cerr.clear();
 	}
 }
 
@@ -94,5 +130,6 @@ start:
 		std::cerr << FT_ANSI_YELLOW_BOLD << "Restarting servers.." << FT_ANSI_RESET << std::endl;
 		goto start;
 	}
+	LOG("exiting..\n");
 	return (0);
 }

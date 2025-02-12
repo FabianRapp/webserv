@@ -1,4 +1,5 @@
 #include <CgiTimeouts.hpp>
+#include <main.hpp>
 
 CgiTimeouts::CgiTimeouts(std::chrono::milliseconds timeout_time):
 	_timeout_time(timeout_time)
@@ -31,15 +32,15 @@ void	CgiTimeouts::handle_timeouts(void) {
 		struct process	cur = _queue.front();
 		int stat;
 		if (waitpid(cur.pid, &stat, WNOHANG) > 0) {
-			std::cout << "CGI finished by itself\n";
+			LOG(FT_ANSI_GREEN "CGI (pid " << cur.pid << ") finished by itself\n" FT_ANSI_RESET);
 			_queue.pop();
 			continue ;
 		}
 		auto now = std::chrono::steady_clock::now();
 		auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - cur.start_time);
 		if (std::chrono::milliseconds(elapsed_ms) >= _timeout_time) {
-			std::cerr << FT_ANSI_YELLOW "Warning: timing out cgi process with pid "
-				<< cur.pid << FT_ANSI_RESET "\n";
+			LOG(FT_ANSI_YELLOW "Warning: timing out cgi process with pid "
+				<< cur.pid << FT_ANSI_RESET "\n");
 			_queue.pop();
 			kill(cur.pid, SIGKILL);
 		}

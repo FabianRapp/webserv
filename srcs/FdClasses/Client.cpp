@@ -24,15 +24,13 @@ Client::Client(DataManager& data, Server* parent_server):
 	memset(&addr, 0, sizeof addr);// might not be needed
 	fd = accept(server->fd, addr_ptr, &addr_len);
 	if (fd < 0) {
-		std::cerr << "Error: " << name << "could not be accepted\n";
+		LOG("Error: " << name << "could not be accepted\n");
 		set_close();
 		return ;
 	}
 	name = name + ": " + std::string(inet_ntoa(addr.sin_addr)) + "::" +
 		std::to_string(ntohs(addr.sin_port));
 	_set_non_blocking();
-	std::cout << FT_ANSI_BOLD FT_ANSI_GREEN "Connection accepted: " << name
-		<< FT_ANSI_RESET "\n";
 }
 
 Client::~Client(void) {
@@ -45,7 +43,7 @@ void	Client::_receive_request(void) {
 		auto now = std::chrono::steady_clock::now();
 		auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_availability).count();
 		if (elapsed_ms > 2000) {
-			std::cerr << "client " << data_idx << " timed out..\n";
+			LOG(FT_ANSI_YELLOW << name <<": timed out..\n" FT_ANSI_RESET);
 			set_close();
 		}
 		return ;
@@ -57,12 +55,10 @@ void	Client::_receive_request(void) {
 	long int	bytes_read = recv(this->fd, buffer, sizeof buffer - 1, recv_flags);
 
 	if (bytes_read <= 0) {
-		std::cerr << "Error: recv failed\n";
+		LOG(FT_ANSI_RED "Error: recv failed\n" FT_ANSI_RESET);
 		set_close();
 		return ;
 	}
-	buffer[bytes_read] = 0;//not needed, only for debugging
-	std::cout << "Read:\n" << buffer << '\n';
 	this->input.append(buffer, static_cast<size_t>(bytes_read));
 
 	this->parse();
@@ -97,12 +93,12 @@ void	Client::execute(void) {
 	}
 	switch (this->mode) {
 		case (ClientMode::RECEIVING): {
-			LOG_FABIAN3("receiving\n");
+			LOG_FABIAN3("client: receiving\n");
 			_receive_request();
 			break ;
 		}
 		case (ClientMode::BUILD_RESPONSE): {
-			std::cout << "exec\n";
+			LOG_FABIAN3("client: exec\n");
 			if (response == nullptr) {
 				response = new Response(_parser.get_config(),
 						_parser.get_location_config(), _request, *this, mode);
@@ -137,12 +133,11 @@ void	Client::parse() {
 
 void	Client::_send_response(void) {
 	if (!this->is_ready(POLLOUT)) {
-		std::cout << "not rdy\n";
 		FT_ASSERT(this->poll_events & POLLOUT);
 		auto now = std::chrono::steady_clock::now();
 		auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_availability).count();
 		if (elapsed_ms > 2000) {
-			std::cerr << "client " << data_idx << " timed out..\n";
+			LOG(FT_ANSI_YELLOW << name <<": timed out..\n" FT_ANSI_RESET);
 			set_close();
 		}
 		return ;
@@ -150,7 +145,6 @@ void	Client::_send_response(void) {
 	_last_availability = std::chrono::steady_clock::now();
 
 	const int send_flags = MSG_DONTWAIT;
-	//std::cout << "sending:\n" << _send_data.response << "\n";
 	ssize_t send_bytes = send(
 		fd,
 		_send_data.response.c_str() + _send_data.pos,
@@ -160,16 +154,15 @@ void	Client::_send_response(void) {
 		{
 			//remove this later
 			int dbg_fd= open("response.txt", O_WRONLY |O_CLOEXEC| O_TRUNC | O_CREAT, 0777);
-			std::cout << getenv("PWD");
 			write(dbg_fd, _send_data.response.c_str(), _send_data.response.size());
 			ft_close(dbg_fd);
 			if (errno) {
-				std::cout << strerror(errno);
+				LOG(strerror(errno) << std::endl);
 			}
 		}
 
 	if (send_bytes <= 0) {
-		std::cerr << "Error: " << name << ": send: closing connection now\n";
+		LOG(FT_ANSI_RED "Error: " << name << ": send: closing connection now\n" FT_ANSI_RESET);
 		set_close();
 		return ;
 	}

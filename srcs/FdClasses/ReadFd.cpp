@@ -18,7 +18,6 @@ ReadFd::ReadFd(DataManager& data, Response& response, std::string& target_buffer
 	this->fd = fd;
 	_set_non_blocking();
 	left_over_bytes = byte_count;
-	std::cout << byte_count << "=byte count\n";
 }
 
 ReadFd::~ReadFd(void) {

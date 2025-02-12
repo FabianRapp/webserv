@@ -57,7 +57,6 @@ void	Parser::_select_server_config(void) {
 				|| to_match == prefix + name
 				|| to_match == name + postfix)
 			{
-				std::cout << "found!\n";
 				_config_index = static_cast<int>(i);
 				return ;
 			}
@@ -76,11 +75,8 @@ void	Parser::_select_location_config(void) {
 	for (size_t i = 0; i < locationsFiles.size(); i++) {
 		const LocationConfigFile& locationFile = locationsFiles[i];
 		size_t	loc_path_len = locationFile.getPath().length();
-		std::cout << "uri: " << _request._uri << "\n";
-		std::cout << "locationFile.getPath(): " << locationFile.getPath() << "\n";
-		std::cout << "\n";
 		if (loc_path_len > longest_match
-			&& !strncmp(_request._uri.c_str(), locationFile.getPath().c_str(), loc_path_len)
+			&& !std::strncmp(_request._uri.c_str(), locationFile.getPath().c_str(), loc_path_len)
 			&& (_request._uri.length() == loc_path_len || _request._uri[loc_path_len] == '/'
 				|| (locationFile.getPath() == "/"))
 			)
@@ -130,7 +126,7 @@ std::string	cleanBody(const std::string& input) {
 
 	start = input.find("\r\n\r\n");
 	if (start == std::string::npos) {
-		std::cout << "could not find end of headers" << std::endl;
+		//shouldn't happen
 		return ("");
 	}
 
@@ -250,7 +246,7 @@ void	Parser::parse_headers(const RequestArray& array) {
 		insertHeader(array[i][0], array[i][1]);
 		i++;
 	}
-	std::cout << "Headers were parsed\n" << std::endl;
+	LOG_ADRIAN("Headers were parsed\n" << std::endl);
 	_request._areHeadersParsed = true;
 }
 
@@ -259,28 +255,28 @@ void	Parser::parser_unchunked(std::string& input) {
 	unsigned long bytesToRead = 0;
 	auto it = _request._headers.find(HeaderType::CONTENT_LENGTH);
 
-	std::cout << "parsing unchunked body\n";
+	LOG_PARSER("parsing unchunked body\n");
 	if (it != _request._headers.end()) {
 		bytesToRead = std::stoul(it->second);
 	} else {
-		std::cout << "Content-Length header not found!" << std::endl;
+		LOG_PARSER("Content-Length header not found!" << std::endl);
 	}
 
 	// what happens if input is smaller than ConLen ? does that mean that we havent finished reading the full body ?
 	// this is working bc we dont actually assing the input to the body until the full body is there.
 	if (input.size() < bytesToRead) {
-		std::cout << "Input is smaller than Content-Length!" << std::endl;
+		LOG_PARSER("Input is smaller than Content-Length!");
 		return;
 	}
 
 	for (unsigned int i = 0; i < bytesToRead; ++i) {
 		char currentChar = input[i];
-		std::cout << currentChar;
+		LOG_PARSER(currentChar);
 		_request._body.push_back(currentChar);
 	}
 
 	_request._finished = true;
-	std::cout << "\nFinished reading unchunked body." << std::endl;
+	LOG_PARSER("\nFinished reading unchunked body." << std::endl);
 }
 
 void printStringVector(const std::vector<std::string>& vec) {
@@ -294,15 +290,15 @@ void printStringVector(const std::vector<std::string>& vec) {
 
 bool isChunkedFinished(const std::vector<std::string>& bodyVector) {
 	if (bodyVector.size() < 3) {
-		std::cout << "Error: The body is not long enough, possibly malformed." << std::endl;
+		LOG_PARSER("Error: The body is not long enough, possibly malformed." << std::endl);
 		return false;
 	}
 	size_t start = bodyVector.size() - 3;
 
-	std::cout << "Last 3 elements: " << bodyVector[start] << ", " << bodyVector[start + 1] << ", " << bodyVector[start + 2] << std::endl;
+	LOG_PARSER("Last 3 elements: " << bodyVector[start] << ", " << bodyVector[start + 1] << ", " << bodyVector[start + 2] << std::endl);
 
 	if (bodyVector[start] != "0" || bodyVector[start + 1] != "\r\n" || bodyVector[start + 2] != "\r\n") {
-		std::cout << "Error: Body does not end as expected or is incomplete." << std::endl;
+		LOG_PARSER("Error: Body does not end as expected or is incomplete." << std::endl);
 		return false;
 	}
 
@@ -316,11 +312,9 @@ void Parser::addTokens(const std::string& str, const std::string& delimiter) {
 		std::string token = str.substr(_request._startBodyIdx, end - _request._startBodyIdx);
 		if (end != _request._startBodyIdx) {
 			_request._bodyTokens.push_back(token);
-			// std::cout << "Added token |" << token << "|\n";
 		}
 
 		_request._bodyTokens.push_back(delimiter);
-		// std::cout << "Added |delimiter|\n";
 
 		_request._startBodyIdx = end + delimiter.length();
 		end = str.find(delimiter, _request._startBodyIdx);
@@ -342,13 +336,13 @@ void	Parser::checkForChunks(std::vector<std::string>& bodyVector) {
 
 	if (bodyVector.size() < 4)
 	{
-		std::cout << "check for chunks returned, size is to small to contain a chunk" << std::endl;
+		LOG_PARSER("check for chunks returned, size is to small to contain a chunk" << std::endl);
 		return ;
 	}
 
 	if (bodyVector[1] != "\r\n" && bodyVector[3] != "\r\n")
 	{
-		std::cout << "tokens are not terminated by end sequence" << std::endl;
+		LOG_PARSER("tokens are not terminated by end sequence" << std::endl);
 		return;
 	} else {
 
@@ -372,7 +366,7 @@ void	Parser::checkForChunks(std::vector<std::string>& bodyVector) {
 	if ((bodyVector.size() - 4) < 4)
 	{
 		// TEST this with a send that contains more than one chunk
-		std::cout << "Recursin for checkForChunks called\n";
+		LOG_PARSER("Recursin for checkForChunks called\n");
 		checkForChunks(bodyVector);
 	}
 }
@@ -392,13 +386,13 @@ void	Parser::parser_chunked(std::string& input) {
 
 	// std::cout << "here comes the body vector for chunked requests" << std::endl;
 
-	std::cout << _request._bodyTokens.size() << std::endl;
+	LOG_PARSER(_request._bodyTokens.size() << std::endl);
 	// printStringVector( _request._bodyTokens);
 
 
 	// check what is happening with the ending and why is not being added to the body
 	if (isChunkedFinished( _request._bodyTokens)) {
-		std::cout << "Final chunk detected, chunked parsing finished\n" << std::endl;
+		LOG_PARSER("Final chunk detected, chunked parsing finished\n" << std::endl);
 		_request._finished = true;
 		return;
 	}
@@ -475,7 +469,9 @@ void Parser::parse(void) {
 			return ;
 		}
 		FT_ASSERT(array.size());
-		std::cout << array;
+		if (PRINT_REQUEST) {
+			LOG(array);
+		}
 
 		if (!parse_first_line(array)) {
 			return ;

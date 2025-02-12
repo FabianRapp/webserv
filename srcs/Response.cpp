@@ -77,6 +77,7 @@ void	Response::read_fd(int read_fd, ssize_t byte_count, bool cgi_output) {
 			read_fd,
 			*_client,
 			byte_count,
+			"file_reader",
 			[this, next_mode] () {
 				this->_client_mode = next_mode;
 				this->_reader = nullptr;
@@ -90,6 +91,7 @@ void	Response::read_fd(int read_fd, ssize_t byte_count, bool cgi_output) {
 			read_fd,
 			*_client,
 			byte_count,
+			"CGI_output_reader",
 			[this, next_mode] () {
 				this->_client_mode = next_mode;
 				this->_reader = nullptr;
@@ -105,7 +107,7 @@ void	Response::read_fd(int read_fd, ssize_t byte_count, bool cgi_output) {
 // without any more actions besides the following:
 // Don't close the fd after calling this.
 // Assumes the given fd to be valid.
-void	Response::write_fd(int write_fd) {
+void	Response::write_fd(int write_fd, const std::string& fd_name) {
 	FT_ASSERT(write_fd > 0);
 	ClientMode	next_mode = _client_mode;
 	_client_mode = ClientMode::WRITING_FD;
@@ -114,6 +116,7 @@ void	Response::write_fd(int write_fd) {
 		write_fd,
 		_fd_write_data,
 		*_client,
+		fd_name,
 		[this, next_mode] () {
 			this->_client_mode = next_mode;
 			this->_writer = nullptr;
@@ -124,7 +127,7 @@ void	Response::write_fd(int write_fd) {
 std::vector<std::string>	Response::_get_dir(void) {
 	_dir = opendir(_path.c_str());
 	if (!_dir) {
-		std::cerr << FT_ANSI_RED " ERROR " FT_ANSI_RESET << "opendir: " << _path << " failed: " << strerror(errno) << "\n";
+		LOG(FT_ANSI_RED " ERROR " FT_ANSI_RESET << "opendir: " << _path << " failed: " << strerror(errno) << "\n");
 		switch (errno) {
 			case ENOMEM:
 			case EMFILE:  // Process limit reached for open files
@@ -157,7 +160,7 @@ std::vector<std::string>	Response::_get_dir(void) {
 		dir_data = readdir(_dir);
 	}
 	if (errno) {
-		std::cerr << FT_ANSI_RED " ERROR " FT_ANSI_RESET << "readdir: " << strerror(errno) << "\n";
+		LOG(FT_ANSI_RED " ERROR " FT_ANSI_RESET << "readdir: " << strerror(errno) << "\n");
 		closedir(_dir);
 		_dir = nullptr;
 		errno = 0;
@@ -339,7 +342,8 @@ void	Response::_handle_put_file(bool post) {
 	}
 	int	post_fd = open(_path.c_str(), flags, 0644);
 	if (post_fd < 0) {
-		std::cout << "Error: POST: failed open(): " << strerror(errno) << std::endl;
+		LOG(FT_ANSI_RED "Error: POST: failed open(): " << strerror(errno)
+			<< std::endl << FT_ANSI_RESET);
 		switch (errno) {
 			case ENOMEM:
 			case EMFILE:  // Process limit reached for open files
@@ -381,14 +385,12 @@ void	Response::_handle_put_file(bool post) {
 	} else {
 		FT_ASSERT(0 && "put_stus unknown value");
 	}
-	std::cout << "request body size: " << _request._body.size() << std::endl ;
 	_fd_write_data = std::string_view(_request._body);
-	write_fd(post_fd);
+	write_fd(post_fd, "PUT_writer");
 	_mode = ResponseMode::FINISH_UP;
 }
 
 void	Response::_handle_post(void) {
-	std::cout << "handle_post\n";
 	if (std::filesystem::is_directory(_path)) {
 	 	if (_request._uri.back() != '/') {
 			_handle_get_moved(_request._uri + "/", 301);
@@ -420,7 +422,6 @@ void	Response::_handle_post(void) {
 }
 
 void	Response::_handle_put(void) {
-	std::cout << "handle_post\n";
 	if (CGIManager::isCGI(_request._uri, _location_config)) {
 		load_status_code_response(403, "Forbidden");
 		return ;
@@ -551,12 +552,11 @@ void	Response::load_status_code_body(int code) {
 void	Response::_handle_delete(void) {
 	if (std::remove(_path.c_str()) == 0) {
 		//success
-		std::cout << FT_ANSI_RED " DELETE " FT_ANSI_RESET << _path << "\n";
+		LOG(FT_ANSI_RED " DELETE " FT_ANSI_RESET << FT_ANSI_GREEN << _path << "\n" FT_ANSI_RESET);
 		load_status_code_response(204, "No Content");
 		return ;
 	} else {
-		std::cout << FT_ANSI_RED " DELETE " FT_ANSI_RESET << _path << " failed:\n";
-		std::cout << strerror(errno) << std::endl;
+		LOG(FT_ANSI_RED " DELETE " << _path << " failed: " << strerror(errno) << FT_ANSI_RESET "\n");
 		switch (errno) {
 			case (ENOMEM):
 				errno = 0;
@@ -724,16 +724,12 @@ void Response::setAllowedMethods() {
 
 std::string	Response::getExpandedTarget(void) {
 	std::string expandedPath;
-	_location_config.printLocation();
-	std::cout << "\n";
 
-	std::cout << "--- _config.getRoot() " << _config.getRoot() + "\n";
-	std::cout << "--- _location_config.getRoot() " << _location_config.getRoot() + "\n";
-	std::cout << "--- _location_config.getPath() " << _location_config.getPath() + "\n";
-	std::cout << "--- _location_config.getRedirection()" << _location_config.getRedirection() + "\n";
-	std::cout << "--- request._uri " << _request._uri + "\n";
-
-	std::cout << "\n";
+	LOG_ADRIAN("--- _config.getRoot() " << _config.getRoot() + "\n");
+	LOG_ADRIAN("--- _location_config.getRoot() " << _location_config.getRoot() + "\n");
+	LOG_ADRIAN("--- _location_config.getPath() " << _location_config.getPath() + "\n");
+	LOG_ADRIAN("--- _location_config.getRedirection()" << _location_config.getRedirection() + "\n");
+	LOG_ADRIAN("--- request._uri " << _request._uri + "\n");
 
 	size_t	loc_path_len = _location_config.getPath().length();
 	if (!_location_config.getIsRedir()) {
@@ -746,11 +742,12 @@ std::string	Response::getExpandedTarget(void) {
 		return (expandedPath);
 	}
 
-	std::cout << "RESPONSE PATH SETTED TO |" << expandedPath << "|\n";
-	if (std::filesystem::exists(expandedPath)) {
-		std::cout << "File exists: " << expandedPath << std::endl;
-	} else if (_request.getMethod() == MethodType::GET) {
-		std::cout << "File does not exist: " << expandedPath << std::endl;
+	LOG("Request URI: " << _request._uri << "\n");
+	LOG("System path for response: " << expandedPath << "\n");
+	if (!std::filesystem::exists(expandedPath) && _request.getMethod() == MethodType::GET) {
+		LOG(FT_ANSI_RED "404: File does not exist: " << expandedPath
+			<< std::endl << FT_ANSI_RESET);
+		errno = 0;
 		load_status_code_response(404, "Not Found");
 		return ("");
 	}

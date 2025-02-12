@@ -29,7 +29,6 @@ void	DataManager::new_server(std::vector<ServerConfigFile>& configs) {
 		server = new Server(*this, configs);
 	} catch (const Server::ServerError& err) {
 		LOG(FT_ANSI_RED_BOLD "Error creating server: " << err.what() << "\n" FT_ANSI_RESET);
-
 		return ;
 	}
 	_add_entry(reinterpret_cast<BaseFd*>(server), server->poll_events);
@@ -41,16 +40,18 @@ void	DataManager::new_client(Server* server) {
 }
 
 ReadFd*	DataManager::new_read_fd(Response& response, std::string& target_buffer, int fd, Client& client,
-			ssize_t byte_count, std::function<void()> callback) {
+			ssize_t byte_count, const std::string& fd_name, std::function<void()> callback) {
 	ReadFd*	reader = new ReadFd(*this, response, target_buffer, fd, client, byte_count,
 						callback);
+	reader->name = fd_name;
 	_add_entry(reinterpret_cast<BaseFd*>(reader), reader->poll_events);
 	return (reader);
 }
 
 WriteFd*	DataManager::new_write_fd(Response& response, int fd, const std::string_view& input_data, Client& client,
-				std::function<void()> callback) {
+				const std::string& fd_name, std::function<void()> callback) {
 	WriteFd*	writer = new WriteFd(*this, response, input_data, fd, client, callback);
+	writer->name = fd_name;
 	_add_entry(reinterpret_cast<WriteFd*>(writer), writer->poll_events);
 	return (writer);
 }
@@ -121,7 +122,7 @@ size_t	DataManager::get_count(void) const {
 
 void	DataManager::run_poll() {
 	if (poll(&_pollfds[0], static_cast<nfds_t>(_count), 0) < 0) {
-		std::cerr << "Error: poll: " << strerror(errno) << "\n";
+		LOG("Error: poll: " << strerror(errno) << "\n");
 		FT_ASSERT(errno != EINVAL && errno != EFAULT && errno != EBADF);// would indicate a bug
 		if (errno != EINTR && ++_consecutive_poll_fails > 1000) {
 			throw (std::ios_base::failure(std::string("poll: ")
@@ -156,7 +157,9 @@ void	DataManager::execute_all(void) {
 void	DataManager::_add_entry(BaseFd *entry, short poll_events) {
 	_total_entrys++;
 	entry->data_idx = _count++;
-	std::cout << "_add_entry: count: " << _count << " ; total count: " << _total_entrys << "\n";
+	LOG(FT_ANSI_BLUE "Added new fd object: " << entry->name
+		<< "; Current fd object count: " << _count
+		<< "; Total count: " << _total_entrys << "\n" FT_ANSI_RESET);
 	assert(entry && entry->fd != -1);
 	struct pollfd	poll_fd = {
 		.fd = entry->fd,
@@ -166,12 +169,11 @@ void	DataManager::_add_entry(BaseFd *entry, short poll_events) {
 	_pollfds.push_back(poll_fd);
 	_fd_users.push_back(entry);
 	_close_later.push_back(false);
-	std::cout << "added fd " << _fd_users[_count - 1]->name << " with idx " << _count -1 << "\n";
 }
 
 void	DataManager::_fd_close(size_t idx) {
-	LOG("closing fd " << _fd_users[idx]->fd
-		<< "(name: " << _fd_users[idx]->name << ") with idx " << idx << "\n");
+	LOG(FT_ANSI_BLUE "Closing fd-object " << _fd_users[idx]->name
+		<< "\n" FT_ANSI_RESET);
 	delete _fd_users[idx];
 	if (_pollfds[idx].fd > 0) {
 		ft_close(_pollfds[idx].fd);
@@ -187,7 +189,11 @@ void	DataManager::_fd_close(size_t idx) {
 	_close_later.pop_back();
 	_fd_users.pop_back();
 
-	std::cout << _count << "--count\n";
+	LOG(FT_ANSI_BLUE "fd-object count: " << _count << FT_ANSI_RESET << std::endl);
+}
+
+size_t	DataManager::get_current_count(void) const {
+	return (_fd_users.size());
 }
 
 size_t		DataManager::get_total_count(void) const {

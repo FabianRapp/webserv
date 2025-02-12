@@ -121,7 +121,6 @@ void	CookieManager::remove_expired_cookies(void) {
 void	CookieManager::_add_cookie(const std::string& cookie_para_str,
 			const Request& request)
 {
-	LOG("header_val: |" << cookie_para_str << "|\n");
 	Line	cookie_paras(cookie_para_str, ";");
 	if (cookie_paras.empty()) {
 		return ;

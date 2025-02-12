@@ -40,9 +40,9 @@ public:
 	void		new_server(std::vector<ServerConfigFile>& configs);
 	void		new_client(Server* server);
 	ReadFd*		new_read_fd(Response& response, std::string& target_buffer, int fd, Client& client,
-					ssize_t byte_count, std::function<void()> callback);
+					ssize_t byte_count, const std::string& fd_name, std::function<void()> callback);
 	WriteFd*	new_write_fd(Response& response, int fd, const std::string_view& input_data, Client& client,
-					   std::function<void()> callback);
+					   const std::string& fd_name, std::function<void()> callback);
 	// CgiTimeouts	cgi_lifetimes;
 
 
@@ -60,9 +60,11 @@ public:
 
 	void	execute_all(void);
 
-	ConfigParser	*config_parser;
-		CgiTimeouts	cgi_lifetimes;
+	size_t		get_current_count(void) const;
 	size_t		get_total_count(void) const;
+
+	ConfigParser	*config_parser;
+	CgiTimeouts		cgi_lifetimes;
 private:
 	size_t	_total_entrys;
 	void	_add_entry(BaseFd *entry, short poll_events);

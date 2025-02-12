@@ -144,9 +144,10 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 			}
 			std::string	var_name = var.substr(0, eq_pos);
 			if (_client->server->cookie_manager.valid_cookie(var_name, request)) {
+				LOG(FT_ANSI_MAGENTA_BOLD_UNDERLINE "Cookie accpeted: " << var << "\n" FT_ANSI_RESET);
 				envCGI_storage.push_back(var);
 			} else {
-				LOG(FT_ANSI_RED "Cookie '" << var << "' was not accepted\n" FT_ANSI_RESET);
+				LOG(FT_ANSI_RED "Cookie rejected: " << var << "\n" FT_ANSI_RESET);
 			}
 		}
 	}
@@ -199,17 +200,13 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 	}
 
 	if (_pid == 0) { // Child process
-		std::cout << "cgi child\n\n";
-		//sleep(10);
-
-
 		char *args[] = {
 			const_cast<char *>(interpreter.c_str()),
 			const_cast<char *>(path.c_str()),
 			nullptr
 		};
 		for (int i = 0; char *arg = args[i]; i++) {
-			std::cout << "cgi_args[" << i << "] == " << arg << "\n";
+			LOG_MAKSIM("cgi_args[" << i << "] == " << arg << "\n");
 		}
 
 		ft_close(inputPipe[1]);
@@ -236,6 +233,9 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		_child_exec_fail();
 		return ;
 	} else { // Parent process
+
+		LOG(FT_ANSI_GREEN "Created CGI child process with pid " << _pid
+			<< ".\n" FT_ANSI_RESET);
 		_main_manager.cgi_lifetimes.add(_pid);
 		ft_close(inputPipe[0]);
 		inputPipe[0] = -1;
@@ -276,14 +276,14 @@ void	CGIManager::_init_writing(void) {
 	//std::cout << "has request body in cgi init writing\n";
 	_response->set_fd_write_data(request_body);
 	//write_fd will make sure the cgi->execute does not get called unitil the data is written
-	_response->write_fd(fd_to_write);
+	_response->write_fd(fd_to_write, "CGI_input_writer");
 	_mode = CGI_MODE::INIT_READING;
 }
 
 void	CGIManager::_parse_output(void) {
 	Server*	server = _client->server;
 	server->cookie_manager.add_cookies(_response->get_str_response(), _request);
-	server->cookie_manager.print_cookies();
+	//server->cookie_manager.print_cookies();
 }
 
 CGIManager::~CGIManager(void) {
@@ -306,7 +306,7 @@ bool	CGIManager::execute() {
 	if (exit_) {
 		return (false);
 	}
-	bool	debug = false;
+	const bool	debug = false;
 	if (debug) {
 		std::cout << "cgi::execute: " << std::endl;;
 	}

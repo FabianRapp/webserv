@@ -6,7 +6,7 @@ BaseFd::BaseFd(DataManager& data, short poll_events, const std::string& name):
 	data(data),
 	fd(-1),
 	data_idx(std::numeric_limits<size_t>::max()),
-	name(std::to_string(data.get_total_count()) + ":" + name)
+	name(name)
 {
 }
 

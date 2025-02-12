@@ -3,12 +3,17 @@
 #include <signal.h>
 
 extern volatile sig_atomic_t	exit_;
+
+#ifndef PRINT_REQUEST
+#define PRINT_REQUEST 0
+#endif //PRINT_REQUEST
+
 #ifndef LOGGING
 #define LOGGING (1)
 #endif //LOGGING
 
 #ifndef LOGGING_PARSING
-#define LOGGING_PARSING (LOGGING && 1)
+#define LOGGING_PARSING (0 && LOGGING)
 #endif //LOGGING_PARSING
 
 
@@ -17,11 +22,11 @@ extern volatile sig_atomic_t	exit_;
 #endif //LOGGING_MAKSIM
 
 #ifndef LOGGING_ADRIAN
-#define LOGGING_ADRIAN (1 && LOGGING)
+#define LOGGING_ADRIAN (0 && LOGGING)
 #endif //LOGGING_ADRIAN
 
 #ifndef LOGGING_FABIAN
-#define LOGGING_FABIAN (1 && LOGGING)
+#define LOGGING_FABIAN (0 && LOGGING)
 #endif //LOGGING_FABIAN
 
 //for more logging, mostly disabled
@@ -32,7 +37,7 @@ extern volatile sig_atomic_t	exit_;
 #ifndef LOG
 #define LOG(content) \
 	do {\
-		if (!exit_ && LOGGING) { \
+		if (LOGGING) { \
 			std::cerr << content; \
 		} \
 	} while(0)
@@ -41,7 +46,7 @@ extern volatile sig_atomic_t	exit_;
 #ifndef LOG_PARSER
 #define LOG_PARSER(content) \
 	do {\
-		if (!exit_ && LOGGING_PARSING) { \
+		if (LOGGING_PARSING) { \
 			std::cerr << content; \
 		} \
 	} while(0)
@@ -50,7 +55,7 @@ extern volatile sig_atomic_t	exit_;
 #ifndef LOG_MAKSIM
 #define LOG_MAKSIM(content) \
 	do {\
-		if (!exit_ && LOGGING_MAKSIM) { \
+		if (LOGGING_MAKSIM) { \
 			std::cerr << content; \
 		} \
 	} while(0)
@@ -60,7 +65,7 @@ extern volatile sig_atomic_t	exit_;
 #ifndef LOG_ADRIAN
 #define LOG_ADRIAN(content) \
 	do {\
-		if (!exit_ && LOGGING_ADRIAN) { \
+		if (LOGGING_ADRIAN) { \
 			std::cerr << content; \
 		} \
 	} while(0)
@@ -69,7 +74,7 @@ extern volatile sig_atomic_t	exit_;
 #ifndef LOG_FABIAN
 #define LOG_FABIAN(content) \
 	do {\
-		if (!exit_ && LOGGING_FABIAN) { \
+		if (LOGGING_FABIAN) { \
 			std::cerr << content; \
 		} \
 	} while(0)
@@ -79,7 +84,7 @@ extern volatile sig_atomic_t	exit_;
 #ifndef LOG_FABIAN3
 #define LOG_FABIAN3(content) \
 	do {\
-		if (!exit_ && LOGGING_FABIAN3) { \
+		if (LOGGING_FABIAN3) { \
 			std::cerr << content; \
 		} \
 	} while(0)

@@ -2,7 +2,7 @@
 #include "../../includes/Manager.hpp"
 
 Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
-	BaseFd(data, POLLIN, "Server"),
+	BaseFd(data, POLLIN, "Server::" + std::to_string(configs[0].getPort())),
 	total_unique_clients(0),
 	configs(configs),
 	start_panic(false),
@@ -54,7 +54,6 @@ Server::Server(DataManager& data, std::vector<ServerConfigFile>& configs):
 		throw (ServerError("server: listen: " + std::string(strerror(errno))));
 		return ;
 	}
-	std::cout << "Started server on port " << configs[0].getPort() << "...\n";
 }
 
 Server::~Server(void) {
@@ -67,5 +66,4 @@ void	Server::execute(void) {
 	}
 	data.new_client(this);
 	this->total_unique_clients++;
-	std::cout << "Added client numner " << this->total_unique_clients << "`\n";
 }
