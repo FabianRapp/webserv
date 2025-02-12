@@ -37,6 +37,8 @@
 		if (errno) { \
 			printf("%s\n", strerror(errno));\
 		}\
+		volatile char *p = 0;\
+		*p;\
    		assert(cond); \
    	} \
    } while(0)

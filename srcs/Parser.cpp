@@ -97,13 +97,16 @@ void	Parser::_select_config(void) {
 }
 
 // only callabled once _select_config(void) was used
-const ServerConfigFile&	Parser::get_config(void) const {
+const ServerConfigFile&	Parser::get_config(void) {
+	if (_config_index < 0) {
+		_config_index = 0;
+	}
 	FT_ASSERT(_config_index >= 0 && "config has not been set");
 	return (_server_configs[static_cast<size_t>(_config_index)]);
 }
 
 // only callabled once _select_config(void) was used
-const LocationConfigFile&	Parser::get_location_config(void) const {
+const LocationConfigFile&	Parser::get_location_config(void) {
 	if (_location_index == -1) {
 		return (get_config().getDefaultLocation());
 	}
