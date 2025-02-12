@@ -1,7 +1,6 @@
 #include "../includes/Manager.hpp"
 #include <vector>
 #include <csignal>
-#include "../includes/Exceptions.hpp"
 
 //remove this, just for testing
 #include "../includes/ConfigParser/LocationConfigFile.hpp"
@@ -41,7 +40,7 @@ void	webserv(int ac, char **av) {
 	all_configs = manager.config_parser->getServers();
 	LOG("config count: " << all_configs.size() << std::endl);
 	if (all_configs.size() == 0) {
-		LOG("No empty config, exiting..\n");
+		LOG("No config, exiting..\n");
 		return ;
 	}
 	std::vector<ServerConfigFile>	matching_ports;

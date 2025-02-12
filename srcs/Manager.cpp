@@ -28,7 +28,7 @@ void	DataManager::new_server(std::vector<ServerConfigFile>& configs) {
 	try {
 		server = new Server(*this, configs);
 	} catch (const Server::ServerError& err) {
-		std::cerr << "Error creating server: " << err.what() << "\n";
+		LOG(FT_ANSI_RED_BOLD "Error creating server: " << err.what() << "\n" FT_ANSI_RESET);
 
 		return ;
 	}
@@ -85,7 +85,6 @@ void	DataManager::_handle_server_panic(Server* serv) {
 			set_close(idx);
 		}
 	}
-
 }
 
 void	DataManager::process_closures() {
@@ -121,7 +120,6 @@ size_t	DataManager::get_count(void) const {
 }
 
 void	DataManager::run_poll() {
-	//std::cout << "polling " << static_cast<nfds_t>(_count) << "\n";
 	if (poll(&_pollfds[0], static_cast<nfds_t>(_count), 0) < 0) {
 		std::cerr << "Error: poll: " << strerror(errno) << "\n";
 		FT_ASSERT(errno != EINVAL && errno != EFAULT && errno != EBADF);// would indicate a bug
@@ -139,16 +137,14 @@ void	DataManager::run_poll() {
 
 void	DataManager::execute_all(void) {
 	size_t	count = _count;
-	// std::cout << count << "=count\n";
 
 	// fabi: 07/02: canged loop para from _count to count:
 	// i think _count would just check the same + new obj where none of the
 	// new can possibly be ready(since they were not polled yet)
-	//std::cout << "**************\n";
 	for (size_t i = 0; i < count; i++) {
 		BaseFd* user = _fd_users[i];
 		if (user->name != "Server") {
-			//std::cout << "Manager: execec " << user->name << "\n";
+			LOG_FABIAN3("Manager: execec " << user->name << "\n");
 		}
 		if (exit_) {
 			break ;
@@ -174,8 +170,8 @@ void	DataManager::_add_entry(BaseFd *entry, short poll_events) {
 }
 
 void	DataManager::_fd_close(size_t idx) {
-	std::cout << "closing fd " << _fd_users[idx]->fd
-		<< "(name: " << _fd_users[idx]->name << ") with idx " << idx << "\n";
+	LOG("closing fd " << _fd_users[idx]->fd
+		<< "(name: " << _fd_users[idx]->name << ") with idx " << idx << "\n");
 	delete _fd_users[idx];
 	if (_pollfds[idx].fd > 0) {
 		ft_close(_pollfds[idx].fd);

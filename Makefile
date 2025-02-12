@@ -25,7 +25,6 @@ SRCS := main.cpp \
 		Parser.cpp \
 		utils.cpp \
 		to_string.cpp \
-		Exceptions.cpp \
 		Manager.cpp \
 		FdClasses/BaseFd.cpp \
 		FdClasses/Server.cpp \

@@ -55,8 +55,9 @@ void	Client::_receive_request(void) {
 	char		buffer[1024 * 1024 * 100]; //100 mb
 	int			recv_flags = MSG_DONTWAIT;
 	long int	bytes_read = recv(this->fd, buffer, sizeof buffer - 1, recv_flags);
-	if (bytes_read < 0) {
-		std::cerr << "Error: read failed\n";
+
+	if (bytes_read <= 0) {
+		std::cerr << "Error: recv failed\n";
 		set_close();
 		return ;
 	}
@@ -65,7 +66,6 @@ void	Client::_receive_request(void) {
 	this->input.append(buffer, static_cast<size_t>(bytes_read));
 
 	this->parse();
-	//std::cout << "Request STATUS = " << _parser.is_finished() << std::endl;
 	if (_parser.is_finished() == true)
 	{
 		{
@@ -84,14 +84,14 @@ void	Client::_receive_request(void) {
 
 void	Client::execute(void) {
 	if (is_ready(POLLHUP)) {
-		std::cout << FT_ANSI_YELLOW << name << "(idx " << data_idx
-			 << ") has disconnected by itself\n" FT_ANSI_RESET;
+		LOG(FT_ANSI_YELLOW << name << "(idx " << data_idx
+			 << ") has disconnected by itself\n" FT_ANSI_RESET);
 		set_close();
 		return ;
 	}
 	if (is_ready(POLLERR)) {
-		std::cout << FT_ANSI_RED << name << "(idx " << data_idx
-			 << ") had a poll exception\n" FT_ANSI_RESET;
+		LOG(FT_ANSI_RED << name << "(idx " << data_idx
+			 << ") had a poll exception\n" FT_ANSI_RESET);
 		set_close();
 		return ;
 	}
@@ -104,7 +104,8 @@ void	Client::execute(void) {
 		case (ClientMode::BUILD_RESPONSE): {
 			std::cout << "exec\n";
 			if (response == nullptr) {
-				response = new Response(_parser.get_config(), _parser.get_location_config(), _request, *this, mode);
+				response = new Response(_parser.get_config(),
+						_parser.get_location_config(), _request, *this, mode);
 			}
 			response->execute();
 			if (mode == ClientMode::SENDING) {
@@ -116,16 +117,14 @@ void	Client::execute(void) {
 			break ;
 		}
 		case (ClientMode::SENDING): {
-			// std::cout << "sending\n";
+			LOG_FABIAN3("sending\n");
 			_send_response();
 			break ;
 		}
 		case (ClientMode::READING_FD):
-			// std::cout << "read fd\n";
 			// do nothing
 			break ;
 		case (ClientMode::WRITING_FD): {
-			// std::cout << "write fd\n";
 			// do nothing
 			break ;
 		}

@@ -740,9 +740,10 @@ std::string	Response::getExpandedTarget(void) {
 		expandedPath = _config.getRoot() + _location_config.getRoot();
 		expandedPath += _request._uri.substr(loc_path_len, _request._uri.length() - loc_path_len);
 	} else {
-		return (_location_config.getRedirection()
+		expandedPath = _location_config.getRedirection()
 			+ _request._uri.substr(
-				loc_path_len, _request._uri.length() - loc_path_len));
+				loc_path_len, _request._uri.length() - loc_path_len);
+		return (expandedPath);
 	}
 
 	std::cout << "RESPONSE PATH SETTED TO |" << expandedPath << "|\n";

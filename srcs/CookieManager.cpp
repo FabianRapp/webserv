@@ -51,8 +51,7 @@ std::ostream	&operator<<(std::ostream &output, const Cookie &cookie) {
 	return (output);
 }
 
-CookieManager::CookieManager(void)
-{
+CookieManager::CookieManager(void) {
 }
 
 CookieManager::~CookieManager(void) {

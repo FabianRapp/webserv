@@ -70,7 +70,6 @@ TODO:
 4. front-end presentation for eval.
 5. Compile warning.
 6. Prepare cool scripts using CGI (py, php, bash)
-7. Cookies
 8. go throught evaluation sheet
 9. check for leaks (valgrind)
 10. try to brake the webserver somehow
