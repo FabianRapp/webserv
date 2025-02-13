@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "../includes/Request.hpp"
+#include <colors.h>
+#include <logging.hpp>
 
 Request::Request()
 {
@@ -166,11 +168,9 @@ void Request::set_status_code(int code) {
 	};
 
 	if (codes.find(code) == codes.end()) {
-		std::cerr << "unsupported status code: " << code << std::endl;
-		FT_ASSERT(0);//todo: comment this line later
+		LOG(FT_ANSI_RED "unsupported status code: " << code << FT_ANSI_RESET << std::endl);
 		code = 500;
 	}
 	_status_code.first = code;
 	_status_code.second = codes.at(code);
 }
-
