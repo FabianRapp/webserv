@@ -26,9 +26,5 @@ protected:
 	Client*								client;
 	Server*								server;
 	Response&							response;
-
-
-	//debug: remove later
-	int									debug_fd;
 };
 

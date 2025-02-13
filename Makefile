@@ -8,17 +8,15 @@ INCLUDES := -I./includes \
 			-I./includes/ConfigParser \
 
 FSAN := address
+NO_DEBUG = -DNDEBUG
+WWW := -Wall -Wextra -Wconversion -Wsign-conversion -Werror
 
-#-Werror
-WWW := -Wall -Wextra 
+BASE_CXXFLAGS := $(WWW) -std=c++17 -O3 $(INCLUDES)
+DEBUG_CXXFLAGS := -g -fsanitize=$(FSAN)
+RELEASE_CXXFLAGS := $(NO_DEBUG)
 
-CXXFLAGS :=  $(WWW) -std=c++17 -g -fsanitize=$(FSAN) -O3 \
-			-Wconversion -Wsign-conversion  $(INCLUDES) \
+CXXFLAGS := $(BASE_CXXFLAGS) $(RELEASE_CXXFLAGS)
 
-#CXXFLAGS :=  $(WWW) -std=c++17 -g -pg -O3 -no-pie \
-#			-Wconversion -Wsign-conversion $(INCLUDES) \
-
-#-Wno-shadow -Wshadow
 
 SRCS_DIR := srcs/
 SRCS := main.cpp \
@@ -53,9 +51,12 @@ YELLOW	=	\033[33m
 CYAN	=	\033[0;36m
 CLEAR	=	\033[0m
 
-.PHONY: all normal leaks clean fclean re compile_commands.json
+.PHONY: all debug normal leaks clean fclean re compile_commands.json
 
 all: $(NAME) client
+
+debug: CXXFLAGS = $(BASE_CXXFLAGS) $(DEBUG_CXXFLAGS)
+debug: all
 
 $(NAME): $(OBJS)
 	$(CPP) $(CXXFLAGS) $(OBJS) -o $(NAME) $(CXXFLAGS)

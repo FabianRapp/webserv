@@ -49,7 +49,6 @@ void	WriteFd::execute(void) {
 	if (pos == src.size() || write_ret == 0) {
 		data.set_close(data_idx);
 		completion_callback();
-		//std::cout << "writer finished\n";
 		return ;
 	}
 }

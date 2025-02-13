@@ -617,12 +617,7 @@ void	Response::_finish_up(void) {
 		+ _body
 	;
 	_client_mode = ClientMode::SENDING;
-	//for debugging: saves the body as file
-	int debug_body_fd = open("body", O_WRONLY | O_CREAT | O_TRUNC, 0777);
-	FT_ASSERT(debug_body_fd >  0);
-	ssize_t v = write(debug_body_fd, _body.c_str(), _body.length());
-	(void)v;
-	close(debug_body_fd);
+	LOG_FILE("body.txt", _body.c_str(), _body.length());
 }
 
 void	Response::overwrite_response_str(const std::string& new_response) {

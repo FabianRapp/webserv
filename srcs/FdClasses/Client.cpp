@@ -3,6 +3,7 @@
 #include "../../includes/Manager.hpp"
 #include "../../includes/Response.hpp"
 #include "../../includes/macros.h"
+#include <logging.hpp>
 
 Client::Client(DataManager& data, Server* parent_server):
 	BaseFd(data, POLLIN | POLLOUT, "ClientHandler"),
@@ -67,14 +68,7 @@ void	Client::_receive_request(void) {
 	this->parse();
 	if (_parser.is_finished() == true)
 	{
-		{
-			//todo: remove this later
-			int	debug_fd = open("request.txt", O_WRONLY | O_TRUNC | O_APPEND | O_CREAT, 0644);
-			FT_ASSERT(debug_fd > 0);
-			ssize_t v = write(debug_fd, input.c_str(), input.size());
-			(void)v;
-			close(debug_fd);
-		}
+		LOG_FILE("request.txt", input.c_str(), input.size());
 		_request = _parser.move_request();
 		mode = ClientMode::BUILD_RESPONSE;
 		_send_data.pos = 0;
@@ -155,17 +149,6 @@ void	Client::_send_response(void) {
 		_send_data.response.size() - _send_data.pos,
 		send_flags
 	);
-		{
-			//remove this later
-			int dbg_fd= open("response.txt", O_WRONLY |O_CLOEXEC| O_TRUNC | O_CREAT, 0777);
-			ssize_t	v = write(dbg_fd, _send_data.response.c_str(), _send_data.response.size());
-			(void)v;
-			ft_close(dbg_fd);
-			if (errno) {
-				LOG(strerror(errno) << std::endl);
-			}
-		}
-
 	if (send_bytes <= 0) {
 		LOG(FT_ANSI_RED "Error: " << name << ": send: closing connection now\n" FT_ANSI_RESET);
 		set_close();
@@ -174,6 +157,7 @@ void	Client::_send_response(void) {
 	LOG(FT_ANSI_BLUE "Send by " << name << ": " << _send_data.response.substr(_send_data.pos, 10) << "..\n" FT_ANSI_RESET);
 	_send_data.pos += static_cast<size_t>(send_bytes);
 	if (_send_data.pos == _send_data.response.size()) {
+		LOG_FILE("response.txt", _send_data.response.c_str(), _send_data.response.size());
 		mode = ClientMode::RECEIVING;
 		_send_data.response = "";
 		_send_data.pos = 0;

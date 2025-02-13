@@ -2,8 +2,6 @@
 #include "../../includes/Manager.hpp"
 #include <Response.hpp>
 
-//todo: remove debug fd
-
 ReadFd::ReadFd(DataManager& data, Response& response, std::string& target_buffer, int fd, Client& client,
 		ssize_t byte_count, std::function<void()> completion_callback):
 	BaseFd(data, POLLIN, "ReadFd"),
@@ -11,17 +9,14 @@ ReadFd::ReadFd(DataManager& data, Response& response, std::string& target_buffer
 	completion_callback(std::move(completion_callback)),
 	client(&client),
 	server(client.server),
-	response(response),
-	debug_fd(open("read_data_debug", O_CREAT | O_TRUNC | O_WRONLY, 0777))
+	response(response)
 {
-	FT_ASSERT(debug_fd >= 0);
 	this->fd = fd;
 	_set_non_blocking();
 	left_over_bytes = byte_count;
 }
 
 ReadFd::~ReadFd(void) {
-	close(debug_fd);
 }
 
 void	ReadFd::execute(void) {
@@ -60,8 +55,7 @@ void	ReadFd::execute(void) {
 	left_over_bytes -= read_ret;
 	target_buf.append(buffer, static_cast<size_t>(read_ret));
 	if (left_over_bytes == 0 || read_ret == 0) {
-		ssize_t v = write(debug_fd, target_buf.c_str(), static_cast<size_t>(target_buf.size()));
-		(void)v;
+		LOG_FILE("read_data_debug.txt", target_buf.c_str(), static_cast<size_t>(target_buf.size()));
 		data.set_close(data_idx);
 		completion_callback();
 		return ;
