@@ -80,8 +80,6 @@ DefaultErrorPages::DefaultErrorPages() {
 	_error_pages[511] = "./default/error_pages/511.html"; // Network Authentication Required (RFC 6585)
 }
 
-// void DefaultErrorPages::getErrorPage()
-
 const std::string DefaultErrorPages::getErrorPageLink(int err_code) const {
 	auto it = _error_pages.find(err_code);
 
@@ -99,17 +97,16 @@ void DefaultErrorPages::setErrorPageLink(int err_code, std::string link) {
 
 	if(it != _error_pages.end()) {
 		it->second = link;
-		// std::cout << "Replaced link for error code " << err_code << " with: " << link << std::endl;
 	} else {
-		throw (std::ios_base::failure("Status page for code("
-			+ std::to_string(err_code) + ") not found"));
+		throw (DefaultErrorPagesError("Status page for code("+ std::to_string(err_code) + ") not found"));
 	}
+
 }
 
 void DefaultErrorPages::printErrorPages() const {
 	for (const auto& [code, path] : _error_pages) {
 		if( code == 404) {
-		// std::cout << FT_ANSI_YELLOW << "Error Code " << code << ": " << path << FT_ANSI_RESET << "\n";
+		std::cout << FT_ANSI_YELLOW << "Error Code " << code << ": " << path << FT_ANSI_RESET << "\n";
 		}
 	}
 }

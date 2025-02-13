@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <set>
+#include <unordered_set>
 #include <sstream>
 #include "ServerConfigFile.hpp"
 #include "LocationConfigFile.hpp"
@@ -18,7 +19,11 @@ public:
 
 class ConfigParser {
 private:
-
+	std::unordered_set<std::string> dubs_serv_set;
+	std::unordered_set<std::string> dubs_loc_set;
+	std::unordered_set<std::string> location_paths;
+	void checkAndSetServerOptionDubs(const std::string& option);
+	void checkAndSetLocationOptionDubs(const std::string& option);
 	std::vector<ServerConfigFile> _servers;
 	void validateServerConfig(const ServerConfigFile& server) const;
 	std::string trimWhiteSpace(const std::string& str) const;

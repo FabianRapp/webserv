@@ -47,6 +47,7 @@ void ServerConfigFile::setIndexFile(const std::string index_file) {
 void ServerConfigFile::addErrorPage(int err_code, const std::string& path) {
 	// Check if the file exists
 	//todo: need to add full path to the file.
+	std::cout << "path: " << path << std::endl;
 	if (std::filesystem::exists(path)) {
 		_error_pages.setErrorPageLink(err_code, path); // Replace default error page link
 		std::cout << "Replaced default error page for code 333- " << err_code << " with " << path << "\n";
@@ -135,7 +136,7 @@ void ServerConfigFile::printServer() const {
 	}
 	std::cout << "Root Directory: " << _root << "\n";
 
-	// Print error pages
+	// Print error pages (debug)
 	// std::cout << "Error Pages:\n";
 	// _error_pages.printErrorPages();
 

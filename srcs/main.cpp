@@ -87,6 +87,8 @@ start:
 		webserv(ac, av);
 	} catch (const ConfigParseError& err) {
 		std::cerr << FT_ANSI_RED_BOLD << err.what() << FT_ANSI_RESET << std::endl;
+	} catch (const DefaultErrorPagesError& err) {
+		std::cerr << FT_ANSI_RED_BOLD << err.what() << FT_ANSI_RESET << std::endl;
 	} catch (const std::bad_alloc&) {
 		std::cerr << FT_ANSI_RED_BOLD << "Bad alloc!\nRestarting servers.." << FT_ANSI_RESET << std::endl;
 		goto start;

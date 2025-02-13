@@ -6,22 +6,6 @@
 
 ConfigParser::ConfigParser() {}
 
-void ConfigParser::checkAndSetServerOptionDubs(const std::string& option) {
-	if (dubs_serv_set.find(option) != dubs_serv_set.end()) {
-		throw ConfigParseError("ERROR: Duplicate option in server block'"
-			+ option + "' found!");
-	}
-	dubs_serv_set.insert(option);
-}
-
-void ConfigParser::checkAndSetLocationOptionDubs(const std::string& option) {
-	if (dubs_loc_set.find(option) != dubs_loc_set.end()) {
-		throw ConfigParseError("ERROR: Duplicate option in location block'"
-			+ option + "' found!");
-	}
-	dubs_loc_set.insert(option);
-}
-
 ConfigParser::ConfigParser(const std::string& config_file) {
 	parseFile(config_file);
 }
@@ -113,12 +97,12 @@ void ConfigParser::validatePort(const std::string& line, ServerConfigFile& curre
 
 	size_t space_pos = line.find(' ');
 	if (space_pos != std::string::npos) {
-		throw ConfigParseError("ERROR: Invalid listen option: '" + line
+		throw ConfigParseError("ERROR: Invalid listen directive: '" + line
 			+ "'. Port must not contain spaces or additional words.");
 	}
 
 	if (line.find_first_not_of("0123456789") != std::string::npos) {
-		throw ConfigParseError("ERROR: Invalid listen option: '"+ line +
+		throw ConfigParseError("ERROR: Invalid listen directive: '"+ line +
 			"'. Port must be numeric.");
 	}
 	int port = std::stoi(line);
@@ -146,32 +130,27 @@ void ConfigParser::validateRoot(const std::string& value, bool is_server_block) 
 
 	// Check if the path starts with '/'
 	if (!value.empty() && value[0] != '/') {
-		throw ConfigParseError("ERROR: Invalid root configuration: '" + value
-			+ "'. Path must start with '/'.");
+		throw ConfigParseError("ERROR: Invalid root configuration: '" + value + "'. Path must start with '/'.");
 	}
 
 	// Check if the path ends with '/' (but allow just "/")
 	if (value.size() > 1 && value.back() == '/') {
-		throw ConfigParseError("ERROR: Invalid root configuration: '" + value
-			+ "'. Path must not end with '/'.");
+		throw ConfigParseError("ERROR: Invalid root configuration: '" + value + "'. Path must not end with '/'.");
 	}
 
 	// Check for invalid characters and ensure no dots
 	for (char ch : value) {
 		if (!std::isalnum(ch) && ch != '/' && ch != '_' && ch != '-') {
-			throw ConfigParseError("ERROR: Invalid root configuration: '"
-				+ value + "'. Path contains invalid characters.");
+			throw ConfigParseError("ERROR: Invalid root configuration: '" + value + "'. Path contains invalid characters.");
 		}
 		if (ch == '.') {
-			throw ConfigParseError("ERROR: Invalid root configuration: '"
-				+ value + "'. Path must not contain dots.");
+			throw ConfigParseError("ERROR: Invalid root configuration: '" + value + "'. Path must not contain dots.");
 		}
 	}
 
 	// Check for spaces or multiple words
 	if (value.find(' ') != std::string::npos) {
-		throw ConfigParseError("ERROR: Invalid root configuration: '" + value
-			+ "'. Path must not contain spaces or multiple words.");
+		throw ConfigParseError("ERROR: Invalid root configuration: '" + value + "'. Path must not contain spaces or multiple words.");
 	}
 }
 
@@ -259,9 +238,48 @@ void ConfigParser::parseFile(const std::string& config_file) {
 }
 
 void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count) {
-	dubs_serv_set.clear();
-	location_paths.clear();
 	std::string line;
+
+
+    bool root_found = false;
+
+    // Preliminary loop to find and set the root directive first
+    std::streampos block_start = file.tellg(); // Save the position of the start of the block
+    while (std::getline(file, line)) {
+        line = trimWhiteSpace(line);
+
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+
+        line = sanitizeLine(line);
+
+        if (line == "}") {
+            throw ConfigParseError("ERROR: 'root' must be defined in the server block before other directives!");
+        }
+
+        // Check for "root" directive
+        if (line.find("root ") == 0) {
+            std::string root_value = trimWhiteSpace(line.substr(5));
+            if (!root_value.empty() && root_value.back() == ';') {
+                root_value.pop_back();
+            }
+
+            validateRoot(root_value, true); // Validate root
+            current_server.setRoot(root_value); // Set root for the server
+            root_found = true;
+            break; // Exit after finding and setting root
+        }
+    }
+
+    if (!root_found) {
+        throw ConfigParseError("ERROR: Mandatory 'root' directive is missing in the server block!");
+    }
+
+    // Reset file stream to re-parse the block
+    file.clear();
+    file.seekg(block_start);
+
 
 	while (std::getline(file, line)) {
 		line = trimWhiteSpace(line);
@@ -281,11 +299,6 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 					throw ConfigParseError("ERROR: Invalid location path: " + path);
 			}
 
-			// check for dup location blocks
-			if (location_paths.find(path) != location_paths.end()) {
-				throw ConfigParseError("ERROR: Duplicate location path found: " + path);
-			}
-			location_paths.insert(path);
 			// Debug: Print the parsed path
 			// std::cout << "Parsed path: " << "|" << path << "|" << std::endl;
 
@@ -296,6 +309,7 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			current_server.addLocation(current_location);
 			continue;
 		}
+
 		if (line == "}") {
 			bracket_count--;
 			validateServerConfig(current_server);
@@ -307,7 +321,6 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			line.pop_back(); // Remove trailing semicolon
 		}
 		if (line.find("listen ") == 0) {
-			checkAndSetServerOptionDubs("listen");
 			std::string port_value = trimWhiteSpace(line.substr(7));
 
 			if (!port_value.empty() && port_value.back() == ';') {
@@ -316,7 +329,6 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 
 			validatePort(port_value, current_server);
 		} else if (line.find("server_name ") == 0) {
-			checkAndSetServerOptionDubs("server_name");
 			std::string server_names_line = trimWhiteSpace(line.substr(12));
 
 			if (server_names_line.empty()) {
@@ -330,11 +342,9 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 				current_server.addServerName(name);
 			}
 		} else if (line.find("cgi_path ") == 0) {
-			checkAndSetServerOptionDubs("cgi_path");
 			handleCgiPath(line, current_server);
 			handleCgiPath(line, current_server.setDefaultLocation());
 		} else if (line.find("allowed_methods ") == 0) {
-			checkAndSetServerOptionDubs("allowed_methods");
 			//todo: fix this shit later
 			std::string methods_str = trimWhiteSpace(line.substr(15));
 
@@ -347,19 +357,19 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			validateMethods(methods_str, current_server.setDefaultLocation());
 
 		} else if (line.find("root ") == 0) {
-			checkAndSetServerOptionDubs("root");
-			std::string root_value = trimWhiteSpace(line.substr(5)); // Extract the value after "root "
+			// std::string root_value = trimWhiteSpace(line.substr(5)); // Extract the value after "root "
 
-			if (!root_value.empty() && root_value.back() == ';') {
-				root_value.pop_back();
-			}
+			// if (!root_value.empty() && root_value.back() == ';') {
+			// 	root_value.pop_back();
+			// }
 
-			validateRoot(root_value, true); // true for server block
-			current_server.setRoot(root_value);
-			current_server.setDefaultLocation().setRoot("/");
+			// // Validate and set the root path
+			// validateRoot(root_value, true); // true for server block
+			// current_server.setRoot(root_value);
+			// current_server.setDefaultLocation().setRoot("/");
 
 		} else if (line.find("error_page ") == 0) {
-			checkAndSetServerOptionDubs("error_page");
+
 			std::string error_directive = line.substr(11);
 			std::vector<std::string> tokens = splitByWhitespace(error_directive);
 
@@ -388,32 +398,14 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 					path = path.substr(1);
 				}
 
-				// std::string root = current_server.getRoot();
 				std::string root = current_server.getRoot();
-				std::cout << "ROOT: " << root << std::endl;
-
-				// Check if root is empty
-				if (root.empty()) {
-					// throw std::runtime_error("Root directory cannot be empty");
-					throw ConfigParseError("Root option has to be set before error_code!");
-				}
-
-				// std::string full_path = root.back() == '/' ? root + path : root + "/" + path;
-
-				std::string full_path;
-				if (root.back() == '/') {
-					full_path = root + path;
-				} else {
-					full_path = root + "/" + path;
-				}
-
+				std::string full_path = root.back() == '/' ? root + path : root + "/" + path;
 
 				current_server.addErrorPage(code, full_path);
 				current_server.getErrorPages().printErrorPages();
 			}
 
 		} else if (line.find("request_body_size ") == 0) {
-			checkAndSetServerOptionDubs("request_body_size");
 			std::string size_value = trimWhiteSpace(line.substr(17));
 
 			if (!size_value.empty() && size_value.back() == ';') {
@@ -424,7 +416,6 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			validateClientBodySize(size_value, current_server.setDefaultLocation());
 
 		} else if (line.find("index ") == 0) {
-			checkAndSetServerOptionDubs("index");
 			std::string index_value = trimWhiteSpace(line.substr(6));
 
 			if (!index_value.empty() && index_value.back() == ';') {
@@ -435,7 +426,6 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			validateIndex(index_value, current_server.setDefaultLocation());
 
 		} else if (line.find("autoindex ") == 0) {
-			checkAndSetServerOptionDubs("autoindex");
 			std::string autoindex_value = trimWhiteSpace(line.substr(10));
 
 			if (!autoindex_value.empty() && autoindex_value.back() == ';') {
@@ -445,20 +435,19 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			validateAutoIndex(autoindex_value, current_server);
 			validateAutoIndex(autoindex_value, current_server.setDefaultLocation());
 		} else if (line.find("error_page ") == 0) {
-			// std::string error_page_value = trimWhiteSpace(line.substr(11));
+			std::string error_page_value = trimWhiteSpace(line.substr(11));
 
-			// if (!error_page_value.empty() && error_page_value.back() == ';') {
-			// 	error_page_value.pop_back();
-			// }
+			if (!error_page_value.empty() && error_page_value.back() == ';') {
+				error_page_value.pop_back();
+			}
 
 			} else {
-				throw ConfigParseError("ERROR: Invalid line inside server block: " + line);
+			throw ConfigParseError("ERROR: Invalid line inside server block: " + line);
 		}
 	}
 }
 
 void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& current_location, int& bracket_count) {
-	dubs_loc_set.clear();
 	std::string line;
 
 	while (std::getline(file, line)) {
@@ -484,7 +473,6 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 
 		// Parse key-value pairs inside the location block
 		if (line.find("allowed_methods ") == 0) {
-			checkAndSetLocationOptionDubs("allowed_methods");
 			std::string methods_str = trimWhiteSpace(line.substr(15));
 
 			if (!methods_str.empty() && methods_str.back() == ';') {
@@ -495,11 +483,9 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			validateMethods(methods_str, current_location);
 
 		} else if (line.find("cgi_path ") == 0) {
-			checkAndSetLocationOptionDubs("cgi_path");
 			handleCgiPath(line, current_location);
 
 		} else if (line.find("redirection ") == 0) {
-			checkAndSetLocationOptionDubs("redirection");
 			std::string redir_str = trimWhiteSpace(line.substr(12));
 
 			if (!redir_str.empty() && redir_str.back() == ';') {
@@ -508,7 +494,6 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			current_location.setIsRedir(true);
 			current_location.setRedirection(redir_str);
 		} else if (line.find("autoindex ") == 0) {
-			checkAndSetLocationOptionDubs("autoindex");
 			std::string autoindex_value = trimWhiteSpace(line.substr(10));
 
 			if (!autoindex_value.empty() && autoindex_value.back() == ';') {
@@ -518,7 +503,6 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			validateAutoIndex(autoindex_value, current_location);
 
 		} else if (line.find("root ") == 0) {
-			checkAndSetLocationOptionDubs("root");
 			std::string root_value = trimWhiteSpace(line.substr(5));
 
 			if (!root_value.empty() && root_value.back() == ';') {
@@ -528,7 +512,6 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			validateRoot(root_value, false); // false for location block
 			current_location.setRoot(root_value);
 		} else if (line.find("request_body_size ") == 0) {
-			checkAndSetLocationOptionDubs("request_body_size");
 			std::string size_value = trimWhiteSpace(line.substr(17));
 
 			if (!size_value.empty() && size_value.back() == ';') {
@@ -538,7 +521,6 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			validateClientBodySize(size_value, current_location);
 
 		} else if (line.find("index ") == 0) {
-			checkAndSetLocationOptionDubs("index");
 			std::string index_value = trimWhiteSpace(line.substr(6));
 
 			if (!index_value.empty() && index_value.back() == ';') {
@@ -548,7 +530,7 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			validateIndex(index_value, current_location);
 
 		} else {
-			throw (ConfigParseError("ERROR: Invalid option inside location block: " + line));
+			throw (ConfigParseError("ERROR: Invalid directive inside location block: " + line));
 		}
 	}
 }
