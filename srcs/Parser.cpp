@@ -228,6 +228,13 @@ bool	Parser::parse_first_line(const RequestArray& array) {
 		setRequestMethod(array[0][0]);
 		setUri(array[0][1]);
 		setVersion(array[0][2]);
+		if (_request._version != " HTTP/1.1") {//care: the space is intentional, idk..
+			LOG(FT_ANSI_RED "Unsupported HTTP version:" << _request._version
+				<< "\n" FT_ANSI_RESET);
+			_request._finished = true;
+			_request.set_status_code(505);
+			return (false);
+		}
 	}
 	return (true);
 }
@@ -384,7 +391,6 @@ void	Parser::checkForChunks(std::vector<std::string>& bodyVector) {
 }
 
 // there will be probably more checks needed for the formatting of the parser
-// TO DO: try to parse one chunk at the time and continue the parsing at the next iter
 
 // POSIBLE LOGIC: add line by line to _bodyTokens and then check the vector, if there is a pair of matching chunkSizeLine and chunkLine
 // then parse it, add it to the body and remove them from the vector
@@ -459,13 +465,7 @@ bool	Parser::_invalid_headers(void) {
 	return (false);
 }
 
-// to do:
-// 1. finish the checking for the end of the body
-// 2. do more checking for chunked and unchunked bodies in multiple reads
 void Parser::parse(void) {
-	// std::cout << "from parser:" <<std::endl << "|" << input << "|" << std::endl;
-	//std::cout << "Parsing started\n";
-	//std::cout << "parser input: " << _input << "\n";
 	RequestArray	array;
 	if (!_request._areHeadersParsed)
 	{

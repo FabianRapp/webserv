@@ -23,7 +23,7 @@ WriteFd::~WriteFd(void) {
 
 void	WriteFd::execute(void) {
 	if (is_ready(POLLHUP) && !is_ready(POLLIN)) {
-		std::cout << FT_ANSI_RED "write POLLHUP\n" FT_ANSI_RESET;
+		LOG(FT_ANSI_RED "write POLLHUP\n" FT_ANSI_RESET);
 		data.set_close(data_idx);
 		completion_callback();
 		return ;
@@ -31,11 +31,10 @@ void	WriteFd::execute(void) {
 	if (!is_ready(POLLOUT)) {
 		return ;
 	}
-	std::cout << "exec write fd\n";
 	ssize_t write_ret = write(fd, src.data() + pos, src.size() - pos);
 	if (write_ret < 0) {
-		std::cerr << FT_ANSI_RED "Error: fd: " << name
-			<< ": write failed\n" FT_ANSI_RESET;
+		LOG(FT_ANSI_RED "Error: fd: " << name
+			<< ": write failed\n" FT_ANSI_RESET);
 		data.set_close(data_idx);
 		completion_callback();
 		response.load_status_code_response(500, "Internal Server Error");
