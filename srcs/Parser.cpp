@@ -468,11 +468,13 @@ void Parser::parse(void) {
 			_request._finished = false;
 			return ;
 		}
-		FT_ASSERT(array.size());
+		if (!array.size()) {
+			_request._finished = false;
+			return ;
+		}
 		if (PRINT_REQUEST) {
 			LOG(array);
 		}
-
 		if (!parse_first_line(array)) {
 			return ;
 		}

@@ -12,7 +12,6 @@
 #include "FdClasses/Client.hpp"
 #include "FdClasses/ReadFd.hpp"
 
-#include <thread>
 #include <unistd.h>
 #include <cstring>
 #include <errno.h>

@@ -628,11 +628,12 @@ void	Response::execute(void) {
 	// check if the status was changed from 200 by something outside the Response class
 	int	status_code = _request._status_code.first;
 	const std::string&	status_str = _request._status_code.second;
-	if (status_code != 200) {
+	if ((status_code != 200 && !_in_error_handling) || status_code == 500) {
 		load_status_code_response(status_code, status_str, _request.additional_response_headers);
+		status_code = 200;//avoid infite recursion
 		return ;
 	}
-	if (_first_iter) {
+	if (_first_iter && !_in_error_handling) {
 		_first_iter = false;
 		_path = getExpandedTarget();
 		//return if a status code file was requested
@@ -746,10 +747,16 @@ std::string	Response::getExpandedTarget(void) {
 	}
 	LOG("Request URI: " << _request._uri << "\n");
 	LOG("System path for response: " << expandedPath << "\n");
-	if (!std::filesystem::exists(expandedPath) && _request.getMethod() == MethodType::GET) {
-		LOG(FT_ANSI_RED "404: File does not exist: " << expandedPath
-			<< std::endl << FT_ANSI_RESET);
-		errno = 0;
+	try {
+		if (!std::filesystem::exists(expandedPath) && _request.getMethod() == MethodType::GET) {
+			LOG(FT_ANSI_RED "404: File does not exist: " << expandedPath
+				<< std::endl << FT_ANSI_RESET);
+			errno = 0;
+			load_status_code_response(404, "Not Found");
+			return ("");
+		}
+	} catch (const std::filesystem::filesystem_error& e) {
+		LOG(FT_ANSI_RED "Error expanding path: " << e.what() << FT_ANSI_RESET "\n");
 		load_status_code_response(404, "Not Found");
 		return ("");
 	}

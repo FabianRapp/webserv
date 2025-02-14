@@ -16,7 +16,7 @@ Client::Client(DataManager& data, Server* parent_server):
 
 {
 	this->server = parent_server;
-	assert(server->is_ready(POLLIN));
+	FT_ASSERT(server->is_ready(POLLIN));
 	errno = 0;
 
 	socklen_t				addr_len = static_cast<socklen_t>(sizeof addr);
@@ -70,6 +70,7 @@ void	Client::_receive_request(void) {
 	{
 		LOG_FILE("request.txt", input.c_str(), input.size());
 		_request = _parser.move_request();
+		LOG_FILE("request_body.txt", _request._body.c_str(), _request._body.size());
 		mode = ClientMode::BUILD_RESPONSE;
 		_send_data.pos = 0;
 		_send_data.response = "";
