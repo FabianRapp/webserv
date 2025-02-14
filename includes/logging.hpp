@@ -16,7 +16,7 @@ extern volatile sig_atomic_t	exit_;
 #endif //LOGGING
 
 #ifndef LOGGING_PARSING
-#define LOGGING_PARSING (0 && LOGGING)
+#define LOGGING_PARSING (1 && LOGGING)
 #endif //LOGGING_PARSING
 
 
@@ -29,7 +29,7 @@ extern volatile sig_atomic_t	exit_;
 #endif //LOGGING_ADRIAN
 
 #ifndef LOGGING_FABIAN
-#define LOGGING_FABIAN (0 && LOGGING)
+#define LOGGING_FABIAN (1 && LOGGING)
 #endif //LOGGING_FABIAN
 
 //for more logging, mostly disabled

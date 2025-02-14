@@ -625,16 +625,19 @@ void	Response::overwrite_response_str(const std::string& new_response) {
 }
 
 void	Response::execute(void) {
-	// check if the status was changed from 200 by something outside the Response class
-	int	status_code = _request._status_code.first;
-	const std::string&	status_str = _request._status_code.second;
-	if ((status_code != 200 && !_in_error_handling) || status_code == 500) {
-		load_status_code_response(status_code, status_str, _request.additional_response_headers);
-		status_code = 200;//avoid infite recursion
-		return ;
-	}
+
 	if (_first_iter && !_in_error_handling) {
 		_first_iter = false;
+	
+		// check if the status was changed from 200 by something outside the Response class
+		int	status_code = _request._status_code.first;
+		const std::string&	status_str = _request._status_code.second;
+		if ((status_code != 200 && !_in_error_handling) || status_code == 500) {
+
+			load_status_code_response(status_code, status_str, _request.additional_response_headers);
+			status_code = 200;//avoid infite recursion
+			return ;
+		}
 		_path = getExpandedTarget();
 		//return if a status code file was requested
 		if (_mode != ResponseMode::NORMAL) {
