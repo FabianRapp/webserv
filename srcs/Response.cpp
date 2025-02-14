@@ -628,7 +628,7 @@ void	Response::execute(void) {
 
 	if (_first_iter && !_in_error_handling) {
 		_first_iter = false;
-	
+
 		// check if the status was changed from 200 by something outside the Response class
 		int	status_code = _request._status_code.first;
 		const std::string&	status_str = _request._status_code.second;
@@ -717,7 +717,7 @@ void Response::setAllowedMethods() {
 	if (_location_config.isPutAllowed()) {
 		_allowedMethods.push_back(MethodType::PUT);
 	}
-	if (_location_config.isPostAllowed()) {
+	if (_location_config.isDeleteAllowed()) {
 		_allowedMethods.push_back(MethodType::DELETE);
 	}
 }
