@@ -5,9 +5,11 @@
 #include <string>
 #include <fstream>
 #include <set>
+#include <unordered_set>
 #include <sstream>
 #include "ServerConfigFile.hpp"
 #include "LocationConfigFile.hpp"
+#include <colors.h>
 
 #include <regex>
 
@@ -18,50 +20,43 @@ public:
 
 class ConfigParser {
 private:
-	std::vector<ServerConfigFile> _servers; // List of parsed servers
+	std::unordered_set<std::string> dubs_serv_set;
+	std::unordered_set<std::string> dubs_loc_set;
+	std::unordered_set<std::string> location_paths;
+	void checkAndSetServerOptionDubs(const std::string& option);
+	void checkAndSetLocationOptionDubs(const std::string& option);
+	std::vector<ServerConfigFile> _servers;
 	void validateServerConfig(const ServerConfigFile& server) const;
-	// Helper methods
-	std::string trimWhiteSpace(const std::string& str) const;
+	std::string trimWhiteSpaceEdges(const std::string& str) const;
+	std::string sanitizeLine(const std::string& line) const;
+	std::vector<std::string> splitByWhitespace(const std::string& str) const;
+	void validateServerName(const std::string& value, ServerConfigFile& server);
+	void validatePort(const std::string& line, ServerConfigFile& current_server);
+	void validateRoot(const std::string& value, bool is_server_block);
 	bool isValidLocationPath(const std::string& path) const;
-	void parseFile(const std::string& config_file);
-	void parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count);
-	void parseLocationBlock(std::ifstream& file, LocationConfigFile& current_location, int& bracket_count);
-
+	void errorPageValidation(const std::string& line, ServerConfigFile& current_server);
 	void validateCgiExtension(const std::string& ext);
 	void validateExecutablePath(const std::string& path);
-
-	//testing templates for validation. Need to recheck todo
+	void parseFile(const std::string& config_file);
+	void parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count);
+	void handleServerOptions(const std::string& option, const std::string& value, ServerConfigFile& current_server);
+	void parseLocationBlock(std::ifstream& file, LocationConfigFile& current_location, int& bracket_count);
+	void handleLocationOption(const std::string& line, const std::string& single_value, LocationConfigFile& current_location);
 
 	template <typename T>
 	void validateMethods(const std::string& methods_str, T& config_object);
 
 	template <typename T>
+	void validateCgiPath(const std::string& values, T& config);
+
+	template <typename T>
 	void validateIndex(const std::string& value, T& config_object);
-
-	template <typename T>
-	void handleCgiPath(const std::string& line, T& config);
-
-	template <typename T>
-	void	validateAutoIndex(const std::string& value, T& config_object);
 
 	template <typename T>
 	void validateClientBodySize(const std::string& value, T& config_object);
 
-
-
-	void validatePort(const std::string& line, ServerConfigFile& current_server);
-
-	// void validateRoot(const std::string& value, const std::string& directive_name);
-	void validateRoot(const std::string& value, const std::string& directive_name, bool is_server_block);
-
-	// void validateClientBodySize(const std::string& value);
-
-
-	std::string sanitizeLine(const std::string& line) const;
-
-	std::vector<std::string> splitByWhitespace(const std::string& str) const;
-
-	void validateServerName(const std::string& name);
+	template <typename T>
+	void validateAutoIndex(const std::string& value, T& config_object);
 
 public:
 	ConfigParser();
@@ -97,15 +92,15 @@ void ConfigParser::validateMethods(const std::string& methods_str, T& config_obj
 }
 
 template <typename T>
-void ConfigParser::handleCgiPath(const std::string& line, T& config_object) {
-	std::vector<std::string> tokens = splitByWhitespace(line);
+void ConfigParser::validateCgiPath(const std::string& values, T& config_object) {
+	std::vector<std::string> tokens = splitByWhitespace(values);
 
-	if (tokens.size() != 3 || tokens[0] != "cgi_path") {
-		throw (ConfigParseError("Invalid cgi_pass format: " + line));
+	if (tokens.size() != 2) {
+		throw (ConfigParseError("Invalid cgi_pass format: " + values));
 	}
 
-	const std::string& ext = tokens[1];
-	const std::string& path = tokens[2];
+	const std::string& ext = tokens[0];
+	const std::string& path = tokens[1];
 
 	validateCgiExtension(ext);
 	validateExecutablePath(path);
@@ -122,7 +117,8 @@ void ConfigParser::validateIndex(const std::string& value, T& config_object) {
 	}
 
 	if (!std::regex_match(value, index_regex)) {
-		throw ConfigParseError("ERROR: Invalid index file name: " + value + ". File name must contain only letters, numbers, '_', '-', and optionally a single '.'");
+		throw ConfigParseError("ERROR: Invalid index file name: " + value
+			+ ". File name must contain only letters, numbers, '_', '-', and optionally a single '.'");
 	}
 
 	config_object.setIndexFile(value);
@@ -141,11 +137,20 @@ void ConfigParser::validateClientBodySize(const std::string& value, T& config_ob
 		}
 	}
 
-	int size = std::stoi(value);
-	const int MAX_SIZE = 1024 * 1024 * 1024; // 1 GB
+	int size;
+	try {
+		size = std::stoi(value);
+	} catch (const std::invalid_argument& ) {
+		throw(ConfigParseError("ERROR: Invalid request_body_size value: " + value + ". Must be a non-negative integer."));
+	} catch (const std::out_of_range& ) {
+		throw (ConfigParseError("ERROR: Invalid request_body_size value: " + value + ". Must be a non-negative integer."));
+	}
+
+	const int MAX_SIZE = 1024 * 1024 * 1024;
 
 	if (size > MAX_SIZE) {
-		throw (ConfigParseError("ERROR: Invalid request_body_size value: " + value + ". Maximum allowed is " + std::to_string(MAX_SIZE) + " bytes."));
+		throw (ConfigParseError("ERROR: Invalid request_body_size value: " + value
+			+ ". Maximum allowed is " + std::to_string(MAX_SIZE) + " bytes."));
 	}
 	config_object.setRequestBodySize(size);
 }

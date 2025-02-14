@@ -23,7 +23,40 @@ private:
 
 public:
 	LocationConfigFile();
+	LocationConfigFile(const LocationConfigFile& old)
+		: _path(old._path),
+			_get_header(old._get_header),
+			_post_header(old._post_header),
+			_delete_header(old._delete_header),
+			_put_header(old._put_header),
+			_autoindex(old._autoindex),
+			_request_body_size(old._request_body_size),
+			_isRedir(old._isRedir),
+			_cgi_map(old._cgi_map),
+			_root(old._root),
+			_index_file(old._index_file),
+			_redireciton(old._redireciton) {}
 
+	LocationConfigFile& operator=(const LocationConfigFile& old) {
+		if (this == &old) {
+			return *this;
+		}
+
+		_path = old._path;
+		_get_header = old._get_header;
+		_post_header = old._post_header;
+		_delete_header = old._delete_header;
+		_put_header = old._put_header;
+		_autoindex = old._autoindex;
+		_request_body_size = old._request_body_size;
+		_isRedir = old._isRedir;
+		_cgi_map = old._cgi_map;
+		_root = old._root;
+		_index_file = old._index_file;
+		_redireciton = old._redireciton;
+
+		return *this;
+	}
 	void setPath(const std::string& path);
 	void setMethods(bool get, bool post, bool del, bool put);
 	void setAutoIndex(bool autoindex);
@@ -46,8 +79,6 @@ public:
 	const std::string& getRedirection() const;
 	int getRequestBodySize() const;
 	const std::map<std::string, std::string>& getCgiExtensions() const;
-
-	// void validateMethods() const;
 
 	void printLocation() const;
 

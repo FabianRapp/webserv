@@ -14,8 +14,6 @@ void LocationConfigFile::setMethods(bool get, bool post, bool del, bool put) {
 	_post_header = post;
 	_delete_header = del;
 	_put_header = put;
-
-	// validateMethods();
 }
 
 void LocationConfigFile::setAutoIndex(bool autoindex) {
@@ -42,49 +40,7 @@ void LocationConfigFile::setRequestBodySize(int size) {
 	_request_body_size = size;
 }
 
-// void LocationConfigFile::addCgiExtension(const std::string& ext, const std::string& path_to_binary) {
-// 	// Validate extension format
-// 	if (ext.empty() || ext[0] != '.') {
-// 		throw std::invalid_argument("CGI extension must start with '.'");
-// 	}
-
-// 	// Validate allowed characters in extension
-// 	const std::string allowed_chars = "abcdefghijklmnopqrstuvwxyz_";
-// 	if (ext.substr(1).find_first_not_of(allowed_chars) != std::string::npos) {
-// 		throw std::invalid_argument("Invalid CGI extension: " + ext + " !");
-// 	}
-
-// 	// Validate binary path format
-// 	if (path_to_binary.empty() || path_to_binary[0] != '/' ||
-// 		path_to_binary.find("..") != std::string::npos) {
-// 		throw std::invalid_argument("Invalid CGI binary path: " + path_to_binary);
-// 	}
-
-// 	// Validate binary is executable
-// 	if (access(path_to_binary.c_str(), X_OK) != 0) {
-// 		throw std::runtime_error("CGI binary not executable: " + path_to_binary);
-// 	}
-
-// 	_cgi_map[ext] = path_to_binary;
-// }
-
 void LocationConfigFile::addCgiExtension(const std::string& ext, const std::string& path_to_binary) {
-	// Permanent configuration validation
-	if (ext.empty() || ext[0] != '.') {
-		throw std::invalid_argument("CGI extension must start with '.'");
-	}
-
-	const std::string allowed_chars = "abcdefghijklmnopqrstuvwxyz_";
-	if (ext.substr(1).find_first_not_of(allowed_chars) != std::string::npos) {
-		throw std::invalid_argument("Invalid CGI extension format: " + ext);
-	}
-
-	if (path_to_binary.empty() || path_to_binary[0] != '/' ||
-		path_to_binary.find("..") != std::string::npos) {
-		throw std::invalid_argument("Invalid CGI path format: " + path_to_binary);
-	}
-
-	// Store without executable check
 	_cgi_map[ext] = path_to_binary;
 }
 
@@ -137,11 +93,6 @@ const std::map<std::string, std::string>& LocationConfigFile::getCgiExtensions()
 	return _cgi_map;
 }
 
-// void LocationConfigFile::validateMethods() const {
-// 	if (!_get_header && !_post_header && !_delete_header) {
-// 		throw std::runtime_error("Invalid or no methods provided.");
-// 	}
-// }
 
 void LocationConfigFile::printLocation() const {
 	std::cout << "Location Path: " << _path << "\n";

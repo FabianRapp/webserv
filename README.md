@@ -74,3 +74,8 @@ TODO:
 9. check for leaks (valgrind)
 10. try to brake the webserver somehow
 12. try to break config file
+
+maksim:
+1. user error-page parsing
+2. double everything in config file. need to check it somehow.
+3. front-end things and CGI.
