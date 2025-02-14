@@ -61,7 +61,6 @@ std::string ConfigParser::sanitizeLine(const std::string& line) const {
 		throw (ConfigParseError("ERROR: Missing semicolon in the line: " + line));
 	}
 
-	// remove everything after semicolon
 	std::string sanitized = line.substr(0, semicolon_pos);
 
 	return trimWhiteSpaceEdges(sanitized);
@@ -78,34 +77,43 @@ std::vector<std::string> ConfigParser::splitByWhitespace(const std::string& str)
 	return tokens;
 }
 
-void ConfigParser::validateServerName(const std::string& name) {
-	if (name.empty()) {
-		throw (ConfigParseError("ERROR: 'server_name' cannot be empty!"));
+void ConfigParser::validateServerName(const std::string& value, ServerConfigFile& server) {
+	if (value.empty()) {
+		throw ConfigParseError("ERROR: server_name cannot be empty!");
 	}
 
-	// Check first and last characters are alphanumeric
-	if (!std::isalnum(name.front()) || !std::isalnum(name.back())) {
-		throw (ConfigParseError("ERROR: server_name '" + name
-			+ "' must start/end with alphanumeric character!"));
-	}
-
-	bool previous_is_dot = false;
-	for (size_t i = 0; i < name.size(); ++i) {
-		const char c = name[i];
-
-		if (!std::isalnum(c) && c != '-' && c != '.' && c != '_') {
-			throw (ConfigParseError("ERROR: server_name '" + name
-				+ "' contains invalid character: '" + std::string(1, c) + "'!"));
+	std::vector<std::string> server_names = splitByWhitespace(value);
+	for (const auto& name : server_names) {
+		if (name.empty()) {
+			throw ConfigParseError("ERROR: 'server_name' cannot contain empty names!");
 		}
-		if (c == '.') {
-			if (previous_is_dot) {
-				throw (ConfigParseError("ERROR: server_name '"
-					+ name + "' contains consecutive dots!"));
+
+		if (!std::isalnum(name.front()) || !std::isalnum(name.back())) {
+			throw ConfigParseError("ERROR: server_name '" + name
+				+ "' must start/end with alphanumeric character!");
+		}
+
+		bool previous_is_dot = false;
+		for (size_t i = 0; i < name.size(); ++i) {
+			const char c = name[i];
+
+			if (!std::isalnum(c) && c != '-' && c != '.' && c != '_') {
+				throw ConfigParseError("ERROR: server_name '" + name
+					+ "' contains invalid character: '" + std::string(1, c) + "'!");
 			}
-			previous_is_dot = true;
-		} else {
-			previous_is_dot = false;
+			if (c == '.') {
+				if (previous_is_dot) {
+					throw ConfigParseError("ERROR: server_name '"
+						+ name + "' contains consecutive dots!");
+				}
+				previous_is_dot = true;
+			} else {
+				previous_is_dot = false;
+			}
 		}
+
+		// If validation passes, add the server name to the server config
+		server.addServerName(name);
 	}
 }
 
@@ -121,7 +129,15 @@ void ConfigParser::validatePort(const std::string& line, ServerConfigFile& curre
 		throw ConfigParseError("ERROR: Invalid listen option: '"+ line +
 			"'. Port must be numeric.");
 	}
-	int port = std::stoi(line);
+
+	int port;
+	try {
+		port = std::stoi(line);
+	} catch (const std::invalid_argument&) {
+		throw ConfigParseError("ERROR: Invalid port value: " + line + ". Port must be a valid integer.");
+	} catch (const std::out_of_range&) {
+		throw ConfigParseError("ERROR: Invalid port value: " + line + ". Port is out of range.");
+	}
 
 	if (port < 2 || port > 65535) {
 		throw ConfigParseError("ERROR: Invalid port number: "
@@ -132,31 +148,31 @@ void ConfigParser::validatePort(const std::string& line, ServerConfigFile& curre
 }
 
 void ConfigParser::validateRoot(const std::string& value, bool is_server_block) {
-	// Check if root is empty in server block
+	// if root is empty in server block
 	if (is_server_block && value.empty()) {
 		throw ConfigParseError("ERROR: Invalid root configuration:"
 			"Root cannot be empty in server block.");
 	}
 
-	// For server block, ensure it starts with "/www/"
+	// have to start with "/www/"
 	if (is_server_block && value.substr(0, 5) != "/www/") {
 		throw ConfigParseError("ERROR: Invalid root configuration: '" + value
 			+ "'. Root in server block must start with '/www/'.");
 	}
 
-	// Check if the path starts with '/'
+	// if the path starts with '/'
 	if (!value.empty() && value[0] != '/') {
 		throw ConfigParseError("ERROR: Invalid root configuration: '" + value
 			+ "'. Path must start with '/'.");
 	}
 
-	// Check if the path ends with '/' (but allow just "/")
+	// if the path ends with '/' (but allow just "/")
 	if (value.size() > 1 && value.back() == '/') {
 		throw ConfigParseError("ERROR: Invalid root configuration: '" + value
 			+ "'. Path must not end with '/'.");
 	}
 
-	// Check for invalid characters and ensure no dots
+	// for invalid characters and ensure no dots
 	for (char ch : value) {
 		if (!std::isalnum(ch) && ch != '/' && ch != '_' && ch != '-') {
 			throw ConfigParseError("ERROR: Invalid root configuration: '"
@@ -168,7 +184,7 @@ void ConfigParser::validateRoot(const std::string& value, bool is_server_block) 
 		}
 	}
 
-	// Check for spaces or multiple words
+	// for spaces or multiple words
 	if (value.find(' ') != std::string::npos) {
 		throw ConfigParseError("ERROR: Invalid root configuration: '" + value
 			+ "'. Path must not contain spaces or multiple words.");
@@ -198,8 +214,6 @@ bool ConfigParser::isValidLocationPath(const std::string& path) const {
 }
 
 void ConfigParser::errorPageValidation(const std::string& values, ServerConfigFile& current_server) {
-	// std::string error_option = line.substr(11);
-	// std::cout << "error_option: " << error_option << std::endl;
 	std::vector<std::string> tokens = splitByWhitespace(values);
 
 	if (tokens.size() != 2) {
@@ -367,8 +381,6 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 				throw ConfigParseError("ERROR: Duplicate location path found: " + path);
 			}
 			location_paths.insert(path);
-			// Debug: Print the parsed path
-			// std::cout << "Parsed path: " << "|" << path << "|" << std::endl;
 
 			bracket_count++; // increment before location block starts
 			LocationConfigFile current_location;
@@ -383,112 +395,49 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			return; // ending parsing for this server block
 		}
 
-		// Parse key-value pairs inside the server block
-		if (!line.empty() && line.back() == ';') {
-			line.pop_back(); // Remove trailing semicolon
-		}
-
 		size_t	sep = line.find(" ");
 		if (sep == std::string::npos) {
-			throw ConfigParseError("ERROR: No space after option");
+			throw ConfigParseError("ERROR: Option and values have to be seperated by space."
+				"Any other whitespace are not allowed");
 		}
 		std::string	option = line.substr(0, sep);
 		if ("error_page" != option && "cgi_path" != option) {
 			checkAndSetServerOptionDubs(option);
 		}
 		std::string	single_value = trimWhiteSpaceEdges(line.substr(sep));
-		if (line.find("listen ") == 0) {
-			//checkAndSetServerOptionDubs("listen");
-			// std::string port_value = trimWhiteSpaceEdges(line.substr(7));
 
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
+		handleServerOptions(option, single_value, current_server);
+	}
+}
 
-			validatePort(single_value, current_server);
-		} else if (line.find("server_name ") == 0) {
-			//checkAndSetServerOptionDubs("server_name");
-			// std::string server_names_line = trimWhiteSpaceEdges(line.substr(12));
-
-			if (single_value.empty()) {
-				throw ConfigParseError("ERROR: server_name cannot be empty!");
-			}
-
-			std::vector<std::string> server_names = splitByWhitespace(single_value);
-
-			for (const auto& name : server_names) {
-				validateServerName(name);
-				current_server.addServerName(name);
-			}
-		} else if (line.find("cgi_path ") == 0) {
-			// checkAndSetServerOptionDubs("cgi_path");
-			handleCgiPath(single_value, current_server);
-			handleCgiPath(single_value, current_server.setDefaultLocation());
-		} else if (line.find("allowed_methods ") == 0) {
-			//checkAndSetServerOptionDubs("allowed_methods");
-			//todo: fix this shit later
-			// std::string methods_str = trimWhiteSpaceEdges(line.substr(15));
-
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
-
-			// Validate and set allowed methods for the server block
-			validateMethods(single_value, current_server);
-			validateMethods(single_value, current_server.setDefaultLocation());
-
-		} else if (line.find("root ") == 0) {
-			//checkAndSetServerOptionDubs("root");
-			// std::string root_value = trimWhiteSpaceEdges(line.substr(5)); // Extract the value after "root "
-
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
-
-			validateRoot(single_value, true); // true for server block
-			current_server.setRoot(single_value);
-			current_server.setDefaultLocation().setRoot("/");
-
-		} else if (line.find("error_page ") == 0) {
-
-				errorPageValidation(single_value, current_server);
-
-
-		} else if (line.find("request_body_size ") == 0) {
-			//checkAndSetServerOptionDubs("request_body_size");
-			// std::string size_value = trimWhiteSpaceEdges(line.substr(17));
-
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
-
-			validateClientBodySize(single_value, current_server);
-			validateClientBodySize(single_value, current_server.setDefaultLocation());
-
-		} else if (line.find("index ") == 0) {
-			//checkAndSetServerOptionDubs("index");
-			// std::string index_value = trimWhiteSpaceEdges(line.substr(6));
-
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
-
-			validateIndex(single_value, current_server);
-			validateIndex(single_value, current_server.setDefaultLocation());
-
-		} else if (line.find("autoindex ") == 0) {
-			//checkAndSetServerOptionDubs("autoindex");
-			// std::string autoindex_value = trimWhiteSpaceEdges(line.substr(10));
-
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
-
-			validateAutoIndex(single_value, current_server);
-			validateAutoIndex(single_value, current_server.setDefaultLocation());
-		} else {
-			throw ConfigParseError("ERROR: Invalid line inside server block: " + line);
-		}
+void ConfigParser::handleServerOptions(const std::string& option, const std::string& value, ServerConfigFile& current_server) {
+	if (option == "listen") {
+		validatePort(value, current_server);
+	} else if (option == "server_name") {
+		validateServerName(value, current_server);
+	} else if (option == "cgi_path") {
+		validateCgiPath(value, current_server);
+		validateCgiPath(value, current_server.setDefaultLocation());
+	} else if (option == "allowed_methods") {
+		validateMethods(value, current_server);
+		validateMethods(value, current_server.setDefaultLocation());
+	} else if (option == "root") {
+		validateRoot(value, true); // true for server block
+		current_server.setRoot(value);
+		current_server.setDefaultLocation().setRoot("/");
+	} else if (option == "error_page") {
+		errorPageValidation(value, current_server);
+	} else if (option == "request_body_size") {
+		validateClientBodySize(value, current_server);
+		validateClientBodySize(value, current_server.setDefaultLocation());
+	} else if (option == "index") {
+		validateIndex(value, current_server);
+		validateIndex(value, current_server.setDefaultLocation());
+	} else if (option == "autoindex") {
+		validateAutoIndex(value, current_server);
+		validateAutoIndex(value, current_server.setDefaultLocation());
+	} else {
+		throw ConfigParseError("ERROR: Invalid option inside server block: " + option);
 	}
 }
 
@@ -505,103 +454,53 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 
 		line = sanitizeLine(line);
 
-		// Handle end of location block
 		if (line == "}") {
-			bracket_count--; // Decrement for closing bracket of location block
+			bracket_count--;
 
-			// If no root is set, default it to the location's path
-			if (current_location.getRoot().empty()) { // Assuming getUploadDir() is equivalent to root
+			if (current_location.getRoot().empty()) {
 				current_location.setRoot(current_location.getPath());
 			}
-			// std::cout << "Location root: " << "|" << current_location.getRoot() << "|" << std::endl;
-			return; // End parsing this location block
+			return;
 		}
 
 		size_t	sep = line.find(" ");
 		if (sep == std::string::npos) {
-			throw ConfigParseError("ERROR: No space after option" + line);
+			throw ConfigParseError("ERROR: Option and values have to be seperated by space."
+				"Any other whitespace are not allowed!");
 		}
 		std::string	option = line.substr(0, sep);
 		if ("cgi_path" != option) {
 			checkAndSetLocationOptionDubs(option);
 		}
-
 		std::string	single_value = trimWhiteSpaceEdges(line.substr(sep));
-		// Parse key-value pairs inside the location block
-		if (line.find("allowed_methods ") == 0) {
-			// checkAndSetLocationOptionDubs("allowed_methods");
-			// std::string methods_str = trimWhiteSpaceEdges(line.substr(15));
 
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
+		handleLocationOption(line, single_value, current_location);
+	}
+}
 
-			// Validate and set allowed methods for the location block
-			validateMethods(single_value, current_location);
-
-		} else if (line.find("cgi_path ") == 0) {
-			// checkAndSetLocationOptionDubs("cgi_path");
-
-			handleCgiPath(single_value, current_location);
-
-		} else if (line.find("redirection ") == 0) {
-			// checkAndSetLocationOptionDubs("redirection");
-			// std::string redir_str = trimWhiteSpaceEdges(line.substr(12));
-			std::cout << FT_ANSI_YELLOW_BOLD_UNDERLINE << "redirection: " << single_value << FT_ANSI_RESET << std::endl;
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
-			printf("current location ptr: %p\n", &current_location);
-			current_location.setIsRedir(true);
-			current_location.setRedirection(single_value);
-		} else if (line.find("autoindex ") == 0) {
-			// checkAndSetLocationOptionDubs("autoindex");
-			// std::string autoindex_value = trimWhiteSpaceEdges(line.substr(10));
-
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
-
-			validateAutoIndex(single_value, current_location);
-
-		} else if (line.find("root ") == 0) {
-			// checkAndSetLocationOptionDubs("root");
-			// std::string root_value = trimWhiteSpaceEdges(line.substr(5));
-
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
-
-			validateRoot(single_value, false); // false for location block
-			current_location.setRoot(single_value);
-		} else if (line.find("request_body_size ") == 0) {
-			// checkAndSetLocationOptionDubs("request_body_size");
-			// std::string size_value = trimWhiteSpaceEdges(line.substr(17));
-
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
-
-			validateClientBodySize(single_value, current_location);
-
-		} else if (line.find("index ") == 0) {
-			// checkAndSetLocationOptionDubs("index");
-			// std::string index_value = trimWhiteSpaceEdges(line.substr(6));
-
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
-			}
-
-			validateIndex(single_value, current_location);
-
-		} else {
-			throw (ConfigParseError("ERROR: Invalid option inside location block: " + line));
-		}
+void ConfigParser::handleLocationOption(const std::string& line, const std::string& single_value, LocationConfigFile& current_location) {
+	if (line.find("allowed_methods ") == 0) {
+		validateMethods(single_value, current_location);
+	} else if (line.find("cgi_path ") == 0) {
+		validateCgiPath(single_value, current_location);
+	} else if (line.find("redirection ") == 0) {
+		printf("current location ptr: %p\n", &current_location);
+		current_location.setIsRedir(true);
+		current_location.setRedirection(single_value);
+	} else if (line.find("autoindex ") == 0) {
+		validateAutoIndex(single_value, current_location);
+	} else if (line.find("root ") == 0) {
+		validateRoot(single_value, false); // false for location block
+		current_location.setRoot(single_value);
+	} else if (line.find("request_body_size ") == 0) {
+		validateClientBodySize(single_value, current_location);
+	} else if (line.find("index ") == 0) {
+		validateIndex(single_value, current_location);
+	} else {
+		throw (ConfigParseError("ERROR: Invalid option inside location block: " + line));
 	}
 }
 
 const std::vector<ServerConfigFile> ConfigParser::getServers() const {
 	return _servers;
 }
-
-

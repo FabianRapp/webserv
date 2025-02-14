@@ -45,8 +45,6 @@ void ServerConfigFile::setIndexFile(const std::string index_file) {
 }
 
 void ServerConfigFile::addErrorPage(int err_code, const std::string& path) {
-	// Check if the file exists
-	//todo: need to add full path to the file.
 	std::cout << "path: " << path << std::endl;
 	if (std::filesystem::exists(path)) {
 		_error_pages.setErrorPageLink(err_code, path); // Replace default error page link
@@ -55,8 +53,6 @@ void ServerConfigFile::addErrorPage(int err_code, const std::string& path) {
 		std::cerr << "Error: File does not exist at path: 444- " << path << "\n";
 	}
 }
-
-
 
 void ServerConfigFile::addLocation(const LocationConfigFile& location) {
 	_locations.push_back(location);

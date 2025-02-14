@@ -30,7 +30,7 @@ private:
 	std::string trimWhiteSpaceEdges(const std::string& str) const;
 	std::string sanitizeLine(const std::string& line) const;
 	std::vector<std::string> splitByWhitespace(const std::string& str) const;
-	void validateServerName(const std::string& name);
+	void validateServerName(const std::string& value, ServerConfigFile& server);
 	void validatePort(const std::string& line, ServerConfigFile& current_server);
 	void validateRoot(const std::string& value, bool is_server_block);
 	bool isValidLocationPath(const std::string& path) const;
@@ -39,13 +39,15 @@ private:
 	void validateExecutablePath(const std::string& path);
 	void parseFile(const std::string& config_file);
 	void parseServerBlock(std::ifstream& file, ServerConfigFile& current_server, int& bracket_count);
+	void handleServerOptions(const std::string& option, const std::string& value, ServerConfigFile& current_server);
 	void parseLocationBlock(std::ifstream& file, LocationConfigFile& current_location, int& bracket_count);
+	void handleLocationOption(const std::string& line, const std::string& single_value, LocationConfigFile& current_location);
 
 	template <typename T>
 	void validateMethods(const std::string& methods_str, T& config_object);
 
 	template <typename T>
-	void handleCgiPath(const std::string& values, T& config);
+	void validateCgiPath(const std::string& values, T& config);
 
 	template <typename T>
 	void validateIndex(const std::string& value, T& config_object);
@@ -90,7 +92,7 @@ void ConfigParser::validateMethods(const std::string& methods_str, T& config_obj
 }
 
 template <typename T>
-void ConfigParser::handleCgiPath(const std::string& values, T& config_object) {
+void ConfigParser::validateCgiPath(const std::string& values, T& config_object) {
 	std::vector<std::string> tokens = splitByWhitespace(values);
 
 	if (tokens.size() != 2) {
@@ -104,7 +106,6 @@ void ConfigParser::handleCgiPath(const std::string& values, T& config_object) {
 	validateExecutablePath(path);
 
 	config_object.addCgiExtension(ext, path);
-	// std::cout << "ext: " << ext << "path: " << path << std::endl;
 }
 
 template <typename T>
