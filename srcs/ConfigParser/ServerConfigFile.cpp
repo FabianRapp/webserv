@@ -56,6 +56,8 @@ void ServerConfigFile::addErrorPage(int err_code, const std::string& path) {
 	}
 }
 
+
+
 void ServerConfigFile::addLocation(const LocationConfigFile& location) {
 	_locations.push_back(location);
 }
@@ -130,7 +132,9 @@ LocationConfigFile& ServerConfigFile::setDefaultLocation() {
 void ServerConfigFile::printServer() const {
 	std::cout << "********************************" << std::endl;
 	std::cout << "Server Port: " << _port << "\n";
+	std::cout << "autoindex: " << _autoindex << "\n";
 	std::cout << "Server Names:\n";
+
 	for (const auto& name : _server_names) {
 		std::cout << "\t" << name << "\n";
 	}

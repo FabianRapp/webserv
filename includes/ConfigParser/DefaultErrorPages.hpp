@@ -15,6 +15,7 @@ private:
 
 public:
 	DefaultErrorPages();
+	DefaultErrorPages(const DefaultErrorPages& old): _error_pages(old._error_pages){}
 
 	//getter
 	const std::string getErrorPageLink(int err_code) const;

@@ -28,7 +28,45 @@ private:
 
 public:
 	ServerConfigFile();
+    ServerConfigFile(const ServerConfigFile& old)
+        : _port(old._port),
+          _server_names(old._server_names),
+          _root(old._root),
+          _get_header(old._get_header),
+          _post_header(old._post_header),
+          _delete_header(old._delete_header),
+          _put_header(old._put_header),
+          _autoindex(old._autoindex),
+          _request_body_size(old._request_body_size),
+          _cgi_map(old._cgi_map),
+          _index_file(old._index_file),
+          _error_pages(old._error_pages),
+          _locations(old._locations),
+          _defaultLocation(old._defaultLocation) {}
 
+    // Assignment operator
+    ServerConfigFile& operator=(const ServerConfigFile& old) {
+        if (this == &old) {
+            return *this;
+        }
+
+        _port = old._port;
+        _server_names = old._server_names;
+        _root = old._root;
+        _get_header = old._get_header;
+        _post_header = old._post_header;
+        _delete_header = old._delete_header;
+        _put_header = old._put_header;
+        _autoindex = old._autoindex;
+        _request_body_size = old._request_body_size;
+        _cgi_map = old._cgi_map;
+        _index_file = old._index_file;
+        _error_pages = old._error_pages;
+        _locations = old._locations;
+        _defaultLocation = old._defaultLocation;
+
+        return *this;
+    }
 	// setters
 	void setPort(int port);
 	void addServerName(const std::string& _server_names);

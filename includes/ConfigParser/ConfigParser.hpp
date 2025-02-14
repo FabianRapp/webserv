@@ -9,6 +9,7 @@
 #include <sstream>
 #include "ServerConfigFile.hpp"
 #include "LocationConfigFile.hpp"
+#include <colors.h>
 
 #include <regex>
 
@@ -26,13 +27,14 @@ private:
 	void checkAndSetLocationOptionDubs(const std::string& option);
 	std::vector<ServerConfigFile> _servers;
 	void validateServerConfig(const ServerConfigFile& server) const;
-	std::string trimWhiteSpace(const std::string& str) const;
+	std::string trimWhiteSpaceEdges(const std::string& str) const;
 	std::string sanitizeLine(const std::string& line) const;
 	std::vector<std::string> splitByWhitespace(const std::string& str) const;
 	void validateServerName(const std::string& name);
 	void validatePort(const std::string& line, ServerConfigFile& current_server);
 	void validateRoot(const std::string& value, bool is_server_block);
 	bool isValidLocationPath(const std::string& path) const;
+	void errorPageValidation(const std::string& line, ServerConfigFile& current_server);
 	void validateCgiExtension(const std::string& ext);
 	void validateExecutablePath(const std::string& path);
 	void parseFile(const std::string& config_file);
@@ -43,7 +45,7 @@ private:
 	void validateMethods(const std::string& methods_str, T& config_object);
 
 	template <typename T>
-	void handleCgiPath(const std::string& line, T& config);
+	void handleCgiPath(const std::string& values, T& config);
 
 	template <typename T>
 	void validateIndex(const std::string& value, T& config_object);
@@ -88,21 +90,21 @@ void ConfigParser::validateMethods(const std::string& methods_str, T& config_obj
 }
 
 template <typename T>
-void ConfigParser::handleCgiPath(const std::string& line, T& config_object) {
-	std::vector<std::string> tokens = splitByWhitespace(line);
+void ConfigParser::handleCgiPath(const std::string& values, T& config_object) {
+	std::vector<std::string> tokens = splitByWhitespace(values);
 
-	if (tokens.size() != 3 || tokens[0] != "cgi_path") {
-		throw (ConfigParseError("Invalid cgi_pass format: " + line));
+	if (tokens.size() != 2) {
+		throw (ConfigParseError("Invalid cgi_pass format: " + values));
 	}
 
-	const std::string& ext = tokens[1];
-	const std::string& path = tokens[2];
+	const std::string& ext = tokens[0];
+	const std::string& path = tokens[1];
 
 	validateCgiExtension(ext);
 	validateExecutablePath(path);
 
 	config_object.addCgiExtension(ext, path);
-	std::cout << "ext: " << ext << "path: " << path << std::endl;
+	// std::cout << "ext: " << ext << "path: " << path << std::endl;
 }
 
 template <typename T>
@@ -134,7 +136,15 @@ void ConfigParser::validateClientBodySize(const std::string& value, T& config_ob
 		}
 	}
 
-	int size = std::stoi(value);
+	int size;
+	try {
+		size = std::stoi(value);
+	} catch (const std::invalid_argument& ) {
+		throw(ConfigParseError("ERROR: Invalid request_body_size value: " + value + ". Must be a non-negative integer."));
+	} catch (const std::out_of_range& ) {
+		throw (ConfigParseError("ERROR: Invalid request_body_size value: " + value + ". Must be a non-negative integer."));
+	}
+
 	const int MAX_SIZE = 1024 * 1024 * 1024;
 
 	if (size > MAX_SIZE) {

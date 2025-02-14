@@ -422,8 +422,8 @@ void ConfigParser::parseServerBlock(std::ifstream& file, ServerConfigFile& curre
 			}
 		} else if (line.find("cgi_path ") == 0) {
 			// checkAndSetServerOptionDubs("cgi_path");
-			handleCgiPath(single_value, current_server);
-			handleCgiPath(single_value, current_server.setDefaultLocation());
+			handleCgiPath(line, current_server);
+			handleCgiPath(line, current_server.setDefaultLocation());
 		} else if (line.find("allowed_methods ") == 0) {
 			//checkAndSetServerOptionDubs("allowed_methods");
 			//todo: fix this shit later
@@ -497,11 +497,20 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 	std::string line;
 
 	while (std::getline(file, line)) {
-		line = trimWhiteSpaceEdges(line);
+		// line = trimWhiteSpaceEdges(line);
 
 		if (line.empty() || line[0] == '#') {
 			continue;
 		}
+		size_t	sep = line.find(" ");
+		if (sep == std::string::npos) {
+			throw ConfigParseError("ERROR: No space after option");
+		}
+		std::string	option = line.substr(0, sep);
+		if ("error_page" != option && "cgi_path" != option) {
+			checkAndSetServerOptionDubs(option);
+		}
+		std::string	single_value = trimWhiteSpaceEdges(line.substr(sep));
 
 		line = sanitizeLine(line);
 
@@ -517,82 +526,70 @@ void ConfigParser::parseLocationBlock(std::ifstream& file, LocationConfigFile& c
 			return; // End parsing this location block
 		}
 
-		size_t	sep = line.find(" ");
-		if (sep == std::string::npos) {
-			throw ConfigParseError("ERROR: No space after option" + line);
-		}
-		std::string	option = line.substr(0, sep);
-		if ("cgi_path" != option) {
-			checkAndSetLocationOptionDubs(option);
-		}
-
-		std::string	single_value = trimWhiteSpaceEdges(line.substr(sep));
 		// Parse key-value pairs inside the location block
 		if (line.find("allowed_methods ") == 0) {
-			// checkAndSetLocationOptionDubs("allowed_methods");
-			// std::string methods_str = trimWhiteSpaceEdges(line.substr(15));
+			checkAndSetLocationOptionDubs("allowed_methods");
+			std::string methods_str = trimWhiteSpaceEdges(line.substr(15));
 
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
+			if (!methods_str.empty() && methods_str.back() == ';') {
+				methods_str.pop_back();
 			}
 
 			// Validate and set allowed methods for the location block
-			validateMethods(single_value, current_location);
+			validateMethods(methods_str, current_location);
 
 		} else if (line.find("cgi_path ") == 0) {
 			// checkAndSetLocationOptionDubs("cgi_path");
-
-			handleCgiPath(single_value, current_location);
+			handleCgiPath(line, current_location);
 
 		} else if (line.find("redirection ") == 0) {
-			// checkAndSetLocationOptionDubs("redirection");
-			// std::string redir_str = trimWhiteSpaceEdges(line.substr(12));
-			std::cout << FT_ANSI_YELLOW_BOLD_UNDERLINE << "redirection: " << single_value << FT_ANSI_RESET << std::endl;
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
+			checkAndSetLocationOptionDubs("redirection");
+			std::string redir_str = trimWhiteSpaceEdges(line.substr(12));
+
+			if (!redir_str.empty() && redir_str.back() == ';') {
+				redir_str.pop_back();
 			}
-			printf("current location ptr: %p\n", &current_location);
 			current_location.setIsRedir(true);
-			current_location.setRedirection(single_value);
+			current_location.setRedirection(redir_str);
 		} else if (line.find("autoindex ") == 0) {
-			// checkAndSetLocationOptionDubs("autoindex");
-			// std::string autoindex_value = trimWhiteSpaceEdges(line.substr(10));
+			checkAndSetLocationOptionDubs("autoindex");
+			std::string autoindex_value = trimWhiteSpaceEdges(line.substr(10));
 
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
+			if (!autoindex_value.empty() && autoindex_value.back() == ';') {
+				autoindex_value.pop_back();
 			}
 
-			validateAutoIndex(single_value, current_location);
+			validateAutoIndex(autoindex_value, current_location);
 
 		} else if (line.find("root ") == 0) {
-			// checkAndSetLocationOptionDubs("root");
-			// std::string root_value = trimWhiteSpaceEdges(line.substr(5));
+			checkAndSetLocationOptionDubs("root");
+			std::string root_value = trimWhiteSpaceEdges(line.substr(5));
 
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
+			if (!root_value.empty() && root_value.back() == ';') {
+				root_value.pop_back();
 			}
 
-			validateRoot(single_value, false); // false for location block
-			current_location.setRoot(single_value);
+			validateRoot(root_value, false); // false for location block
+			current_location.setRoot(root_value);
 		} else if (line.find("request_body_size ") == 0) {
-			// checkAndSetLocationOptionDubs("request_body_size");
-			// std::string size_value = trimWhiteSpaceEdges(line.substr(17));
+			checkAndSetLocationOptionDubs("request_body_size");
+			std::string size_value = trimWhiteSpaceEdges(line.substr(17));
 
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
+			if (!size_value.empty() && size_value.back() == ';') {
+				size_value.pop_back();
 			}
 
-			validateClientBodySize(single_value, current_location);
+			validateClientBodySize(size_value, current_location);
 
 		} else if (line.find("index ") == 0) {
-			// checkAndSetLocationOptionDubs("index");
-			// std::string index_value = trimWhiteSpaceEdges(line.substr(6));
+			checkAndSetLocationOptionDubs("index");
+			std::string index_value = trimWhiteSpaceEdges(line.substr(6));
 
-			if (!single_value.empty() && single_value.back() == ';') {
-				single_value.pop_back();
+			if (!index_value.empty() && index_value.back() == ';') {
+				index_value.pop_back();
 			}
 
-			validateIndex(single_value, current_location);
+			validateIndex(index_value, current_location);
 
 		} else {
 			throw (ConfigParseError("ERROR: Invalid option inside location block: " + line));

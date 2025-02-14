@@ -730,7 +730,8 @@ std::string	Response::getExpandedTarget(void) {
 	std::cout << "--- _config.getRoot() " << _config.getRoot() + "\n";
 	std::cout << "--- _location_config.getRoot() " << _location_config.getRoot() + "\n";
 	std::cout << "--- _location_config.getPath() " << _location_config.getPath() + "\n";
-	std::cout << "--- _location_config.getRedirection()" << _location_config.getRedirection() + "\n";
+	std::cout << "--- _location_config.getIsRedir()" << _location_config.getIsRedir() << "\n";
+	std::cout << "--- _location_config.getRedirection()" << _location_config.getRedirection() << "\n";
 	std::cout << "--- request._uri " << _request._uri + "\n";
 
 	std::cout << "\n";

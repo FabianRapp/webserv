@@ -56,6 +56,7 @@ void	webserv(int ac, char **av) {
 				i++;
 			}
 		}
+		matching_ports[0].printServer();
 		manager.new_server(matching_ports);
 		matching_ports.clear();
 	}
