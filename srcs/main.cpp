@@ -56,7 +56,7 @@ void	webserv(int ac, char **av) {
 
 	std::vector<ServerConfigFile>	all_configs;
 	if (ac == 1) {
-		manager.config_parser = new ConfigParser("config/m.conf");
+		manager.config_parser = new ConfigParser("config/eval.conf");
 	} else {
 		manager.config_parser = new ConfigParser(av[1]);
 	}

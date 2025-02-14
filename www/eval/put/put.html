@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>PUT TESTING WEBSITE</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		}
+
+		body {
+			background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+			height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #ffffff;
+		}
+
+		.container {
+			text-align: center;
+			padding: 2rem;
+		}
+
+		.method-name {
+			font-size: 8rem;
+			font-weight: bold;
+			color: #4A90E2; /* Updated to a nice blue */
+			text-shadow: 5px 5px 4px rgba(0, 0, 0, 0.3);
+			margin-bottom: 1rem;
+		}
+
+		.message {
+			font-size: 1.2rem;
+			margin-bottom: 2rem;
+			color: #cccccc;
+			letter-spacing: 2px;
+			text-transform: uppercase;
+		}
+
+		form {
+			margin-top: 2rem;
+		}
+
+		input[type="text"],
+		textarea {
+			width: 100%;
+			padding: 0.5rem;
+			margin-bottom: 1rem;
+			border: 2px solid #4A90E2;
+			border-radius: 5px;
+			background: transparent;
+			color: #ffffff;
+			font-size: 1rem;
+		}
+
+		textarea {
+			resize: vertical;
+			height: 150px;
+		}
+
+		button[type="submit"] {
+			padding: 0.5rem 1rem;
+			background: #4A90E2;
+			color: #1a1a1a;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 1rem;
+			transition: background 0.3s ease;
+		}
+
+		button[type="submit"]:hover {
+			background: #357ABD;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="method-name">PUT METHOD</div>
+		<div class="message">Create a file using the PUT method!</div>
+		<form id="putForm">
+			<input type="text" name="filename" placeholder="File name" required> </br></br>
+			<textarea name="content" placeholder="File content" required></textarea> </br></br>
+			<button type="submit">Create File</button>
+		</form>
+	</div>
+
+	<script>
+		document.getElementById('putForm').addEventListener('submit', async (e) => {
+			e.preventDefault();
+
+			const filename = e.target.filename.value; // Get the filename
+			const content = e.target.content.value; // Get the content
+
+			try {
+				// Use the filename provided by the user in the URL
+				const response = await fetch(`upload/${filename}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'text/plain' }, // Set content type to plain text
+					body: content // Send the content as plain text
+				});
+				console.log(response);
+				if (response.status === 204) {
+					alert('File created successfully! (Status Code: 204)');
+				} else if (response.status === 201) {
+					alert('File updated successfully! (Status Code: 201)');
+				} else {
+					alert(`Unexpected status code: ${response.status}. File creation or update failed.`);
+				}
+			} catch (error) {
+				alert(`Network error: ${error.message}`);
+			}
+		});
+	</script>
+</body>
+</html>

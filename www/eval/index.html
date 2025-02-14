@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Clickable Boxes</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		}
+
+		body {
+			background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+			height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #ffffff;
+		}
+
+		.container {
+			text-align: center;
+			padding: 2rem;
+		}
+
+		.method-name {
+			font-size: 4rem;
+			font-weight: bold;
+			color: #4A90E2;
+			text-shadow: 5px 5px 4px rgba(0, 0, 0, 0.3);
+			margin-bottom: 2rem;
+		}
+
+		.box-container {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 1.5rem;
+		}
+
+		.box {
+			background: #4A90E2;
+			border-radius: 10px;
+			padding: 1.5rem;
+			width: 200px;
+			text-align: left;
+			transition: transform 0.3s ease, background 0.3s ease;
+			cursor: pointer;
+			text-decoration: none;
+			color: inherit;
+		}
+
+		.box:hover {
+			transform: translateY(-10px);
+			background: #357ABD;
+		}
+
+		.box-title {
+			font-size: 1.5rem;
+			font-weight: bold;
+			margin-bottom: 0.5rem;
+		}
+
+		.box-description {
+			font-size: 0.9rem;
+			color: #cccccc;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="method-name">CLICKABLE BOXES</div>
+		<div class="box-container">
+			<a href="/get" class="box">
+				<div class="box-title">GET</div>
+				<div class="box-description">Click to get a file using GET method!</div>
+			</a>
+			<a href="/put" class="box">
+				<div class="box-title">PUT</div>
+				<div class="box-description">You can upload and update a file!</div>
+			</a>
+			<a href="/put/upload" class="box">
+				<div class="box-title">Autoindex</div>
+				<div class="box-description">Click to test autoindex and download files uploaded using PUT!</div>
+			</a>
+			<a href="/somethingthatdoesnotexists404default" class="box">
+				<div class="box-title">Defaul 404 error</div>
+				<div class="box-description">Click to test servers 404 error page!</div>
+			</a>
+			<a href="/notallowed" class="box">
+				<div class="box-title">Client 405 error</div>
+				<div class="box-description">Click to test client 405 error page!</div>
+			</a>
+			<a href="/youtube" class="box">
+				<div class="box-title">Redirection</div>
+				<div class="box-description">Click to test Redirection!</div>
+			</a>
+			<a href="/cgi-bin/test.php" class="box">
+				<div class="box-title">PHP CGI</div>
+				<div class="box-description">Click to test PHP CGI script.</div>
+			</a>
+			<a href="/cgi-bin/test.py" class="box">
+				<div class="box-title">PYTHON CGI</div>
+				<div class="box-description">Click to test PYTHON CGI script.</div>
+			</a>
+			<a href="/cgi-bin/test.sh" class="box">
+				<div class="box-title">BASH CGI</div>
+				<div class="box-description">Click to test BASH CGI.</div>
+			</a>
+			<a href="/cgi-bin/cookies.py" class="box">
+				<div class="box-title">Cookies and Session</div>
+				<div class="box-description">Click to test cookies and session!</div>
+			</a>
+			<a href="/post/post.html" class="box">
+				<div class="box-title">TESTING POST (NOT WORKING)</div>
+				<div class="box-description">Click here to test POST!</div>
+			</a>
+			<a href="/put/delete.html" class="box">
+				<div class="box-title">DELETE</div>
+				<div class="box-description">Click here to test DELETE!</div>
+			</a>
+			<!-- Add more boxes as needed -->
+		</div>
+	</div>
+</body>
+</html>

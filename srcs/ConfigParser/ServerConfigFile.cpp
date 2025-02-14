@@ -45,13 +45,14 @@ void ServerConfigFile::setIndexFile(const std::string index_file) {
 }
 
 void ServerConfigFile::addErrorPage(int err_code, const std::string& path) {
-	std::cout << "path: " << path << std::endl;
-	if (std::filesystem::exists(path)) {
-		_error_pages.setErrorPageLink(err_code, path); // Replace default error page link
-		std::cout << "Replaced default error page for code 333- " << err_code << " with " << path << "\n";
-	} else {
-		std::cerr << "Error: File does not exist at path: 444- " << path << "\n";
-	}
+	// std::cout << "path: " << path << std::endl;
+	// if (std::filesystem::exists(path)) {
+	// 	_error_pages.setErrorPageLink(err_code, path); // Replace default error page link
+	// 	std::cout << "Replaced default error page for code 333- " << err_code << " with " << path << "\n";
+	// } else {
+	// 	std::cerr << "Error: File does not exist at path: 444- " << path << "\n";
+	// }
+	_error_pages.setErrorPageLink(err_code, path); // Replace default error page link
 }
 
 void ServerConfigFile::addLocation(const LocationConfigFile& location) {
