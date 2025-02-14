@@ -257,7 +257,19 @@ void	Parser::parser_unchunked(std::string& input) {
 
 	LOG_PARSER("parsing unchunked body\n");
 	if (it != _request._headers.end()) {
-		bytesToRead = std::stoul(it->second);
+		try {
+			bytesToRead = std::stoul(it->second);
+		} catch (const std::invalid_argument&) {
+			LOG(FT_ANSI_RED "Invalid chunk size" FT_ANSI_RESET);
+			_request._finished = true;
+			_request.set_status_code(400);
+			return ;
+		} catch (const std::out_of_range&) {
+			LOG(FT_ANSI_RED "Invalid chunk size" FT_ANSI_RESET);
+			_request._finished = true;
+			_request.set_status_code(400);
+			return ;
+		}
 	} else {
 		LOG_PARSER("Content-Length header not found!" << std::endl);
 	}
