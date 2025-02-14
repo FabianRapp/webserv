@@ -149,8 +149,8 @@
 					method: 'DELETE'
 				});
 				console.log(response);
-				if (response.status === 200) {
-					alert('File deleted successfully! (Status Code: 200)');
+				if (response.status === 204) {
+					alert('File deleted successfully! (Status Code: 204)');
 				} else if (response.status === 404) {
 					alert('File not found! (Status Code: 404)');
 				} else {
