@@ -80,6 +80,17 @@ DefaultErrorPages::DefaultErrorPages() {
 	_error_pages[511] = "./default/error_pages/511.html"; // Network Authentication Required (RFC 6585)
 }
 
+DefaultErrorPages::DefaultErrorPages(const DefaultErrorPages& old) 
+	: _error_pages(old._error_pages) {}
+
+// Copy assignment operator
+DefaultErrorPages& DefaultErrorPages::operator=(const DefaultErrorPages& old) {
+	if (this != &old) {
+		_error_pages = old._error_pages;
+	}
+	return *this;
+}
+
 const std::string DefaultErrorPages::getErrorPageLink(int err_code) const {
 	auto it = _error_pages.find(err_code);
 
