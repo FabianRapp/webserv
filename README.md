@@ -79,3 +79,4 @@ maksim:
 1. user error-page parsing
 2. double everything in config file. need to check it somehow.
 3. front-end things and CGI.
+4. ERROR PAGES THAT PEOPLE SET, NEET TO FIX IT!!!
