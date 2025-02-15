@@ -28,7 +28,7 @@
 		.method-name {
 			font-size: 8rem;
 			font-weight: bold;
-			color: #4A90E2; /* Updated to a nice blue */
+			color: #E24A4A;
 			text-shadow: 5px 5px 4px rgba(0, 0, 0, 0.3);
 			margin-bottom: 1rem;
 		}
@@ -50,7 +50,7 @@
 			width: 100%;
 			padding: 0.5rem;
 			margin-bottom: 1rem;
-			border: 2px solid #4A90E2;
+			border: 2px solid #E24A4A;
 			border-radius: 5px;
 			background: transparent;
 			color: #ffffff;
@@ -64,7 +64,7 @@
 
 		button[type="submit"] {
 			padding: 0.5rem 1rem;
-			background: #4A90E2;
+			background: #E24A4A;
 			color: #1a1a1a;
 			border: none;
 			border-radius: 5px;
@@ -74,35 +74,16 @@
 		}
 
 		button[type="submit"]:hover {
-			background: #357ABD;
+			background: #BD3535;
 		}
 
-		.delete-form {
-			margin-top: 3rem;
-		}
-
-		.delete-form button[type="submit"] {
-			background: #E24A4A; /* Red color for delete button */
-		}
-
-		.delete-form button[type="submit"]:hover {
-			background: #BD3535; /* Darker red on hover */
-		}
 	</style>
 </head>
 <body>
 	<div class="container">
-		<div class="method-name">PUT & DELETE</div>
-		<div class="message">Create or delete a file using PUT and DELETE methods!</div>
+		<div class="method-name">DELETE METHOD</div>
+		<div class="message">Delete your created files!</div>
 
-		<!-- PUT Form -->
-		<form id="putForm">
-			<input type="text" name="filename" placeholder="File name" required> </br></br>
-			<textarea name="content" placeholder="File content" required></textarea> </br></br>
-			<button type="submit">Create File</button>
-		</form>
-
-		<!-- DELETE Form -->
 		<form id="deleteForm" class="delete-form">
 			<input type="text" name="filename" placeholder="File name to delete" required> </br></br>
 			<button type="submit">Delete File</button>
@@ -110,41 +91,12 @@
 	</div>
 
 	<script>
-		// PUT Form Submission
-		document.getElementById('putForm').addEventListener('submit', async (e) => {
-			e.preventDefault();
-
-			const filename = e.target.filename.value; // Get the filename
-			const content = e.target.content.value; // Get the content
-
-			try {
-				// Use the filename provided by the user in the URL
-				const response = await fetch(`upload/${filename}`, {
-					method: 'PUT',
-					headers: { 'Content-Type': 'text/plain' }, // Set content type to plain text
-					body: content // Send the content as plain text
-				});
-				console.log(response);
-				if (response.status === 204) {
-					alert('File created successfully! (Status Code: 204)');
-				} else if (response.status === 201) {
-					alert('File updated successfully! (Status Code: 201)');
-				} else {
-					alert(`Unexpected status code: ${response.status}. File creation or update failed.`);
-				}
-			} catch (error) {
-				alert(`Network error: ${error.message}`);
-			}
-		});
-
-		// DELETE Form Submission
 		document.getElementById('deleteForm').addEventListener('submit', async (e) => {
 			e.preventDefault();
 
-			const filename = e.target.filename.value; // Get the filename
+			const filename = e.target.filename.value;
 
 			try {
-				// Use the filename provided by the user in the URL
 				const response = await fetch(`upload/${filename}`, {
 					method: 'DELETE'
 				});

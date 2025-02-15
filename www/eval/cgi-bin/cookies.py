@@ -11,9 +11,9 @@ headers = [
 ]
 
 if theme_val == None:
-	theme_val = "#f0c001"
+	theme_val = "#706020;"
 
-if theme_val == "#f0c001":
+if theme_val == "#706020;":
 	button = f"""
 		<a href="/cgi-bin/set_cookie.py" class="big-button">START SESSION AND SET COOKIES</a>
 	"""
