@@ -16,6 +16,14 @@ private:
 public:
 	DefaultErrorPages();
 	DefaultErrorPages(const DefaultErrorPages& old): _error_pages(old._error_pages){}
+	DefaultErrorPages& operator=(const DefaultErrorPages& old)
+	{
+		if (this == &old) {
+			return (*this);
+		}
+		_error_pages = old._error_pages;
+		return (*this);
+	}
 
 	//getter
 	const std::string getErrorPageLink(int err_code) const;

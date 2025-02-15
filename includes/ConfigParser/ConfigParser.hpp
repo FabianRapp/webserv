@@ -11,7 +11,10 @@
 #include "LocationConfigFile.hpp"
 #include <colors.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #include <regex>
+#pragma GCC diagnostic pop
 
 class ConfigParseError: public std::runtime_error{
 public:

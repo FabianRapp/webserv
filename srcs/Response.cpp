@@ -754,7 +754,8 @@ std::string	Response::getExpandedTarget(void) {
 
 	// catch any file system throws here to rule out invalid path length or so
 	try {
-		std::filesystem::exists(expandedPath);
+		auto _v = std::filesystem::exists(expandedPath);
+		(void)_v;
 	} catch (const std::filesystem::filesystem_error& e) {
 		LOG(FT_ANSI_RED "Error expanding path: " << e.what() << FT_ANSI_RESET "\n");
 		if (_request.getMethod() == MethodType::GET
