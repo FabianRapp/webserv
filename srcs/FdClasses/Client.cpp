@@ -68,9 +68,7 @@ void	Client::_receive_request(void) {
 	this->parse();
 	if (_parser.is_finished() == true)
 	{
-		LOG_FILE("request.txt", input.c_str(), input.size());
 		_request = _parser.move_request();
-		LOG_FILE("request_body.txt", _request._body.c_str(), _request._body.size());
 		mode = ClientMode::BUILD_RESPONSE;
 		_send_data.pos = 0;
 		_send_data.response = "";
@@ -158,7 +156,6 @@ void	Client::_send_response(void) {
 	LOG(FT_ANSI_BLUE "Send by " << name << ": " << _send_data.response.substr(_send_data.pos, 10) << "..\n" FT_ANSI_RESET);
 	_send_data.pos += static_cast<size_t>(send_bytes);
 	if (_send_data.pos == _send_data.response.size()) {
-		LOG_FILE("response.txt", _send_data.response.c_str(), _send_data.response.size());
 		mode = ClientMode::RECEIVING;
 		_send_data.response = "";
 		_send_data.pos = 0;

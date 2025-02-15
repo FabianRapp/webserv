@@ -11,11 +11,14 @@ FSAN := address
 NO_DEBUG = -DNDEBUG
 WWW := -Wall -Wextra -Wconversion -Wsign-conversion -Werror
 
-BASE_CXXFLAGS := $(WWW) -std=c++17 -O3 $(INCLUDES)
-DEBUG_CXXFLAGS := -g -fsanitize=$(FSAN)
-RELEASE_CXXFLAGS := $(NO_DEBUG)
+#BASE_CXXFLAGS := $(WWW) -std=c++17 -O3 $(INCLUDES)
+#DEBUG_CXXFLAGS := -g -fsanitize=$(FSAN)
+#RELEASE_CXXFLAGS := $(NO_DEBUG)
 
-CXXFLAGS := $(BASE_CXXFLAGS) $(RELEASE_CXXFLAGS)
+CXXFLAGS :=  $(WWW) -std=c++17 -g -fsanitize=$(FSAN) -O3 \
+			-Wconversion -Wsign-conversion  $(INCLUDES) \
+
+#CXXFLAGS := $(BASE_CXXFLAGS) $(RELEASE_CXXFLAGS)
 
 
 SRCS_DIR := srcs/
@@ -55,7 +58,7 @@ CLEAR	=	\033[0m
 
 all: $(NAME) client
 
-debug: CXXFLAGS = $(BASE_CXXFLAGS) $(DEBUG_CXXFLAGS)
+rdebugebug: CXXFLAGS = $(BASE_CXXFLAGS) $(DEBUG_CXXFLAGS)
 debug: all
 
 $(NAME): $(OBJS)

@@ -55,7 +55,6 @@ void	ReadFd::execute(void) {
 	left_over_bytes -= read_ret;
 	target_buf.append(buffer, static_cast<size_t>(read_ret));
 	if (left_over_bytes == 0 || read_ret == 0) {
-		LOG_FILE("read_data_debug.txt", target_buf.c_str(), static_cast<size_t>(target_buf.size()));
 		data.set_close(data_idx);
 		completion_callback();
 		return ;

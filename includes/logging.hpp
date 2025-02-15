@@ -94,19 +94,8 @@ extern volatile sig_atomic_t	exit_;
 #endif //LOG_FABIAN
 
 #ifndef LOG_FILE
-#	ifdef NDEBUG
 #		define LOG_FILE(file_name, content, size) \
 			do {\
 			} while(0)
-#	else
-#		define LOG_FILE(_file_name_, _content_, _size_) \
-			do {\
-				int _FD_LOG_FILE_ = open(_file_name_, O_WRONLY |O_CLOEXEC| O_TRUNC | O_CREAT, 0777); \
-				FT_ASSERT(_FD_LOG_FILE_ > 0); \
-				auto _v_ = write(_FD_LOG_FILE_, _content_, _size_); \
-				(void)_v_; \
-				close(_FD_LOG_FILE_); \
-			} while(0)
-#	endif //NDEBUG
 #endif //LOG_FILE
 

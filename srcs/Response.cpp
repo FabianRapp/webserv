@@ -618,7 +618,6 @@ void	Response::_finish_up(void) {
 		+ _body
 	;
 	_client_mode = ClientMode::SENDING;
-	LOG_FILE("body.txt", _body.c_str(), _body.length());
 }
 
 void	Response::overwrite_response_str(const std::string& new_response) {
