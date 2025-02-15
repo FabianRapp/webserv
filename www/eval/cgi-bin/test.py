@@ -37,7 +37,6 @@ headers = [
 	"HTTP/1.1 200 OK",
 	"Content-Type: text/html",
 	f"Content-Length: {content_length}",
-	"Set-Cookie: theme=dark; Max-Age=30",
 	""
 ]
 

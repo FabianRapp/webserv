@@ -1,0 +1,22 @@
+HTTP/1.1 201 OK
+Content-Type: text/html
+Content-Length: 242
+
+<!DOCTYPE html>
+	<html>
+	<head><title>C</title></head>
+	<style>
+		body {
+			background: #191a1d;
+			color: #90EE90;
+			padding: 20px;
+		}
+		h1 {
+			text-align: center;
+
+		}
+	</style>
+	<body>
+		<h1>Upload was successful!</h1>
+	</body>
+	</html>
