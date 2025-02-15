@@ -223,7 +223,12 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		}
 		ft_close(outputPipe[1]);
 		outputPipe[1] = -1;
+	
+		std::string dir = path.substr(0, path.find_last_of("/"));
 
+		if (chdir(dir.c_str()) < 0) {
+			throw (ChildError("chdir fail"));
+		}
 		execve(args[0], args, (char**)(envCGI.data()));
 		throw (ChildError("exceve failed"));
 	} else { // Parent process

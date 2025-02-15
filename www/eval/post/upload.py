@@ -129,7 +129,7 @@ if boundary_start_index != -1:
     os.makedirs("www/eval/uploads/", exist_ok=True)
 
     # Save the file to the specified path
-    with open(f"www/eval/uploads/{fileName}", "wb") as img_file:
+    with open(f"{fileName}", "wb") as img_file:
         img_file.write(content)
 
     print(f"Image saved successfully as {fileName}!")

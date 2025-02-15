@@ -41,7 +41,7 @@ void	WriteFd::execute(void) {
 		return ;
 	}
 	if (write_ret) {
-		LOG(FT_ANSI_BLUE "Written by " << name << ": " << src.substr(0, 10) << "..\n" FT_ANSI_RESET);
+		LOG(FT_ANSI_BLUE "Written by " << name << ": " << src.substr(pos, 10) << "..\n" FT_ANSI_RESET);
 	}
 	//std::cout << "written: |" << src.substr(0, static_cast<size_t>(write_ret)) << "|\n";
 	pos += static_cast<size_t>(write_ret);
