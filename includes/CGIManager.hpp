@@ -17,8 +17,6 @@ public:
 	ChildError(const std::string& msg): std::runtime_error(msg){}
 };
 
-
-
 class CGIManager {
 private:
 	std::string path;
@@ -36,6 +34,8 @@ private:
 	const LocationConfigFile&	_location_cofig;
 	enum class CGI_MODE {
 		PASS,
+		ERROR,
+		LOADING_ERROR,
 		INIT_READING,
 		INIT_WRITING,
 		FINISHED,

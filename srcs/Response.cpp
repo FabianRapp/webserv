@@ -416,7 +416,8 @@ void	Response::_handle_post(void) {
 			_client_mode = ClientMode::SENDING;
 		}
 	} else {
-		//todo: do we handle it as put or give an error?
+		// we decided to handle post as a put that can not overwirite files
+		// in case it's not cgi
 		_handle_put_file(true);
 	}
 }
@@ -741,26 +742,32 @@ std::string	Response::getExpandedTarget(void) {
 				loc_path_len, _request._uri.length() - loc_path_len);
 		return (expandedPath);
 	}
+	LOG("Request URI: " << _request._uri << "\n");
+	LOG("System path for response: " << expandedPath << "\n");
 
+	//catch too long path without throwing
 	if (expandedPath.length() > FILENAME_MAX || expandedPath.length() > PATH_MAX) {
 		LOG(FT_ANSI_RED "404: File does not exist: " << expandedPath
 			<< std::endl << FT_ANSI_RESET);
 		load_status_code_response(404, "Not Found");
 		return ("");
 	}
-	LOG("Request URI: " << _request._uri << "\n");
-	LOG("System path for response: " << expandedPath << "\n");
+
+	// catch any file system throws here to rule out invalid path length or so
 	try {
-		if (!std::filesystem::exists(expandedPath) && _request.getMethod() == MethodType::GET) {
-			LOG(FT_ANSI_RED "404: File does not exist: " << expandedPath
-				<< std::endl << FT_ANSI_RESET);
-			errno = 0;
-			load_status_code_response(404, "Not Found");
-			return ("");
-		}
+		std::filesystem::exists(expandedPath);
 	} catch (const std::filesystem::filesystem_error& e) {
 		LOG(FT_ANSI_RED "Error expanding path: " << e.what() << FT_ANSI_RESET "\n");
-		load_status_code_response(404, "Not Found");
+		if (_request.getMethod() == MethodType::GET
+			|| _request.getMethod() == MethodType::GET
+			|| _request.getMethod() == MethodType::DELETE
+		) {
+			load_status_code_response(404, "Not Found");
+		} else if (_request.getMethod() == MethodType::PUT) {
+			load_status_code_response(403, "Forbidden");
+		} else {
+			return "";
+		}
 		return ("");
 	}
 	return (expandedPath);

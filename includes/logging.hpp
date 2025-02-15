@@ -16,7 +16,7 @@ extern volatile sig_atomic_t	exit_;
 #endif //LOGGING
 
 #ifndef LOGGING_PARSING
-#define LOGGING_PARSING (1 && LOGGING)
+#define LOGGING_PARSING (0 && LOGGING)
 #endif //LOGGING_PARSING
 
 
@@ -99,13 +99,13 @@ extern volatile sig_atomic_t	exit_;
 			do {\
 			} while(0)
 #	else
-#		define LOG_FILE(file_name, content, size) \
+#		define LOG_FILE(_file_name_, _content_, _size_) \
 			do {\
-				int fd = open(file_name, O_WRONLY |O_CLOEXEC| O_TRUNC | O_CREAT, 0777); \
-				FT_ASSERT(fd > 0); \
-				auto v = write(fd, content, size); \
-				(void)v; \
-				close(fd); \
+				int _FD_LOG_FILE_ = open(_file_name_, O_WRONLY |O_CLOEXEC| O_TRUNC | O_CREAT, 0777); \
+				FT_ASSERT(_FD_LOG_FILE_ > 0); \
+				auto _v_ = write(_FD_LOG_FILE_, _content_, _size_); \
+				(void)_v_; \
+				close(_FD_LOG_FILE_); \
 			} while(0)
 #	endif //NDEBUG
 #endif //LOG_FILE

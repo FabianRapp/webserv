@@ -152,8 +152,6 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		}
 	}
 
-
-
 	for (std::string& var : envCGI_storage) {
 		LOG_MAKSIM("\n");
 		LOG_MAKSIM(FT_ANSI_YELLOW_BOLD_UNDERLINE << "ENV VAR: " << var << FT_ANSI_RESET << std::endl);
@@ -163,39 +161,38 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 
 	if (!isCGI(path, _location_cofig)) {
 		_client->response->load_status_code_response(500, "Internal Server Error");
-		_mode = CGI_MODE::FINISHED;
+		_mode = CGI_MODE::LOADING_ERROR;
 		return ;
 	}
 
 	// File existence checks moved HERE (before execution)
 	if (access(path.c_str(), F_OK) == -1) {
-		_client->response->load_status_code_response(500, "Internal Server Error");
-		_mode = CGI_MODE::FINISHED;
+		_client->response->load_status_code_response(404, "Not Found");
+		_mode = CGI_MODE::LOADING_ERROR;
 		return ;
 	}
 
 	if (access(path.c_str(), R_OK) == -1) {
-		_client->response->load_status_code_response(500, "Internal Server Error");
-		_mode = CGI_MODE::FINISHED;
+		_client->response->load_status_code_response(403, "Forbidden");
+		_mode = CGI_MODE::LOADING_ERROR;
 		return ;
 	}
 
-	std::string interpreter = getInterpreter(path);
+	std::string	interpreter = getInterpreter(path);
 	if (interpreter.empty()) {
-		_client->response->load_status_code_response(500, "Internal Server Error");
-		_mode = CGI_MODE::FINISHED;
+		_mode = CGI_MODE::LOADING_ERROR;
 		return ;
 	}
 
 	if (pipe(inputPipe) == -1 || pipe(outputPipe) == -1) {
 		_client->response->load_status_code_response(500, "Internal Server Error");
-		_mode = CGI_MODE::FINISHED;
+		_mode = CGI_MODE::LOADING_ERROR;
 		return ;
 	}
 	_pid = fork();
 	if (_pid == -1) {
 		_client->response->load_status_code_response(500, "Internal Server Error");
-		_mode = CGI_MODE::FINISHED;
+		_mode = CGI_MODE::LOADING_ERROR;
 		return ;
 	}
 
@@ -300,6 +297,11 @@ bool	CGIManager::execute() {
 		std::cout << "cgi::execute: " << std::endl;;
 	}
 	switch (_mode) {
+		case (CGI_MODE::LOADING_ERROR):
+			_mode = CGI_MODE::ERROR;
+			return (false);
+		case (CGI_MODE::ERROR):
+			return (true);
 		case (CGI_MODE::PASS):
 			if (debug) {
 				std::cout << "mode: PASS: ";
@@ -351,7 +353,6 @@ std::string CGIManager::getInterpreter(const std::string& path) {
 		if (access(interpreter.c_str(), X_OK) != 0) {
 			return "";
 		}
-			//printCgiRunning();
 		return interpreter;
 	}
 	return "";
