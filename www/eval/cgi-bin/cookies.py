@@ -65,11 +65,9 @@ body = f"""<!DOCTYPE html>
 </html>
 """
 
-# Add final headers
 headers.append(f"Content-Length: {len(body.encode('utf-8'))}")
 
 headers.append("")
 
-# Send response
 sys.stdout.write("\r\n".join(headers))
 sys.stdout.write("\r\n" + body)

@@ -13,7 +13,7 @@
 #include <CookieManager.hpp>
 
 #ifndef REQUEST_QUE_SIZE
-# define REQUEST_QUE_SIZE 10
+# define REQUEST_QUE_SIZE 1000
 #endif
 
 class Server: public BaseFd {
