@@ -11,10 +11,14 @@
 #include "LocationConfigFile.hpp"
 #include <colors.h>
 
+#ifdef __linux__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #include <regex>
 #pragma GCC diagnostic pop
+#else
+#include <regex>
+#endif //__linux__
 
 class ConfigParseError: public std::runtime_error{
 public:

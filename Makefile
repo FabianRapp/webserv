@@ -63,7 +63,6 @@ debug: all
 
 $(NAME): $(OBJS)
 	$(CPP) $(CXXFLAGS) $(OBJS) -o $(NAME) $(CXXFLAGS)
-	cp -f $(NAME) ./docker_testing/server
 
 normal: $(NAME)
 	@echo "$(GREEN) Compiled $(NAME) $(CLEAR)"
