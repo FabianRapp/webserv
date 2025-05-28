@@ -53,7 +53,6 @@ CGIManager::CGIManager(Client* client, const LocationConfigFile& location_config
 		LOG_MAKSIM(FT_ANSI_RED_UNDERLINE << to_string(type) << ": " << FT_ANSI_RESET << FT_ANSI_GREEN_UNDERLINE << value << FT_ANSI_RESET << std::endl);
 		if (type == HeaderType::CONTENT_LENGTH
 			|| type == HeaderType::CONTENT_TYPE
-
 		){
 			env_var = to_string(type) + "=" + value;
 		} else {

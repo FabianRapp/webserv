@@ -1,66 +1,88 @@
-# #!/usr/bin/env python3
-
-import sys
+#!/usr/bin/env python3
 import os
+import cgi
+import cgitb
 import html
+import sys
 
-try:
-	body = sys.stdin.buffer.read()
+cgitb.enable()
 
-	boundary_prefix = b"------WebKitFormBoundary"
+UPLOAD_DIR = "uploads"
 
-	boundary_start_index = body.find(boundary_prefix)
+if not os.path.isdir(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-	if boundary_start_index != -1:
+form = cgi.FieldStorage()
 
-		boundary_end_index = body.find(b"\r\n", boundary_start_index)
-		boundary_id = body[boundary_start_index + len(boundary_prefix):boundary_end_index].strip()
-		start_boundary = boundary_prefix + boundary_id + b"\r\n"
-		end_boundary = b"------WebKitFormBoundary" + boundary_id + b"--\r\n"
-		part_start_index = body.find(start_boundary) + len(start_boundary)
-		part_end_index = body.find(end_boundary, part_start_index)
-		content = body[part_start_index:part_end_index]
-		headersIdxEnd = content.find(b"\r\n\r\n") + 4
-		headers = content[:headersIdxEnd]
-		content = content[headersIdxEnd:]
-		fileNameIdxStart = headers.find(b"filename=") + len(b'filename="')
-		fileNameIdxEnd = headers.find(b'"', fileNameIdxStart)
-		fileName = headers[fileNameIdxStart:fileNameIdxEnd].decode("utf-8")
-		os.makedirs("uploads/", exist_ok=True)
+if "userfile" not in form or not form["userfile"].filename:
+    body = """
+    <html><body>
+    <h2 style="color:#E74C3C;">No file was uploaded</h2>
+    <a href="post.html" style="color:#4A90E2;">Back to upload page</a>
+    </body></html>
+    """
+    headers = [
+        "HTTP/1.1 200 OK",
+        "Content-Type: text/html",
+        f"Content-Length: {len(body.encode('utf-8'))}",
+        ""
+    ]
+    sys.stdout.write("\r\n".join(headers))
+    sys.stdout.write("\r\n" + body)
+    sys.exit(0)
 
-		with open(f"uploads/{fileName}", "wb") as img_file:
-			img_file.write(content)
+fileitem = form["userfile"]
+filename = os.path.basename(fileitem.filename)
+save_path = os.path.join(UPLOAD_DIR, filename)
 
-	else:
-		throw(1)
+# Save file
+with open(save_path, 'wb') as f:
+    while True:
+        chunk = fileitem.file.read(1024 * 1024)
+        if not chunk:
+            break
+        f.write(chunk)
 
-	success_page = f"""<!DOCTYPE html>
-	<html>
-	<head><title>C</title></head>
-	<style>
-		body {{
-			background: #191a1d;
-			color: #90EE90;
-			padding: 20px;
-		}}
-		h1 {{
-			text-align: center;
+body = f"""
+<html>
+<head>
+    <title>Upload Success</title>
+    <style>
+        body {{
+            background: #181818;
+            color: #fff;
+            text-align: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 5rem;
+        }}
+        img {{
+            margin-top: 2rem;
+            max-width: 360px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px #0008;
+        }}
+        a {{
+            color: #4A90E2;
+            text-decoration: underline;
+        }}
+    </style>
+</head>
+<body>
+    <h1 style="color:#4A90E2;">Upload Successful!</h1>
+    <p>File <strong>{html.escape(filename)}</strong> uploaded.</p>
+    <img src="uploads/{html.escape(filename)}" alt="Uploaded image preview">
+    <br><br>
+    <a href="post.html">Back to upload page</a>
+</body>
+</html>
+"""
 
-		}}
-	</style>
-	<body>
-		<h1>Upload was successful!</h1>
-	</body>
-	</html>"""
+headers = [
+    "HTTP/1.1 200 OK",
+    "Content-Type: text/html",
+    f"Content-Length: {len(body.encode('utf-8'))}",
+    ""
+]
+sys.stdout.write("\r\n".join(headers))
+sys.stdout.write("\r\n" + body)
 
-	headers1 = [
-		"HTTP/1.1 201 OK",
-		"Content-Type: text/html",
-		f"Content-Length: {len(success_page)}",
-		""
-	]
-
-	sys.stdout.write("\r\n".join(headers1))
-	sys.stdout.write("\r\n" + success_page)
-except Exception as e:
-	print("HTTP/1.1 500 Internal Server Error\r\n\r")

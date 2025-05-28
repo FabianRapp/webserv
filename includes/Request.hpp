@@ -51,12 +51,20 @@ class Request {
 			std::cout << "URI: " << _uri << std::endl;
 			std::cout << "Version: " << _version << std::endl;
 
-			// std::cout << "Headers:" << std::endl;
-			// for (const auto& header : _headers) {
-			// 	std::cout << "|" << header.first << "|" << header.second << "|" << std::endl;
-			// }
+			std::cout << "Headers:" << std::endl;
+			for (const auto& header : _headers) {
+				std::cout << "|" << to_string(header.first) << "|" << header.second << "|" << std::endl;
+			}
 			std::cout << "Body len: " <<  _body.length() << std::endl;
-			std::cout << "Body: " << (_body.empty() ? "No body" : _body) << std::endl;
+			if (_body.empty()) {
+				std::cout << "Body: No body" << std::endl;
+			} else {
+				std::cout << "Body: " << _body.substr(0, 100);
+				if (_body.length() > 100) {
+					std::cout << "..";
+				}
+				std::cout << std::endl;
+			}
 		}
 
 		void	set_status_code(int code);

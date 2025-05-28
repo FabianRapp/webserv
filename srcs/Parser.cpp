@@ -167,6 +167,15 @@ HeaderType	setType(const std::string& str) {
 	std::pair<const std::string, HeaderType>	matches[] = {
 		{"Accept:",                  HeaderType::ACCEPT},
 		{"Content-Length:",          HeaderType::CONTENT_LENGTH},
+		{"Content-Type:",            HeaderType::CONTENT_TYPE},
+		{"Origin:",                   HeaderType::ORIGIN},
+		{"Upgrade-Insecure-Requests:",HeaderType::UPGRADE_INSECURE_REQUESTS},
+		{"Sec-Fetch-Dest:",           HeaderType::UPGRADE_INSECURE_REQUESTS},
+		{"Sec-Fetch-Mode:",           HeaderType::UPGRADE_INSECURE_REQUESTS},
+		{"Sec-Fetch-Site:",           HeaderType::UPGRADE_INSECURE_REQUESTS},
+		{"Sec-Fetch-User:",           HeaderType::UPGRADE_INSECURE_REQUESTS},
+		{"Priority:",                 HeaderType::UPGRADE_INSECURE_REQUESTS},
+
 		{"Accept-Charset:",          HeaderType::ACCEPT_CHARSET},
 		{"Accept-Encoding:",         HeaderType::ACCEPT_ENCODING},
 		{"Accept-Language:",         HeaderType::ACCEPT_LANGUAGE},
@@ -209,6 +218,7 @@ HeaderType	setType(const std::string& str) {
 void Parser::insertHeader(const std::string& key, const std::string& value) {
 	HeaderType keyType = setType(key);
 	if (keyType == HeaderType::INVALID) {
+		LOG("invalid heaer: " + key << std::endl);
 		return ;
 	}
 	_request._headers.insert({keyType, value});
