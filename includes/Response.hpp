@@ -59,8 +59,25 @@ class Response {
 		CGIManager*				_cgi_manager;
 
 		std::string_view		_fd_write_data;
+
 		bool					_first_iter;
-		DIR*					_dir;
+
+		DIR*					_dir;//director data for auto index that needs to cleaned if it exists
+
+		/* _in_error_handling:
+		 * Set when loading the status page for an internal error.
+		 * If loading the status page fails the new error can be treated diffrent
+		  to any other error to prevent getting stuck
+		  fn load_status_code*() {
+		  ...
+			if (code == 500 && _in_error_handling)
+				hard coded status page overwrites the response
+				return 
+			if (code == 500)
+				_in_error_handling = true
+			}
+			...
+		*/
 		bool					_in_error_handling;
 
 
@@ -82,7 +99,7 @@ class Response {
 public:
 		Response () = delete;
 		Response(const ServerConfigFile& configFile, const LocationConfigFile& locationConfig,
-			const Request& request,Client& client, ClientMode& client_mode);
+			const Request& request, Client& client, ClientMode& client_mode);
 		~Response();
 		Response operator=(const Response& old);
 
